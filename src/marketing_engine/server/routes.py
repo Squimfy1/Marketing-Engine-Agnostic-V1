@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -152,6 +153,51 @@ class Api:
             char_delta=body.get("charDelta"),
         )
         return 200, {"ok": True, **result}
+
+    # -- knowledge base (source uploads) ---------------------------------
+    def kb_list(self, params: dict) -> tuple[int, dict]:
+        try:
+            tenant, brand = split_ref(_ref_of(params))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        try:
+            self.engine.registry.get_brand(tenant, brand)
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        vault = FilesystemVaultAdapter(self.engine.layout, tenant, brand)
+        files = [
+            rel.split("/", 1)[1]
+            for rel in vault.glob("_kb/*")
+            if rel != "_kb/README.md"
+        ]
+        return 200, {"ok": True, "files": files}
+
+    def kb_upload(self, body: dict) -> tuple[int, dict]:
+        try:
+            tenant, brand = split_ref(_ref_of(body))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        try:
+            self.engine.registry.get_brand(tenant, brand)
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        files = body.get("files") or []
+        vault = FilesystemVaultAdapter(self.engine.layout, tenant, brand)
+        ingested, skipped = [], []
+        for f in files:
+            name = os.path.basename((f.get("name") or "").strip())
+            content = f.get("content")
+            if not name or content is None:
+                continue
+            if os.path.splitext(name)[1].lower() not in (".md", ".txt", ".markdown"):
+                skipped.append(name)
+                continue
+            try:
+                vault.write(f"_kb/{name}", content)
+                ingested.append(name)
+            except PermissionError:
+                skipped.append(name)
+        return 200, {"ok": True, "ingested": ingested, "skipped": skipped}
 
     # -- sessions (server-managed UI state) ------------------------------
     def _sessions_dir(self) -> Path:

@@ -1196,6 +1196,7 @@ textarea.lab-main-input {
 <nav class="tab-bar" role="tablist">
   <button type="button" class="active" data-tab="arch" id="tab-arch" aria-selected="true">Architecture</button>
   <button type="button" data-tab="lab" id="tab-lab" aria-selected="false">Marketing Engine</button>
+  <button type="button" data-tab="kb" id="tab-kb" aria-selected="false">Knowledge Base</button>
 </nav>
 
 <div id="panel-arch" class="tab-panel visible" role="tabpanel">
@@ -1261,6 +1262,23 @@ textarea.lab-main-input {
 <div class="ov" id="ov" onclick="cd()"></div>
 <div class="dp" id="dp"><button class="dx" onclick="cd()">✕</button><div id="dcc"></div></div>
 </div><!-- end panel-arch -->
+
+<div id="panel-kb" class="tab-panel" role="tabpanel" aria-label="Knowledge Base">
+  <div style="max-width:860px;margin:0 auto;padding:28px 24px">
+    <h2 style="margin:0 0 4px">Knowledge Base</h2>
+    <p style="color:#888;margin:0 0 18px;font-size:13px">Add a client's source material — white papers, posted articles, research, product notes. Files are saved to that brand's <code>_kb/</code> and read by the engine when it generates, so the more real material you add, the more accurate and on-brand the output. Markdown and text files (<code>.md</code>, <code>.txt</code>) are read directly; convert PDFs/Word first.</p>
+    <label for="kb-brand" style="font-size:12px;font-weight:600;color:#333">Client / Brand</label>
+    <select id="kb-brand" style="display:block;margin:6px 0 18px;padding:7px 10px;min-width:260px;border:1px solid #ccc;border-radius:8px"></select>
+    <div id="kb-drop" tabindex="0" style="border:2px dashed #5b9bd5;border-radius:14px;padding:46px 20px;text-align:center;cursor:pointer;background:rgba(91,155,213,.06);transition:background .15s">
+      <div style="font-size:16px;font-weight:600;color:#2b6aa3">Drop files here</div>
+      <div style="font-size:12px;color:#888;margin-top:6px">or click to choose &mdash; add as many as you like (<code>.md</code>, <code>.txt</code>, <code>.markdown</code>)</div>
+      <input type="file" id="kb-input" multiple style="display:none">
+    </div>
+    <div id="kb-status" style="margin-top:14px;font-size:13px;min-height:18px"></div>
+    <h3 style="margin:26px 0 8px;font-size:13px;color:#333">Files in this brand&rsquo;s knowledge base</h3>
+    <ul id="kb-list" style="font-size:13px;color:#444;padding-left:18px;margin:0"></ul>
+  </div>
+</div>
 
 <div id="panel-lab" class="tab-panel" role="tabpanel" aria-label="Marketing Engine">
 <div class="lab-wrap">
@@ -1415,33 +1433,22 @@ textarea.lab-main-input {
 <script>
 /* ----- Tabs ----- */
 function switchTab(name) {
-  var arch = document.getElementById('panel-arch');
-  var lab = document.getElementById('panel-lab');
-  var tArch = document.getElementById('tab-arch');
-  var tLab = document.getElementById('tab-lab');
-  if (name === 'lab') {
-    document.body.classList.add('lab-tab');
-    arch.classList.remove('visible');
-    lab.classList.add('visible');
-    tArch.classList.remove('active');
-    tLab.classList.add('active');
-    tArch.setAttribute('aria-selected', 'false');
-    tLab.setAttribute('aria-selected', 'true');
-    try { localStorage.setItem('me-dash-tab', 'lab'); } catch (e) {}
-  } else {
-    document.body.classList.remove('lab-tab');
-    lab.classList.remove('visible');
-    arch.classList.add('visible');
-    tLab.classList.remove('active');
-    tArch.classList.add('active');
-    tLab.setAttribute('aria-selected', 'false');
-    tArch.setAttribute('aria-selected', 'true');
-    try { localStorage.setItem('me-dash-tab', 'arch'); } catch (e) {}
-    if (typeof drawLines === 'function') setTimeout(drawLines, 50);
-  }
+  var tabs = ['arch', 'lab', 'kb'];
+  tabs.forEach(function (t) {
+    var panel = document.getElementById('panel-' + t);
+    var btn = document.getElementById('tab-' + t);
+    var on = (t === name);
+    if (panel) panel.classList.toggle('visible', on);
+    if (btn) { btn.classList.toggle('active', on); btn.setAttribute('aria-selected', on ? 'true' : 'false'); }
+  });
+  document.body.classList.toggle('lab-tab', name === 'lab');
+  try { localStorage.setItem('me-dash-tab', name); } catch (e) {}
+  if (name === 'arch' && typeof drawLines === 'function') setTimeout(drawLines, 50);
+  if (name === 'kb' && typeof kbRefresh === 'function') kbRefresh();
 }
 document.getElementById('tab-arch').addEventListener('click', function () { switchTab('arch'); });
 document.getElementById('tab-lab').addEventListener('click', function () { switchTab('lab'); });
+document.getElementById('tab-kb').addEventListener('click', function () { switchTab('kb'); });
 try {
   if (localStorage.getItem('me-dash-tab') === 'lab' || location.hash === '#lab' || /[?&]session=/.test(location.search)) {
     switchTab('lab');
@@ -3287,6 +3294,79 @@ refreshTranscriptPendingStatus();
   }
   if (document.readyState !== 'loading') initBrands();
   else document.addEventListener('DOMContentLoaded', initBrands);
+})();
+</script>
+<script>
+(function () {
+  function sel() { return document.getElementById('kb-brand'); }
+  function statusEl() { return document.getElementById('kb-status'); }
+  var INGESTIBLE = ['.md', '.txt', '.markdown'];
+  function ext(n) { var i = n.lastIndexOf('.'); return i < 0 ? '' : n.slice(i).toLowerCase(); }
+
+  function kbList() {
+    var s = sel(), ul = document.getElementById('kb-list');
+    if (!s || !ul || !s.value) return;
+    fetch('/api/kb/list?brand=' + encodeURIComponent(s.value))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        ul.innerHTML = '';
+        var files = (d && d.files) || [];
+        if (!files.length) { ul.innerHTML = '<li style="color:#999;list-style:none;margin-left:-18px">No files yet.</li>'; return; }
+        files.forEach(function (f) { var li = document.createElement('li'); li.textContent = f; ul.appendChild(li); });
+      }).catch(function () {});
+  }
+
+  function populate() {
+    var s = sel(); if (!s) return;
+    fetch('/api/brands').then(function (r) { return r.json(); }).then(function (d) {
+      s.innerHTML = '';
+      (d.brands || []).forEach(function (b) { var o = document.createElement('option'); o.value = b.ref; o.textContent = b.name + ' (' + b.ref + ')'; s.appendChild(o); });
+      s.addEventListener('change', kbList);
+      kbList();
+    }).catch(function () {});
+  }
+
+  window.kbRefresh = function () { var s = sel(); if (s && !s.options.length) populate(); else kbList(); };
+
+  function send(files) {
+    var s = sel(), st = statusEl();
+    st.textContent = 'Uploading ' + files.length + ' file(s)…';
+    fetch('/api/kb/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brand: s.value, files: files }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { st.textContent = 'Error: ' + ((d && d.error) || 'upload failed'); return; }
+        var msg = 'Added ' + d.ingested.length + ' file(s) to the knowledge base.';
+        if (d.skipped && d.skipped.length) msg += ' Skipped ' + d.skipped.length + ' (convert to .md/.txt).';
+        st.textContent = msg; kbList();
+      }).catch(function () { st.textContent = 'Upload failed — is the server running?'; });
+  }
+
+  function handle(fileList) {
+    var s = sel(), st = statusEl();
+    if (!s || !s.value) { st.textContent = 'Pick a brand first.'; return; }
+    var arr = Array.prototype.slice.call(fileList);
+    var readable = arr.filter(function (f) { return INGESTIBLE.indexOf(ext(f.name)) >= 0; });
+    var skipped = arr.length - readable.length;
+    if (!readable.length) { st.textContent = skipped ? ('Nothing added — ' + skipped + ' file(s) need converting to .md/.txt.') : ''; return; }
+    st.textContent = 'Reading ' + readable.length + ' file(s)…';
+    var out = [], pending = readable.length;
+    readable.forEach(function (file) {
+      var rd = new FileReader();
+      rd.onload = function () { out.push({ name: file.name, content: rd.result }); if (--pending === 0) send(out); };
+      rd.onerror = function () { if (--pending === 0 && out.length) send(out); };
+      rd.readAsText(file);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var drop = document.getElementById('kb-drop'), input = document.getElementById('kb-input');
+    if (!drop || !input) return;
+    drop.addEventListener('click', function () { input.click(); });
+    input.addEventListener('change', function () { handle(input.files); input.value = ''; });
+    ['dragenter', 'dragover'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.style.background = 'rgba(91,155,213,.18)'; }); });
+    ['dragleave', 'drop'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.style.background = 'rgba(91,155,213,.06)'; }); });
+    drop.addEventListener('drop', function (ev) { handle(ev.dataTransfer.files); });
+  });
 })();
 </script>
 </body>

@@ -127,6 +127,31 @@ def test_session_missing(api: Api):
     assert status == 404
 
 
+# -- knowledge base upload ----------------------------------------------
+def test_kb_upload_and_list(api: Api):
+    status, payload = api.kb_upload({
+        "brand": "acme-co/acme",
+        "files": [
+            {"name": "whitepaper.md", "content": "# WP\n\nFacts."},
+            {"name": "notes.txt", "content": "more"},
+            {"name": "deck.pdf", "content": "binary"},
+            {"name": "../escape.md", "content": "nope"},
+        ],
+    })
+    assert status == 200 and payload["ok"]
+    assert set(payload["ingested"]) == {"whitepaper.md", "notes.txt", "escape.md"}  # basename'd
+    assert "deck.pdf" in payload["skipped"]
+
+    status, listing = api.kb_list({"brand": "acme-co/acme"})
+    assert status == 200
+    assert "whitepaper.md" in listing["files"] and "notes.txt" in listing["files"]
+
+
+def test_kb_upload_unknown_brand(api: Api):
+    status, _ = api.kb_upload({"brand": "acme-co/ghost", "files": []})
+    assert status == 404
+
+
 # -- status --------------------------------------------------------------
 def test_status_endpoints_enable_generation(api: Api):
     assert api.anthropic_status()[1]["configured"] is True
