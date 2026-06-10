@@ -41,6 +41,21 @@ def test_bash_is_always_denied(layout: VaultLayout):
     assert not allowed
 
 
+def test_relative_path_resolves_against_agent_cwd(layout: VaultLayout):
+    """A `Grep .` inside the brand dir must be allowed (resolved vs cwd, not server)."""
+    roots = layout.allowed_roots("acme-co", "acme")
+    brand_dir = layout.brand_dir("acme-co", "acme")
+    # relative "." with the agent cwd = brand dir -> allowed
+    allowed, offending = guard_decision("Grep", {"path": "."}, roots, base_dir=brand_dir)
+    assert allowed and offending == []
+    # relative "_kb" likewise allowed
+    allowed, _ = guard_decision("Read", {"file_path": "_kb/product.md"}, roots, base_dir=brand_dir)
+    assert allowed
+    # a relative escape is still denied
+    allowed, _ = guard_decision("Read", {"file_path": "../globex/brand.yaml"}, roots, base_dir=brand_dir)
+    assert not allowed
+
+
 def test_extract_paths_handles_glob_and_grep():
     assert extract_paths("Glob", {"path": "/x", "pattern": "*.md"}) == ["/x"]
     assert extract_paths("Grep", {"path": "/y"}) == ["/y"]

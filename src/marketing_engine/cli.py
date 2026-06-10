@@ -79,6 +79,57 @@ def serve(
     serve_app(settings, host=host, port=port, llm=llm)
 
 
+@app.command(name="new-brand")
+def new_brand(
+    tenant: str = typer.Option(..., "--tenant", "-t", help="Tenant (account) id."),
+    brand: str = typer.Option(..., "--brand", "-b", help="Brand (client) id."),
+    name: Optional[str] = typer.Option(None, "--name", help="Display name (defaults to brand id)."),
+    vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
+) -> None:
+    """Scaffold a new client brand (folders + placeholder brand.yaml)."""
+
+    from marketing_engine.tenant.scaffold import ScaffoldError, create_brand
+    from marketing_engine.vault.layout import VaultLayout
+
+    settings = Settings.from_env(vault_root=vault_root)
+    layout = VaultLayout(settings.vault_root)
+    try:
+        brand_dir = create_brand(layout, tenant, brand, name=name)
+    except ScaffoldError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+    typer.secho(f"Created brand {tenant}/{brand} at {brand_dir}", fg=typer.colors.GREEN)
+    typer.echo("Next: edit brand.yaml (identity + voice), then add source files to _kb/.")
+
+
+@app.command()
+def ingest(
+    files: list[Path] = typer.Argument(..., help="Source files (.md / .txt) to add to the KB."),
+    tenant: str = typer.Option(..., "--tenant", "-t", help="Tenant id."),
+    brand: str = typer.Option(..., "--brand", "-b", help="Brand id."),
+    vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
+) -> None:
+    """Copy source files into a brand's knowledge base (_kb/)."""
+
+    from marketing_engine.tenant.scaffold import ScaffoldError, ingest_files
+    from marketing_engine.vault.layout import VaultLayout
+
+    settings = Settings.from_env(vault_root=vault_root)
+    layout = VaultLayout(settings.vault_root)
+    try:
+        ingested, skipped = ingest_files(layout, tenant, brand, list(files))
+    except ScaffoldError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+    typer.secho(f"Ingested {len(ingested)} file(s) into {tenant}/{brand}/_kb/", fg=typer.colors.GREEN)
+    for n in ingested:
+        typer.echo(f"  + {n}")
+    if skipped:
+        typer.secho(f"Skipped {len(skipped)}:", fg=typer.colors.YELLOW)
+        for n in skipped:
+            typer.echo(f"  - {n}")
+
+
 @app.command(name="list")
 def list_brands(
     vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),

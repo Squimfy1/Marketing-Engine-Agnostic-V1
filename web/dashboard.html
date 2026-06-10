@@ -547,7 +547,7 @@ body.lab-tab .tab-bar button.active {
 .lab-copy-output:disabled { opacity: 0.4; cursor: not-allowed; }
 .lab-copy-output.copied { color: #1d8a4e; border-color: rgba(29, 138, 78, 0.5); background: rgba(29, 138, 78, 0.08); }
 
-/* Interactive topic cards (Find a topic) — Anthropic clay accent */
+/* Interactive topic cards (Find a topic) — clay accent */
 .topic-cards {
   display: flex;
   flex-direction: column;
@@ -1289,7 +1289,7 @@ textarea.lab-main-input {
         <label for="braindump" id="braindump-label">Your idea</label>
         <textarea id="braindump" class="lab-input" rows="5" placeholder="Your idea, angle, links, or what you want drafted…"></textarea>
         <div class="lab-composer-actions">
-          <button type="button" class="lab-generate-btn" id="btn-generate-claude" disabled title="Requires ANTHROPIC_API_KEY in .env">Generate</button>
+          <button type="button" class="lab-generate-btn" id="btn-generate-claude" disabled title="Generate via Claude Code (your account)">Generate</button>
           <button type="button" class="lab-send-btn" id="btn-send-claude" aria-label="Copy bundle for Claude Desktop" title="Copy bundle for Claude Desktop">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -1711,8 +1711,7 @@ function genEnabled() {
 }
 
 function genSourceLabel() {
-  if (labAnthropicEnabled) return 'Anthropic API · ' + labAnthropicModel;
-  if (labBridgeEnabled) return 'Claude Code (local, no API key)';
+  if (genEnabled()) return 'Claude Code · ' + (labAnthropicModel || 'your account');
   return '';
 }
 
@@ -1722,7 +1721,7 @@ function updateGenerateButton() {
     genBtn.disabled = !genEnabled();
     genBtn.title = genEnabled()
       ? ('Generate via ' + genSourceLabel())
-      : 'Add ANTHROPIC_API_KEY to .env, or run the Claude Code bridge watcher';
+      : 'Connecting to Claude Code… (is the engine server running?)';
   }
   var resp = document.getElementById('lab-response');
   if (resp && genEnabled()) {
@@ -2165,7 +2164,7 @@ function setLabIntent(mode, silent) {
     hint = hint.replace(/Send loads voice \+ rules and drafts the post\./, 'Generate drafts straight into Response below.');
     hint = hint.replace(/Send drafts the full post \+ visual brief for that angle\./, 'Generate drafts the full post + visual brief into Response below.');
     if (mode === 'suggest') hint = hint.replace(/Claude reads/, 'Generate reads');
-  } else if (hint.indexOf('ANTHROPIC_API_KEY') < 0) {
+  } else {
     hint += ' Or Copy bundle → paste into Claude Desktop.';
   }
   document.getElementById('lab-intent-hint').textContent = hint;
@@ -2224,7 +2223,7 @@ function showTopicLoading(on) {
 }
 
 function requestTopicSuggestions() {
-  if (!genEnabled()) { toast('Start the Claude Code bridge or add a key to find topics'); return; }
+  if (!genEnabled()) { toast('Engine not reachable — is the server running?'); return; }
   var picker = document.getElementById('topic-picker');
   if (picker) picker.hidden = false;
   selectedTopicTitle = '';
@@ -2846,7 +2845,7 @@ function runBridgeGenerate(payload) {
   });
 }
 
-// Route a generate payload to the bridge (no key) or the Anthropic API.
+// Route a generate payload to the engine (Claude Code, your account).
 function runGenerate(payload) {
   var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
   return viaBridge ? runBridgeGenerate(payload) : runAnthropicGenerate(payload);
@@ -2915,7 +2914,7 @@ function appendArticleSection(section, text) {
 }
 
 function generateArticleSkeleton() {
-  if (!genEnabled()) { toast('Start the Claude Code bridge or add a key to Generate'); return; }
+  if (!genEnabled()) { toast('Engine not reachable — is the server running?'); return; }
   var btn = document.getElementById('btn-gen-skeleton');
   btn.disabled = true;
   var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
@@ -2932,7 +2931,7 @@ function generateArticleSkeleton() {
 }
 
 function generateArticleSection(section, btn) {
-  if (!genEnabled()) { toast('Start the Claude Code bridge or add a key to Generate'); return; }
+  if (!genEnabled()) { toast('Engine not reachable — is the server running?'); return; }
   var skeleton = collectSkeleton();
   if (!skeleton) { toast('Generate the skeleton first'); return; }
   if (btn) btn.disabled = true;
@@ -2958,7 +2957,7 @@ function generateArticleSection(section, btn) {
 
 function generateToClaude(intentOverride) {
   if (!genEnabled()) {
-    toast('Add ANTHROPIC_API_KEY to .env, or start the Claude Code bridge — or use Copy for Desktop');
+    toast('Engine not reachable — is the server running?');
     return;
   }
   var intent = intentOverride || labIntent;

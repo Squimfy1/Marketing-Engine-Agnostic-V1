@@ -41,6 +41,7 @@ def assemble_run(
     input_text: str,
     platform_label: str | None = None,
     platform_guidance: str = "",
+    task: str = "default",
 ) -> AssembledRun:
     core_rules = _read_core_rules(layout, tenant.id, brand.id)
 
@@ -54,7 +55,7 @@ def assemble_run(
     )
 
     model = resolve_model(
-        "default",
+        task,
         brand_models=brand.models.model_dump(),
         tenant_default=tenant.default_model,
         settings_default=settings.default_model,

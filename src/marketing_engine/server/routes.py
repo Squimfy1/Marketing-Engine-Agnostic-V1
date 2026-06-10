@@ -120,7 +120,7 @@ class Api:
             "ok": not result.is_error,
             "text": result.text,
             "model": result.model,
-            "usage": {"num_turns": result.num_turns},
+            "usage": {"num_turns": result.num_turns, **result.usage},
             "denied": result.denied_paths,
         }
 

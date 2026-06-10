@@ -42,6 +42,7 @@ class RunResult:
     denied_paths: list[str] = field(default_factory=list)
     num_turns: int = 0
     model: str | None = None
+    usage: dict[str, Any] = field(default_factory=dict)  # token counts from the SDK
 
 
 class LLMClient(Protocol):
@@ -83,6 +84,7 @@ class ClaudeAgentClient:
         texts: list[str] = []
         num_turns = 0
         is_error = False
+        usage: dict[str, Any] = {}
         try:
             async for message in query(prompt=prompt, options=sdk_options):
                 if isinstance(message, AssistantMessage):
@@ -92,6 +94,7 @@ class ClaudeAgentClient:
                 elif isinstance(message, ResultMessage):
                     num_turns = message.num_turns
                     is_error = bool(message.is_error)
+                    usage = _normalize_usage(message.usage)
                     if message.result and not texts:
                         texts.append(message.result)
         except Exception as exc:
@@ -107,6 +110,7 @@ class ClaudeAgentClient:
             denied_paths=denied,
             num_turns=num_turns,
             model=options.model,
+            usage=usage,
         )
 
 
@@ -140,6 +144,23 @@ class FakeLLMClient:
             if first_rule:
                 lines.append(f"Honouring the rule: {first_rule}")
         return RunResult(text="\n".join(lines).strip(), model=options.model or "fake")
+
+
+def _normalize_usage(usage: Any) -> dict[str, Any]:
+    """Pull token counts out of the SDK usage object (dict or attrs)."""
+
+    if not usage:
+        return {}
+    keys = ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
+    out: dict[str, Any] = {}
+    for k in keys:
+        v = usage.get(k) if isinstance(usage, dict) else getattr(usage, k, None)
+        if v is not None:
+            out[k] = v
+    inp = out.get("input_tokens", 0) or 0
+    cached = out.get("cache_read_input_tokens", 0) or 0
+    out["total_tokens"] = inp + cached + (out.get("output_tokens", 0) or 0)
+    return out
 
 
 def _first_matching(text: str, prefix: str) -> str | None:

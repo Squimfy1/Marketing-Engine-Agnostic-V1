@@ -18,9 +18,13 @@ no preamble, no meta-commentary."""
 RUN_INSTRUCTIONS = """\
 Work efficiently — you have a limited number of tool calls:
 1. If you need facts, Glob/Grep the brand's _kb/ and read at most the 1–2 files
-   directly relevant to this request. Do NOT read the shared writing-rule files;
-   your system prompt already constrains voice and style.
-2. Then write the finished piece and stop.
+   directly relevant to this request. Do NOT read the shared writing-rule files
+   (your system prompt already constrains voice and style), do NOT run shell
+   commands, and do NOT look outside this brand's folder.
+2. If _kb/ doesn't have the facts you need, write the best on-brand piece you
+   can from the request itself; only if that is impossible, state briefly in one
+   line what source material is missing — do not keep searching.
+3. Then write the finished piece and stop.
 Return only the final copy in markdown — no preamble, no commentary, no notes
 about what you read."""
 

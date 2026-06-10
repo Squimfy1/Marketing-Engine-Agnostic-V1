@@ -44,20 +44,28 @@ def guard_decision(
     tool_name: str,
     tool_input: dict[str, Any],
     allowed_roots: Iterable[Path],
+    base_dir: str | Path | None = None,
 ) -> tuple[bool, list[str]]:
     """Pure isolation decision.
 
-    Returns ``(allowed, offending_paths)``. A tool with no path arguments (e.g.
-    a brand-scoped MCP tool) is allowed — it cannot reach the filesystem
-    directly. ``Bash`` is intentionally *not* in ``_PATH_KEYS``; if it is ever
-    enabled it should be gated separately, so for safety we deny it here.
+    Returns ``(allowed, offending_paths)``. Relative paths are resolved against
+    ``base_dir`` (the agent's working directory) — NOT the server process cwd —
+    so a normal ``Grep .`` inside the brand folder is allowed. A tool with no
+    path arguments is allowed (it cannot reach the filesystem directly).
+    ``Bash`` is denied outright (not in the allowlist).
     """
 
     if tool_name == "Bash":
         return False, ["<bash command>"]
 
     roots = list(allowed_roots)
-    offending = [p for p in extract_paths(tool_name, tool_input) if not is_within(p, roots)]
+    offending = []
+    for p in extract_paths(tool_name, tool_input):
+        candidate = Path(p)
+        if not candidate.is_absolute() and base_dir is not None:
+            candidate = Path(base_dir) / candidate
+        if not is_within(candidate, roots):
+            offending.append(p)
     return (len(offending) == 0, offending)
 
 
@@ -73,7 +81,8 @@ def make_path_guard_hook(allowed_roots: Iterable[Path], denied_log: list[str] | 
     async def hook(input_data: dict[str, Any], tool_use_id: str | None, context: Any) -> dict:
         tool_name = input_data.get("tool_name", "")
         tool_input = input_data.get("tool_input", {}) or {}
-        allowed, offending = guard_decision(tool_name, tool_input, roots)
+        base_dir = input_data.get("cwd")  # the agent's working dir (the brand folder)
+        allowed, offending = guard_decision(tool_name, tool_input, roots, base_dir=base_dir)
         if allowed:
             return {}
         reason = (

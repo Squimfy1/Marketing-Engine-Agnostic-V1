@@ -66,6 +66,7 @@ class MarketingEngine:
         braindump: str,
         platform: str | None = None,
         intent: str = "draft",
+        task: str = "default",
     ) -> RunResult:
         """Generate copy for a brand + platform from a braindump.
 
@@ -89,6 +90,7 @@ class MarketingEngine:
             input_text=braindump,
             platform_label=plat.label,
             platform_guidance=load_guidance(self.layout, plat),
+            task=task,
         )
         return await self.llm.run(assembled.run_prompt, assembled.options)
 
