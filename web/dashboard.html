@@ -1,0 +1,3294 @@
+3"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Engine Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* hidden attribute must always win over component display rules */
+[hidden] { display: none !important; }
+/* ===== Global shell ===== */
+:root {
+  --bg: #1a1a1a;
+  --zone-be: #212121;
+  --zone-fe: #272727;
+  --zone-out: #232323;
+  --card-be: #2c2c2c;
+  --card-fe: #343434;
+  --card-out: #2e2e2e;
+  --bdr-be: #3a3a3a;
+  --bdr-fe: #454545;
+  --text: #e8e8e8;
+  --text-2: #999;
+  --text-3: #666;
+  --grn: #4ade80;
+  --grn-bg: rgba(74, 222, 128, 0.12);
+  --amb: #fbbf24;
+  --amb-bg: rgba(251, 191, 36, 0.12);
+  --red: #f87171;
+  --red-bg: rgba(248, 113, 113, 0.12);
+  --sh-s: 0 2px 4px rgba(0,0,0,.3);
+  --sh-m: 0 6px 20px rgba(0,0,0,.4);
+  --sh-l: 0 12px 40px rgba(0,0,0,.5);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Tabs ===== */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid #333;
+  background: #141414;
+}
+.tab-bar button {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  color: #888888;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab-bar button:hover { color: #cccccc; }
+.tab-bar button.active {
+  color: #ffffff;
+  font-weight: 600;
+  border-bottom-color: #ffffff;
+}
+.tab-panel { display: none; }
+.tab-panel.visible { display: block; }
+
+/* ===== Architecture (original) ===== */
+.pg { width: 1060px; margin: 0 auto; padding: 28px 0 60px; }
+.hd { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+.ti { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+.lg { display: flex; gap: 14px; font-size: 11px; color: var(--text-2); }
+.lgd { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.cv { position: relative; width: 1060px; height: 860px; }
+.zn { position: absolute; border-radius: 16px; border: 1px solid; }
+.zl { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-3); }
+.nd { position: absolute; border-radius: 10px; padding: 10px 14px 18px; cursor: pointer; transition: all 0.2s; z-index: 2; text-align: center; }
+.nd:hover { transform: translateY(-2px); }
+.nd.active { z-index: 10; }
+.be { background: var(--card-be); border: 1px solid var(--bdr-be); box-shadow: var(--sh-s); }
+.be:hover, .be.active { box-shadow: var(--sh-m); border-color: #555; }
+.fe { background: var(--card-fe); border: 1px solid var(--bdr-fe); box-shadow: var(--sh-s); }
+.fe:hover, .fe.active { box-shadow: var(--sh-m); border-color: #666; }
+.lm { background: #111; border: 1px solid #333; box-shadow: 0 4px 24px rgba(0,0,0,.6); z-index: 3; }
+.lm:hover { box-shadow: 0 8px 32px rgba(0,0,0,.7); transform: translateY(-2px); }
+.ot { background: var(--card-out); border: 1px solid #3a3a3a; box-shadow: var(--sh-s); }
+.ot:hover { box-shadow: var(--sh-m); border-color: #555; }
+.nl { font-size: 12px; font-weight: 500; }
+.ns { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+.dt { width: 7px; height: 7px; border-radius: 50%; position: absolute; top: 9px; right: 9px; }
+.dt.g { background: var(--grn); }
+.dt.a { background: var(--amb); }
+.dt.r { background: var(--red); }
+.dp { position: fixed; top: 0; right: -460px; width: 440px; height: 100vh; background: #222; border-left: 1px solid #333; box-shadow: -8px 0 40px rgba(0,0,0,.5); z-index: 100; transition: right 0.3s; overflow-y: auto; padding: 28px 24px; }
+.dp.open { right: 0; }
+.dx { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #888; transition: all 0.15s; }
+.dx:hover { background: #333; color: #ccc; }
+.dss { display: inline-block; font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 16px; margin-bottom: 10px; }
+.dss.g { background: var(--grn-bg); color: var(--grn); }
+.dss.a { background: var(--amb-bg); color: var(--amb); }
+.dss.r { background: var(--red-bg); color: var(--red); }
+.dtt { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 5px; }
+.ddd { font-size: 12px; line-height: 1.7; color: var(--text-2); margin-bottom: 14px; }
+.dsl { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin: 18px 0 6px; }
+.df { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: rgba(255,255,255,.04); border-radius: 6px; margin-bottom: 3px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-2); }
+.fd { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.fd.g { background: var(--grn); }
+.fd.r { background: var(--red); }
+.fd.a { background: var(--amb); }
+.fl { margin-left: auto; font-family: 'Inter', sans-serif; color: var(--text-3); font-size: 10px; }
+.dc { font-size: 11px; color: var(--text-2); line-height: 1.8; padding: 8px 10px; background: rgba(255,255,255,.03); border-radius: 6px; margin-top: 6px; }
+.ov { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,.4); z-index: 99; display: none; cursor: pointer; }
+.ov.open { display: block; }
+
+/* ===== Progress + priority ===== */
+.arch-layout { display: flex; gap: 20px; align-items: flex-start; max-width: 1380px; margin: 0 auto; padding: 0 16px 60px; }
+.cv-wrap { flex: 1; min-width: 0; }
+.next-sidebar {
+  width: 300px; flex-shrink: 0; position: sticky; top: 12px;
+  background: #1c1c1c; border: 1px solid #333; border-radius: 12px; padding: 14px 16px;
+}
+.next-sidebar h2 { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+.engine-total { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #333; }
+.engine-total .pct-big { font-size: 28px; font-weight: 600; letter-spacing: -1px; }
+.engine-total .pct-bar-wrap { height: 8px; background: #111; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+.engine-total .pct-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--grn), #86efac); transition: width .4s; }
+.next-list { list-style: none; max-height: 520px; overflow-y: auto; }
+.next-list li {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 6px; border-radius: 8px;
+  cursor: pointer; font-size: 12px; line-height: 1.35; border-bottom: 1px solid #2a2a2a;
+}
+.next-list li:hover { background: rgba(255,255,255,.05); }
+.next-list li.done { opacity: 0.45; cursor: default; }
+.next-num {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace;
+}
+.next-num.r { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,.35); }
+.next-num.a { background: var(--amb-bg); color: var(--amb); border: 1px solid rgba(251,191,36,.35); }
+.next-num.g { background: var(--grn-bg); color: var(--grn); border: 1px solid rgba(74,222,128,.35); }
+.next-meta { color: var(--text-3); font-size: 10px; margin-top: 2px; }
+.nd-pri {
+  position: absolute; top: 6px; left: 8px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 5px; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; justify-content: center; z-index: 4;
+}
+.nd-pri.r { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,.4); }
+.nd-pri.a { background: var(--amb-bg); color: var(--amb); border: 1px solid rgba(251,191,36,.4); }
+.nd-pri.g { display: none; }
+.nd.lm .nd-pri { border-color: rgba(255,255,255,.25); }
+.nd.active { outline: 2px solid var(--amb); outline-offset: 2px; }
+.nd-bar-wrap {
+  position: absolute; left: 8px; right: 8px; bottom: 6px; height: 4px; background: #111;
+  border-radius: 2px; overflow: hidden;
+}
+.nd-bar-fill { height: 100%; border-radius: 2px; transition: width .35s; }
+.nd-bar-fill.g { background: var(--grn); }
+.nd-bar-fill.a { background: var(--amb); }
+.nd-bar-fill.r { background: var(--red); }
+.nd.dist { padding-bottom: 10px; }
+.nd.dist .nd-bar-wrap { display: none !important; }
+.nd.dist .nd-pri { display: none !important; }
+.zl-pct { margin-left: 6px; font-weight: 500; color: var(--text-2); }
+.dppct { font-size: 13px; font-weight: 600; margin: 8px 0 12px; font-family: 'JetBrains Mono', monospace; }
+.dppct-bar { height: 6px; background: #111; border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+.dppct-fill { height: 100%; border-radius: 3px; }
+
+/* ===== Marketing Engine — Apple-inspired light UI ===== */
+body.lab-tab {
+  background: #f5f5f7;
+}
+body.lab-tab .tab-bar {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+body.lab-tab .tab-bar button { color: #86868b; }
+body.lab-tab .tab-bar button:hover { color: #1d1d1f; }
+body.lab-tab .tab-bar button.active {
+  color: #1d1d1f;
+  border-bottom-color: #1d1d1f;
+}
+
+#panel-lab {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.47;
+  letter-spacing: -0.01em;
+  color: #1d1d1f;
+  background: #f5f5f7;
+  min-height: calc(100vh - 49px);
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+.lab-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 80px;
+}
+.lab-header {
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+.lab-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1d1d1f;
+  margin: 0;
+}
+.lab-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: block;
+  object-fit: cover;
+}
+.lab-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lab-demo-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.lab-demo-badge.ready {
+  background: rgba(52, 199, 89, 0.15);
+  color: #248a3d;
+}
+.lab-demo-badge.warn {
+  background: rgba(255, 149, 0, 0.15);
+  color: #c93400;
+}
+.lab-demo-badge.loading {
+  background: rgba(0, 0, 0, 0.06);
+  color: #86868b;
+}
+.lab-header p {
+  font-size: 15px;
+  color: #86868b;
+  margin-top: 6px;
+  font-weight: 400;
+}
+.lab-subtabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+.lab-subtab {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  margin-bottom: -0.5px;
+  border: none;
+  background: transparent;
+  color: #86868b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.lab-subtab:hover { color: #1d1d1f; }
+.lab-subtab.active {
+  color: #0071e3;
+  font-weight: 600;
+  border-bottom-color: #0071e3;
+}
+.lab-subpanel { display: none; }
+.lab-subpanel.visible { display: block; }
+.lab-composer-input {
+  position: relative;
+  margin-bottom: 0;
+}
+.lab-composer-input textarea {
+  min-height: 140px;
+  padding-right: 14px;
+  padding-bottom: 14px;
+  border-radius: 16px;
+}
+.lab-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.lab-generate-btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #0071e3;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.35);
+  transition: transform 0.15s, background 0.15s, opacity 0.15s;
+}
+.lab-generate-btn:hover:not(:disabled) {
+  background: #0077ed;
+  transform: translateY(-1px);
+}
+.lab-generate-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.lab-generate-btn.suggest:not(:disabled) {
+  background: #5856d6;
+  box-shadow: 0 2px 8px rgba(88, 86, 214, 0.35);
+}
+.lab-generate-btn.suggest:hover:not(:disabled) {
+  background: #6361e0;
+}
+.lab-intent {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+}
+.lab-intent-btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #86868b;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.lab-intent-btn:hover { color: #1d1d1f; }
+.lab-intent-btn.active {
+  background: #fff;
+  color: #0071e3;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.lab-intent-hint {
+  font-size: 12px;
+  color: #86868b;
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+.lab-topic-pick {
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(0, 113, 227, 0.06);
+  border: 0.5px solid rgba(0, 113, 227, 0.2);
+  border-radius: 14px;
+}
+.lab-topic-pick h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: #1d1d1f;
+}
+.lab-topic-pick-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.lab-topic-pick select {
+  flex: 1;
+  min-width: 180px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+}
+.lab-system-map {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+.lab-system-map summary {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lab-system-map summary::-webkit-details-marker { display: none; }
+.lab-system-map summary::before {
+  content: '▸';
+  font-size: 11px;
+  color: #86868b;
+  transition: transform 0.15s;
+}
+.lab-system-map[open] summary::before { transform: rotate(90deg); }
+.lab-map-diagram {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #515154;
+}
+.lab-map-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.lab-map-box {
+  flex: 1;
+  min-width: 72px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  text-align: center;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+.lab-map-box.canonical { background: #f5f5f7; }
+.lab-map-box.episodic { background: #eef6ff; border-color: rgba(0, 113, 227, 0.2); }
+.lab-map-box.memory { background: #f0faf0; border-color: rgba(52, 120, 60, 0.2); }
+.lab-map-box.claude { background: #1d1d1f; color: #fff; border-color: #1d1d1f; }
+.lab-map-box.out { background: #fff8ee; border-color: rgba(180, 120, 0, 0.25); }
+.lab-map-box strong {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  opacity: 0.85;
+}
+.lab-map-arrow {
+  text-align: center;
+  color: #86868b;
+  font-size: 14px;
+  line-height: 1;
+  margin: 2px 0;
+}
+.lab-map-note {
+  font-size: 10px;
+  color: #86868b;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+.lab-send-btn.suggest {
+  background: #5856d6;
+  box-shadow: 0 2px 8px rgba(88, 86, 214, 0.35);
+}
+.lab-send-btn.suggest:hover {
+  background: #6361e0;
+  box-shadow: 0 4px 14px rgba(88, 86, 214, 0.4);
+}
+.lab-send-btn {
+  position: static;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #0071e3;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.35);
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.lab-send-btn:hover {
+  background: #0077ed;
+  transform: scale(1.04);
+  box-shadow: 0 4px 14px rgba(0, 113, 227, 0.4);
+}
+.lab-send-btn:active { transform: scale(0.96); }
+.lab-send-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.lab-send-btn svg {
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+}
+.lab-response-block {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+.lab-response-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.lab-response-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+.lab-response-status {
+  font-size: 12px;
+  color: #86868b;
+}
+.lab-response-status.waiting { color: #0071e3; }
+
+/* Copy button on the output box */
+.lab-copy-output {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d1d1f;
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.18);
+  border-radius: 9px;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.lab-copy-output svg { width: 14px; height: 14px; }
+.lab-copy-output:hover:not(:disabled) { background: #f5f5f7; border-color: rgba(0, 0, 0, 0.3); }
+.lab-copy-output:disabled { opacity: 0.4; cursor: not-allowed; }
+.lab-copy-output.copied { color: #1d8a4e; border-color: rgba(29, 138, 78, 0.5); background: rgba(29, 138, 78, 0.08); }
+
+/* Interactive topic cards (Find a topic) — Anthropic clay accent */
+.topic-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.topic-card {
+  text-align: left;
+  font-family: inherit;
+  background: #fff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, transform 0.12s;
+}
+.topic-card:hover {
+  border-color: #d97757;
+  background: rgba(217, 119, 87, 0.05);
+  transform: translateY(-1px);
+}
+.topic-card:focus-visible {
+  outline: none;
+  border-color: #d97757;
+  box-shadow: 0 0 0 4px rgba(217, 119, 87, 0.18);
+}
+.topic-card.selected {
+  border-color: #d97757;
+  background: rgba(217, 119, 87, 0.1);
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18);
+}
+.topic-card .topic-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.topic-card .topic-card-num {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d97757;
+}
+.topic-card.selected .topic-card-num::after {
+  content: " · selected";
+  color: #b35a3c;
+}
+.topic-card .topic-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  line-height: 1.35;
+}
+.topic-card .topic-card-meta {
+  font-size: 12px;
+  color: #6e6e73;
+  line-height: 1.45;
+  margin-top: 6px;
+  white-space: pre-wrap;
+}
+
+/* Loading state while the engine finds topics */
+.topic-loading[hidden] { display: none; }
+.topic-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  font-size: 13px;
+  color: #6e6e73;
+  border: 1px dashed rgba(217, 119, 87, 0.4);
+  border-radius: 14px;
+  background: rgba(217, 119, 87, 0.04);
+}
+.topic-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(217, 119, 87, 0.3);
+  border-top-color: #d97757;
+  animation: topic-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes topic-spin { to { transform: rotate(360deg); } }
+
+/* Article skeleton (Articles content type) */
+.lab-article-skeleton {
+  margin-top: 18px;
+  padding: 16px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  background: #fafafa;
+}
+.lab-article-skeleton .article-skeleton-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.lab-article-skeleton .article-skeleton-head h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+.lab-article-skeleton .article-section { margin-top: 12px; }
+.lab-article-skeleton .article-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.lab-article-skeleton .article-section-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6e6e73;
+}
+.lab-article-skeleton .article-bullets {
+  width: 100%;
+  resize: vertical;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.lab-article-skeleton .article-gen-section { padding: 6px 12px; font-size: 12px; }
+.lab-article-skeleton .article-section.done .article-section-name::after {
+  content: " · drafted";
+  color: #1d8a4e;
+  font-weight: 600;
+}
+.lab-response-edit {
+  min-height: 220px;
+  max-height: 420px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1d1d1f;
+  background: #fafafa;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 16px 18px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.lab-response-edit:focus {
+  outline: none;
+  background: #fff;
+  border-color: rgba(0, 113, 227, 0.45);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+.lab-response-edit:empty::before {
+  content: attr(data-placeholder);
+  color: #aeaeb2;
+}
+.lab-submit-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+}
+.lab-submit-hint {
+  font-size: 12px;
+  color: #86868b;
+  flex: 1;
+}
+.lab-design-placeholder {
+  font-size: 14px;
+  color: #86868b;
+  line-height: 1.55;
+}
+.lab-design-placeholder code {
+  font-size: 12px;
+  background: #f5f5f7;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.lab-design-wrap { max-width: 900px; }
+.lab-design-steps {
+  font-size: 13px;
+  color: #86868b;
+  line-height: 1.5;
+  margin: 0 0 16px;
+  padding-left: 1.2em;
+}
+.lab-design-steps li { margin-bottom: 4px; }
+textarea#design-brief {
+  min-height: 220px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.lab-design-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: center;
+}
+.lab-design-status {
+  font-size: 12px;
+  color: #86868b;
+  flex: 1;
+  min-width: 140px;
+}
+.lab-design-status.ready { color: #248a3d; }
+.lab-workflow-note {
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f5f5f7;
+  border-radius: 10px;
+  line-height: 1.45;
+}
+.lab-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .lab-grid { grid-template-columns: 1fr; }
+  .lab-wrap { padding: 20px 16px 60px; }
+}
+.lab-box {
+  background: #ffffff;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.04);
+}
+.lab-box h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+  margin-bottom: 14px;
+  padding-bottom: 0;
+  border: none;
+}
+.lab-box label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #86868b;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+textarea.lab-input,
+.settings input,
+.settings select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #1d1d1f;
+  background: #f5f5f7;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+textarea.lab-input {
+  min-height: 132px;
+  resize: vertical;
+}
+textarea.lab-input:focus,
+.settings input:focus,
+.settings select:focus {
+  outline: none;
+  border-color: rgba(0, 113, 227, 0.5);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
+  background: #ffffff;
+}
+textarea.lab-input::placeholder,
+.settings input::placeholder {
+  color: #aeaeb2;
+}
+textarea.lab-main-input {
+  min-height: 180px;
+}
+.settings select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2386868b' d='M1.4.6 6 5.2 10.6.6 12 2l-6 6-6-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.settings input[type="text"] {
+  min-height: auto;
+  margin-bottom: 14px;
+}
+.settings select { margin-bottom: 14px; }
+.lab-dropzone {
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.lab-dropzone .dropzone-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+.lab-dropzone .dropzone-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.lab-dropzone .dropzone-label {
+  font-size: 13px;
+  line-height: 1.2;
+}
+.lab-dropzone .dropzone-hint {
+  font-size: 12px;
+  margin-left: 2px;
+}
+.dropzone {
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #86868b;
+  background: #fafafa;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.dropzone.lab-dropzone {
+  padding: 10px 16px;
+  margin-top: 12px;
+}
+.dropzone-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(0, 113, 227, 0.08);
+  color: #0071e3;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+.dropzone-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.dropzone-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+}
+.dropzone-hint {
+  font-size: 12px;
+  color: #86868b;
+}
+.dropzone.drag {
+  border-color: #0071e3;
+  background: rgba(0, 113, 227, 0.04);
+}
+.dropzone.drag .dropzone-icon {
+  background: rgba(0, 113, 227, 0.14);
+  transform: scale(1.05);
+}
+.dropzone.drag .dropzone-label,
+.dropzone.drag .dropzone-hint {
+  color: #0071e3;
+}
+.dropzone:hover {
+  border-color: rgba(0, 113, 227, 0.35);
+  background: #f5f5f7;
+}
+.dropzone:hover .dropzone-icon {
+  background: rgba(0, 113, 227, 0.12);
+}
+.file-list { margin-top: 12px; font-size: 13px; }
+.file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0.5px solid rgba(29, 138, 78, 0.35);
+  border-radius: 12px;
+  margin-bottom: 6px;
+  background: rgba(29, 138, 78, 0.07);
+  color: #1d1d1f;
+}
+.file-row .file-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.file-row .file-loaded-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #1d8a4e;
+  color: #fff;
+}
+.file-row .file-loaded-icon svg { width: 11px; height: 11px; }
+.file-row .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-row .file-meta { color: #6e6e73; font-size: 12px; }
+.file-row button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  background: #ffffff;
+  color: #86868b;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.file-row button:hover {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+.chat-log {
+  min-height: 260px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: #fafafa;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.chat-log::-webkit-scrollbar { width: 8px; }
+.chat-log::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+.msg { margin-bottom: 14px; white-space: pre-wrap; word-break: break-word; color: #1d1d1f; }
+.msg .tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #86868b;
+  margin-right: 8px;
+}
+.msg.user .tag { color: #0071e3; }
+.msg.assistant .tag { color: #34c759; }
+.msg.system .tag { color: #aeaeb2; }
+.msg-body {
+  display: block;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  min-height: 2.5em;
+  outline: none;
+}
+.msg.assistant .msg-body:focus {
+  border-color: rgba(0, 113, 227, 0.45);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+}
+.msg.assistant .msg-hint {
+  font-size: 11px;
+  color: #86868b;
+  margin-top: 4px;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.lab-btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+.lab-btn:active { transform: scale(0.98); }
+.lab-btn.primary {
+  background: #0071e3;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.lab-btn.primary:hover { background: #0077ed; }
+.lab-btn.secondary {
+  background: #ffffff;
+  color: #1d1d1f;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.lab-btn.secondary:hover {
+  background: #f5f5f7;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+.lab-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.lab-section-gap { margin-top: 22px; }
+.lab-hint {
+  font-size: 12px;
+  color: #86868b;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+.lab-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #1d1d1f;
+  margin: 14px 0 8px;
+  cursor: pointer;
+  line-height: 1.35;
+}
+.lab-check input { margin-top: 2px; accent-color: #0071e3; }
+.lab-transcript-row { margin-top: 8px; }
+.lab-transcript-row .lab-btn { width: 100%; margin-bottom: 6px; }
+#transcript-pending-status {
+  font-size: 11px;
+  color: #86868b;
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+.lab-api-details { margin-top: 4px; }
+.lab-api-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  padding: 8px 0;
+  list-style: none;
+}
+.lab-api-details summary::-webkit-details-marker { display: none; }
+.lab-api-details[open] summary { margin-bottom: 4px; }
+.lab-btn-link {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0071e3;
+  cursor: pointer;
+  text-align: left;
+}
+.lab-btn-link:hover { text-decoration: underline; }
+.lab-draft-zone {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+.lab-draft-zone.hidden { display: none; }
+.lab-learn-panel {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: #f0f7ff;
+  border: 0.5px solid rgba(0, 113, 227, 0.2);
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.lab-learn-panel h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #1d1d1f;
+}
+.lab-learn-panel ul { margin: 0; padding-left: 18px; }
+.lab-learn-panel li { margin-bottom: 6px; }
+.lab-diff {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  max-height: 120px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #555;
+}
+.lab-session-id {
+  font-size: 11px;
+  color: #86868b;
+  margin-top: 12px;
+  word-break: break-all;
+}
+.lab-session-id code { font-size: 11px; }
+#lab-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  max-width: 360px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 18px;
+  background: rgba(29, 29, 31, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none;
+  border-radius: 14px;
+  color: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  z-index: 200;
+  display: none;
+}
+#lab-toast.show { display: block; animation: lab-toast-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes lab-toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+</head>
+<body>
+
+<nav class="tab-bar" role="tablist">
+  <button type="button" class="active" data-tab="arch" id="tab-arch" aria-selected="true">Architecture</button>
+  <button type="button" data-tab="lab" id="tab-lab" aria-selected="false">Marketing Engine</button>
+</nav>
+
+<div id="panel-arch" class="tab-panel visible" role="tabpanel">
+<div class="arch-layout">
+<aside class="next-sidebar" aria-label="Next steps">
+  <h2>Engine progress</h2>
+  <div class="engine-total">
+    <div class="pct-big" id="engine-pct-label">—%</div>
+    <div class="pct-bar-wrap"><div class="pct-bar-fill" id="engine-pct-bar" style="width:0%"></div></div>
+    <div class="next-meta" id="engine-pct-sub">Across backend → publish pipeline</div>
+  </div>
+</aside>
+<div class="cv-wrap">
+<div class="pg">
+<div class="hd">
+<div class="ti">Marketing Engine V2 — Systems diagram</div>
+<div class="lg"><span><span class="lgd" style="background:#f59e0b"></span>Backend / engine</span><span><span class="lgd" style="background:#5b9bd5"></span>User + Frontend</span> · <span style="color:var(--text-3)">click a box for detail</span></div>
+</div>
+<div class="cv" id="cv" style="position:relative;height:720px;background:#15171a;border-radius:12px;overflow:hidden">
+
+<svg style="position:absolute;top:0;left:0;z-index:1" width="1040" height="720" id="svg">
+<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#777" stroke-width="1.2" stroke-linecap="round"/></marker></defs>
+</svg>
+
+<div style="position:absolute;left:285px;top:34px;height:430px;border-left:1px dashed #3a3a3a;z-index:0"></div>
+<div style="position:absolute;left:705px;top:34px;height:430px;border-left:1px dashed #3a3a3a;z-index:0"></div>
+
+<div style="position:absolute;left:18px;top:4px;font-size:13px;font-weight:600;color:#e2e8f0">User</div>
+<div style="position:absolute;left:18px;top:22px;font-size:8px;color:#777;letter-spacing:.6px">AUTOMATIONS / INTEGRATIONS</div>
+<div style="position:absolute;left:26px;top:44px;font-size:8px;color:#666">MCP servers</div>
+<div style="position:absolute;left:300px;top:4px;font-size:13px;font-weight:600;color:#fbbf24">Backend</div>
+<div style="position:absolute;left:305px;top:48px;font-size:10px;color:#fbbf24">Repo</div>
+<div style="position:absolute;left:740px;top:4px;font-size:13px;font-weight:600;color:#9ec5e8">Frontend</div>
+<div style="position:absolute;left:168px;top:498px;font-size:12px;font-weight:600;color:#e2e8f0">Scraper</div>
+
+<div class="nd dist" id="u0" style="left:24px;top:66px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('notion')"><div class="nl">Work Organiser (Notion)</div></div>
+<div class="nd dist" id="u1" style="left:24px;top:120px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('transcripts')"><div class="nl">Call Transcripts</div></div>
+<div class="nd dist" id="u2" style="left:24px;top:162px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('messaging')"><div class="nl">Company Messaging tool (Slack/Telegram)</div></div>
+<div class="nd dist" id="u3" style="left:24px;top:222px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('li_mcp')"><div class="nl">LinkedIn</div></div>
+<div class="nd dist" id="u4" style="left:24px;top:262px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('email')"><div class="nl">Email</div></div>
+
+<div class="nd dist" id="kb" style="left:315px;top:70px;width:150px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('kb')"><div class="nl">Knowledge Base</div></div>
+<div class="nd dist" id="rules" style="left:315px;top:116px;width:100px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('rules')"><div class="nl">Rules</div></div>
+<div class="nd dist" id="harness" style="left:308px;top:248px;width:120px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('harness')"><div class="nl">Agent Harness</div></div>
+<div class="nd dist" id="llm" style="left:505px;top:205px;width:72px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('llmnode')"><div class="nl">LLM</div></div>
+<div class="nd dist" id="design" style="left:360px;top:352px;width:140px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('design')"><div class="nl">Design System</div></div>
+<div class="nd dist" id="memory" style="left:356px;top:398px;width:156px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('memory')"><div class="nl">Obsidian Memory</div></div>
+
+<div class="nd dist" id="input" style="left:835px;top:66px;width:90px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('input')"><div class="nl">Input</div></div>
+<div class="nd dist" id="ideas" style="left:742px;top:138px;width:128px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('ideas')"><div class="nl">llm Ideas Generation</div></div>
+<div class="nd dist" id="braindump" style="left:888px;top:138px;width:118px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('braindump')"><div class="nl">Insert BrainDump</div></div>
+<div class="nd dist" id="edits" style="left:760px;top:212px;width:216px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('edits')"><div class="nl">Manual Edits + Feedback</div></div>
+<div class="nd dist" id="textout" style="left:846px;top:294px;width:100px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('textout')"><div class="nl">Text Output</div></div>
+<div class="nd dist" id="imageout" style="left:846px;top:362px;width:100px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('imageout')"><div class="nl">Image Output</div></div>
+
+<div class="nd dist" id="account" style="left:214px;top:582px;width:82px;border-radius:50%;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('scraper')"><div class="nl" style="font-size:10px">User Account</div></div>
+
+</div>
+</div>
+</div>
+</div>
+
+<div class="ov" id="ov" onclick="cd()"></div>
+<div class="dp" id="dp"><button class="dx" onclick="cd()">✕</button><div id="dcc"></div></div>
+</div><!-- end panel-arch -->
+
+<div id="panel-lab" class="tab-panel" role="tabpanel" aria-label="Marketing Engine">
+<div class="lab-wrap">
+  <div class="lab-header">
+    <div class="lab-header-row">
+      <h1><img src="assets/lemur-logo.png" alt="" class="lab-logo" width="36" height="36" decoding="async" /><span>Marketing Engine</span></h1>
+      <span id="lab-demo-badge" class="lab-demo-badge loading" title="Engine health">Checking…</span>
+    </div>
+  </div>
+
+  <div class="lab-subtabs" role="tablist" aria-label="Lab mode">
+    <button type="button" class="lab-subtab active" id="lab-subtab-content" data-lab-sub="content" role="tab" aria-selected="true">Content</button>
+    <button type="button" class="lab-subtab" id="lab-subtab-design" data-lab-sub="design" role="tab" aria-selected="false">Design</button>
+  </div>
+
+  <div id="lab-sub-content" class="lab-subpanel visible" role="tabpanel">
+  <div class="lab-grid">
+    <div class="lab-box lab-composer-box">
+      <div class="lab-intent" role="tablist" aria-label="Starting point">
+        <button type="button" class="lab-intent-btn active" data-lab-intent="idea" role="tab" aria-selected="true">I have an idea</button>
+        <button type="button" class="lab-intent-btn" data-lab-intent="suggest" role="tab" aria-selected="false">Find a topic</button>
+      </div>
+      <p id="lab-intent-hint" class="lab-intent-hint">Bring your angle, links, or rough notes — Send loads voice + rules and drafts the post.</p>
+
+      <div class="lab-composer-input">
+        <label for="braindump" id="braindump-label">Your idea</label>
+        <textarea id="braindump" class="lab-input" rows="5" placeholder="Your idea, angle, links, or what you want drafted…"></textarea>
+        <div class="lab-composer-actions">
+          <button type="button" class="lab-generate-btn" id="btn-generate-claude" disabled title="Requires ANTHROPIC_API_KEY in .env">Generate</button>
+          <button type="button" class="lab-send-btn" id="btn-send-claude" aria-label="Copy bundle for Claude Desktop" title="Copy bundle for Claude Desktop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="topic-picker" class="lab-topic-pick" hidden>
+        <h4>Pick a topic to draft</h4>
+        <p class="lab-intent-hint" style="margin-bottom:10px">Click an option, then draft it.</p>
+        <div id="topic-loading" class="topic-loading" hidden>
+          <span class="topic-spinner" aria-hidden="true"></span>
+          <span>Finding 4 topics from strategy, coverage &amp; latest calls…</span>
+        </div>
+        <div id="topic-cards" class="topic-cards" role="radiogroup" aria-label="Suggested topics"></div>
+        <button type="button" class="lab-generate-btn" id="btn-draft-topic" hidden style="margin-top:12px;width:100%">Draft this topic</button>
+      </div>
+
+      <div id="dropzone" class="dropzone lab-dropzone" tabindex="0" role="button" aria-label="Upload context files">
+        <span class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 16V4m0 0 4 4m-4-4 4-4"/>
+            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+          </svg>
+        </span>
+        <span class="dropzone-label">Drop files here</span>
+        <span class="dropzone-hint">or click to browse</span>
+        <input type="file" id="filepick" multiple accept=".md,.txt,.json,.csv,text/plain,text/markdown,application/json" style="display:none" />
+      </div>
+      <div id="filelist" class="file-list"></div>
+
+      <div id="article-skeleton" class="lab-article-skeleton" hidden>
+        <div class="article-skeleton-head">
+          <h4>Article skeleton</h4>
+          <button type="button" class="lab-btn secondary" id="btn-gen-skeleton">Generate skeleton</button>
+        </div>
+        <p class="lab-intent-hint" style="margin:0 0 10px">Generate the structure, edit the bullet arguments, then draft each section into the Response below.</p>
+        <div class="article-section">
+          <div class="article-section-head">
+            <span class="article-section-name">Intro</span>
+            <button type="button" class="lab-btn primary article-gen-section" data-section="intro">Generate intro</button>
+          </div>
+          <textarea id="art-intro" class="lab-input article-bullets" rows="4" placeholder="Bullet arguments for the intro…"></textarea>
+        </div>
+        <div class="article-section">
+          <div class="article-section-head">
+            <span class="article-section-name">Body</span>
+            <button type="button" class="lab-btn primary article-gen-section" data-section="main">Generate body</button>
+          </div>
+          <textarea id="art-main" class="lab-input article-bullets" rows="6" placeholder="Bullet arguments for the body…"></textarea>
+        </div>
+        <div class="article-section">
+          <div class="article-section-head">
+            <span class="article-section-name">Conclusion</span>
+            <button type="button" class="lab-btn primary article-gen-section" data-section="conclusion">Generate conclusion</button>
+          </div>
+          <textarea id="art-conclusion" class="lab-input article-bullets" rows="4" placeholder="Bullet arguments for the conclusion…"></textarea>
+        </div>
+      </div>
+
+      <div class="lab-response-block">
+        <div class="lab-response-header">
+          <h3>Response</h3>
+          <span id="response-status" class="lab-response-status"></span>
+        </div>
+        <div id="lab-response" class="lab-response-edit" contenteditable="true" spellcheck="true"
+          data-placeholder="Your generated post appears here. Edit, then Copy or Save edits."></div>
+        <div class="lab-submit-row">
+          <button type="button" class="lab-copy-output" id="btn-copy-output" title="Copy the final post" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>Copy post</span>
+          </button>
+          <span class="lab-submit-hint" id="submit-hint">Copy the post to publish, or Save edits to teach the engine.</span>
+          <button type="button" class="lab-btn secondary" id="btn-goto-design" hidden>Design →</button>
+          <button type="button" class="lab-btn primary" id="btn-submit-final" disabled>Save edits</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="lab-box settings">
+      <h2>Routing</h2>
+      <label for="brand">Client / Brand</label>
+      <select id="brand"></select>
+      <label for="platform">Content type</label>
+      <select id="platform">
+        <option value="Short posts">Short posts</option>
+        <option value="Articles">Articles</option>
+      </select>
+      <input type="hidden" id="narrative" value="" />
+    </aside>
+  </div>
+  </div>
+
+  <div id="lab-sub-design" class="lab-subpanel" role="tabpanel" hidden>
+    <div class="lab-box lab-design-wrap">
+      <h2>Design lab</h2>
+      <ol class="lab-design-steps">
+        <li>Content tab — paste Claude’s reply, edit the post, click <strong>Save edits</strong></li>
+        <li>This box fills with the visual brief (or paste instructions here)</li>
+        <li><strong>Copy for Claude Design</strong> → paste in Claude Design (your brand loaded)</li>
+        <li>Download image → attach when you publish</li>
+      </ol>
+      <label for="design-brief">Claude Design instructions</label>
+      <textarea id="design-brief" class="lab-input" rows="14" placeholder="Visual brief appears here after Save edits, or paste / write instructions for Claude Design…"></textarea>
+      <div class="lab-design-actions">
+        <button type="button" class="lab-btn primary" id="btn-copy-design">Copy for Claude Design</button>
+        <button type="button" class="lab-btn secondary" id="btn-pull-design">Pull from Response</button>
+        <span id="design-brief-status" class="lab-design-status">No brief yet</span>
+      </div>
+      <p class="lab-workflow-note">Export zip from Send includes rules + <code>VISUAL_BRIEF_RULES.md</code> for your brand's Claude Project. Ask for post + visual brief in one reply — markers <code>━━━ PASTE INTO CLAUDE DESIGN ━━━</code> auto-fill this box.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="lab-toast"></div>
+
+<script>
+/* ----- Tabs ----- */
+function switchTab(name) {
+  var arch = document.getElementById('panel-arch');
+  var lab = document.getElementById('panel-lab');
+  var tArch = document.getElementById('tab-arch');
+  var tLab = document.getElementById('tab-lab');
+  if (name === 'lab') {
+    document.body.classList.add('lab-tab');
+    arch.classList.remove('visible');
+    lab.classList.add('visible');
+    tArch.classList.remove('active');
+    tLab.classList.add('active');
+    tArch.setAttribute('aria-selected', 'false');
+    tLab.setAttribute('aria-selected', 'true');
+    try { localStorage.setItem('me-dash-tab', 'lab'); } catch (e) {}
+  } else {
+    document.body.classList.remove('lab-tab');
+    lab.classList.remove('visible');
+    arch.classList.add('visible');
+    tLab.classList.remove('active');
+    tArch.classList.add('active');
+    tLab.setAttribute('aria-selected', 'false');
+    tArch.setAttribute('aria-selected', 'true');
+    try { localStorage.setItem('me-dash-tab', 'arch'); } catch (e) {}
+    if (typeof drawLines === 'function') setTimeout(drawLines, 50);
+  }
+}
+document.getElementById('tab-arch').addEventListener('click', function () { switchTab('arch'); });
+document.getElementById('tab-lab').addEventListener('click', function () { switchTab('lab'); });
+try {
+  if (localStorage.getItem('me-dash-tab') === 'lab' || location.hash === '#lab' || /[?&]session=/.test(location.search)) {
+    switchTab('lab');
+  }
+} catch (e) {}
+
+/* ----- Architecture diagram (original) ----- */
+function getBox(id) {
+  var el = document.getElementById(id);
+  var cv = document.getElementById('cv');
+  var cr = cv.getBoundingClientRect();
+  var br = el.getBoundingClientRect();
+  return {
+    l: br.left - cr.left, r: br.right - cr.left,
+    t: br.top - cr.top, b: br.bottom - cr.top,
+    cx: br.left - cr.left + br.width / 2, cy: br.top - cr.top + br.height / 2
+  };
+}
+
+function drawLines() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('svg');
+  if (!svg) return;
+  while (svg.children.length > 1) svg.removeChild(svg.lastChild);
+  var BLUE = '#5b9bd5', AMBER = '#f59e0b';
+  function path(d, color, noarrow) {
+    var p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d); p.setAttribute('stroke', color || '#666');
+    p.setAttribute('stroke-width', '1.3'); p.setAttribute('fill', 'none');
+    if (!noarrow) p.setAttribute('marker-end', 'url(#ah)');
+    svg.appendChild(p);
+  }
+  function dot(cx, cy, r, color) {
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
+    c.setAttribute('fill', 'none'); c.setAttribute('stroke', color); c.setAttribute('stroke-width', '1');
+    svg.appendChild(c);
+  }
+  function hz(a, b, color) {
+    var sx = a.r, sy = a.cy, ex = b.l, ey = b.cy, m = (sx + ex) / 2;
+    path('M' + sx + ' ' + sy + ' C' + m + ' ' + sy + ', ' + m + ' ' + ey + ', ' + ex + ' ' + ey, color);
+  }
+  function vt(a, b, color) {
+    var sx = a.cx, sy = a.b, ex = b.cx, ey = b.t, m = (sy + ey) / 2;
+    path('M' + sx + ' ' + sy + ' C' + sx + ' ' + m + ', ' + ex + ' ' + m + ', ' + ex + ' ' + ey, color);
+  }
+  var harness = getBox('harness');
+  ['u0', 'u1', 'u2', 'u3', 'u4'].forEach(function (id) { hz(getBox(id), harness, BLUE); });
+  vt(getBox('kb'), harness, AMBER);
+  vt(getBox('rules'), harness, AMBER);
+  hz(harness, getBox('llm'), AMBER);
+  hz(getBox('llm'), getBox('input'), BLUE);
+  vt(getBox('input'), getBox('ideas'), BLUE);
+  vt(getBox('input'), getBox('braindump'), BLUE);
+  vt(getBox('ideas'), getBox('edits'), BLUE);
+  vt(getBox('braindump'), getBox('edits'), BLUE);
+  vt(getBox('edits'), getBox('textout'), BLUE);
+  vt(harness, getBox('design'), AMBER);
+  vt(harness, getBox('memory'), AMBER);
+  hz(getBox('design'), getBox('imageout'), AMBER);
+  var e = getBox('edits');
+  path('M' + e.l + ' ' + (e.t + 8) + ' C' + (harness.r + 130) + ' ' + (e.t - 34) + ', ' + (harness.r + 40) + ' ' + (harness.cy - 14) + ', ' + harness.r + ' ' + (harness.cy - 14), BLUE);
+  var ac = getBox('account');
+  path('M' + ac.cx + ' ' + ac.t + ' C' + ac.cx + ' ' + (ac.t - 60) + ', ' + harness.cx + ' ' + (harness.b + 60) + ', ' + harness.cx + ' ' + harness.b, AMBER);
+  var cx = ac.cx, cy = ac.cy, R = ac.w / 2;
+  for (var i = 0; i < 11; i++) {
+    var ang = (i / 11) * Math.PI * 2;
+    var ox = cx + Math.cos(ang) * R, oy = cy + Math.sin(ang) * R;
+    var ex2 = cx + Math.cos(ang) * 52, ey2 = cy + Math.sin(ang) * 52;
+    path('M' + ox + ' ' + oy + ' L' + ex2 + ' ' + ey2, BLUE, true);
+    dot(ex2, ey2, 4, BLUE);
+  }
+}
+
+window.addEventListener('load', function () { drawLines(); renderProgress(); });
+window.addEventListener('resize', drawLines);
+
+var PIPELINE_ORDER = ['rules', 'kb', 'archive', 'memory', 'design', 'triggers', 'ideas', 'gate', 'edits'];
+var DISTRIBUTION_KEYS = ['x', 'linkedin', 'blog', 'discord'];
+var NO_BAR_KEYS = ['output'].concat(DISTRIBUTION_KEYS);
+var DIST_NS = { x: 'Short posts', linkedin: 'Long-form', blog: 'Articles', discord: 'Recaps', output: 'Draft + learning' };
+var NODE_MAP = [
+  { el: 'b0', key: 'rules' }, { el: 'b1', key: 'kb' }, { el: 'b2', key: 'archive' }, { el: 'b3', key: 'design' }, { el: 'b4', key: 'memory' },
+  { el: 'llm', key: 'llm' }, { el: 'trg', key: 'triggers' },
+  { el: 'f0', key: 'input' }, { el: 'f1', key: 'routing' }, { el: 'f2', key: 'ideas' }, { el: 'f3', key: 'braindump' }, { el: 'f4', key: 'structure' },
+  { el: 'r0', key: 'gate' }, { el: 'r1', key: 'edits' }, { el: 'r2', key: 'output' },
+  { el: 'c0', key: 'x' }, { el: 'c1', key: 'linkedin' }, { el: 'c2', key: 'blog' }, { el: 'c3', key: 'discord' }
+];
+
+var D = {
+  rules: { s: 'g', t: 'Rules', d: 'Per-brand constitution plus shared writing rules. The constitution is inlined into the system prompt; the agent reads the rest on demand.', f: [{ n: 'brands/<b>/_rules/_core.md', s: 'g', l: 'brand constitution' }, { n: '_shared/rules/WRITING_RULES.md', s: 'g', l: 'master writing rules' }, { n: '_shared/rules/BANNED_PATTERNS.md', s: 'g', l: 'anti-AI audit list' }, { n: '_shared/rules/CONTENT_STRUCTURES.md', s: 'g', l: 'post + article patterns' }], c: 'Client-agnostic rules shared across all brands.' },
+  kb: { s: 'g', t: 'Knowledge base', d: 'Per-brand source material the agent reads to ground copy in real facts.', f: [{ n: 'brands/<b>/_kb/', s: 'g', l: 'white papers, articles, research' }, { n: 'Read / Grep / Glob', s: 'g', l: 'agent reads on demand' }], c: 'Filesystem-direct Obsidian vault.' },
+  archive: { s: 'g', t: 'Content archive', d: 'Generated drafts saved per brand, dated with frontmatter.', f: [{ n: 'brands/<b>/_outputs/', s: 'g', l: 'dated draft notes' }], c: 'Written by Save edits.' },
+  design: { s: 'a', t: 'Design system', d: 'Per-brand design tokens and platform format guidance. Image rendering is a later milestone.', f: [{ n: 'brands/<b>/_design/tokens.yaml', s: 'g', l: 'brand tokens' }, { n: '_shared/platforms/', s: 'g', l: 'Short posts and Articles' }], c: 'Feeds image output (later).' },
+  memory: { s: 'g', t: 'Obsidian memory', d: 'Append-only edit-learnings per brand, fed back into the next generation.', f: [{ n: 'brands/<b>/_memory/LAB_LEARNINGS.md', s: 'g', l: 'edit patterns' }], c: 'Grows on each Save edits.' },
+  llm: { s: 'g', t: 'Agent harness', d: 'Claude Agent SDK over your Claude Code login. Brand-isolated; reads KB and rules, then drafts copy.', f: [{ n: 'engine.generate()', s: 'g', l: '/api/lab/generate' }, { n: 'PreToolUse hook', s: 'g', l: 'brand isolation' }, { n: 'claude-opus-4-8', s: 'g', l: 'default model' }, { n: 'commit-edits', s: 'g', l: 'save draft + learning' }], c: 'No API key needed; uses Claude Code auth.' },
+  triggers: { s: 'g', t: 'Reactive triggers', d: 'External events that warrant content.', f: [{ n: 'Provider change', s: 'g', l: 'infrastructure angle' }, { n: 'New model release', s: 'g', l: 'timely analysis' }, { n: 'Competitor ships', s: 'g', l: 'honest take' }, { n: 'Regulation', s: 'g', l: 'compliance angle' }], c: 'Feeds ideas generation.' },
+  input: { s: 'g', t: 'Input', d: 'Braindump what you want written.', f: [{ n: 'Braindump', s: 'g', l: 'free text' }, { n: 'File drop', s: 'g', l: '.md .txt' }], c: 'Dashboard Content tab.' },
+  routing: { s: 'g', t: 'Routing', d: 'Pick Client / Brand and Platform.', f: [{ n: 'Client / Brand', s: 'g', l: '/api/brands' }, { n: 'Short posts', s: 'g', l: 'social' }, { n: 'Articles', s: 'g', l: 'long-form' }], c: 'Dashboard routing panel.' },
+  ideas: { s: 'g', t: 'Ideas generation', d: 'Generate a draft from the braindump plus brand context.', f: [{ n: 'bundle-pack', s: 'g', l: 'context shown' }, { n: 'generate', s: 'g', l: 'brand voice + rules' }, { n: 'platform guidance', s: 'g', l: 'format' }], c: 'Runs the agent harness.' },
+  braindump: { s: 'g', t: 'Brain dump', d: 'Raw unstructured thoughts.', f: [{ n: 'Lab textarea', s: 'g', l: 'persisted locally' }, { n: 'Drag-drop files', s: 'g', l: 'multi-file' }], c: 'Dashboard Content tab.' },
+  structure: { s: 'g', t: 'Structure + match', d: 'Brand voice, platform format, and rules applied during generation.', f: [{ n: 'Platform guidance', s: 'g', l: 'Short posts / Articles' }, { n: 'Bundle context', s: 'g', l: 'full brand context' }], c: 'Applied automatically on Generate.' },
+  gate: { s: 'g', t: 'Quality gate', d: 'Style and isolation checks.', f: [{ n: 'Voice check', s: 'g', l: 'system prompt' }, { n: 'Specificity', s: 'g', l: 'name, number, date' }, { n: 'Banned patterns', s: 'g', l: '_shared/rules' }, { n: 'Brand mention', s: 'g', l: 'earned only' }, { n: 'Isolation', s: 'g', l: 'PreToolUse hook' }], c: 'Reads _rules/ and _shared/rules/.' },
+  edits: { s: 'g', t: 'Manual edits', d: 'Human catches mismatches and verifies facts.', f: [{ n: 'Human review', s: 'g', l: 'required step' }], c: 'Receives from gate.' },
+  output: { s: 'g', channel: true, t: 'Output', d: 'Save edits writes a dated draft plus a learning, both brand-scoped.', f: [{ n: 'brands/<b>/_outputs/', s: 'g', l: 'dated draft' }, { n: '_memory/LAB_LEARNINGS.md', s: 'g', l: 'edit learning' }], c: 'commit-edits endpoint.' },
+  x: { s: 'g', channel: true, t: 'X (Twitter)', d: 'Distribution channel for short posts and threads.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Short-form social.' },
+  linkedin: { s: 'g', channel: true, t: 'LinkedIn', d: 'Distribution channel for long-form posts.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Professional network.' },
+  blog: { s: 'g', channel: true, t: 'Blog', d: 'Distribution channel for long-form articles.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Long-form.' },
+  discord: { s: 'g', channel: true, t: 'Discord', d: 'Distribution channel for community recaps and announcements.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Casual tone, links welcome.' }
+};
+
+Object.assign(D, {
+  notion: { s: 'a', t: 'Work Organiser (Notion)', d: 'MCP server that pulls tasks, notes and docs from Notion into the engine.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
+  transcripts: { s: 'a', t: 'Call Transcripts', d: 'MCP server that ingests meeting and call transcripts as source material.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
+  messaging: { s: 'a', t: 'Company Messaging', d: 'MCP server for Slack / Telegram messages as context.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
+  li_mcp: { s: 'a', t: 'LinkedIn', d: 'MCP server that pulls LinkedIn activity and context.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
+  email: { s: 'a', t: 'Email', d: 'MCP server that brings email threads in as source material.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
+  harness: { s: 'g', t: 'Agent Harness', d: 'The orchestrator. Reads the Repo (Knowledge Base + Rules), drafts via the LLM, writes Obsidian Memory and the Design System. Brand-isolated.', f: [{ n: 'engine.generate()', s: 'g', l: '/api/lab/generate' }, { n: 'PreToolUse hook', s: 'g', l: 'brand isolation' }, { n: 'commit-edits', s: 'g', l: 'save draft + learning' }], c: 'Claude Agent SDK over Claude Code auth.' },
+  llmnode: { s: 'g', t: 'LLM', d: 'Claude (default claude-opus-4-8) via the Agent SDK over your Claude Code login. No API key.', f: [{ n: 'claude-opus-4-8', s: 'g', l: 'default model' }, { n: 'Claude Code auth', s: 'g', l: 'no API key' }], c: 'Model behind the harness.' },
+  textout: { s: 'g', t: 'Text Output', d: 'The finished copy, saved to the brand vault on Save edits.', f: [{ n: 'brands/<b>/_outputs/', s: 'g', l: 'dated draft' }], c: 'From Manual Edits + Feedback.' },
+  imageout: { s: 'a', t: 'Image Output', d: 'Rendered from the Design System using brand tokens. Image rendering is a later milestone.', f: [{ n: '_design/tokens.yaml', s: 'g', l: 'brand tokens' }, { n: 'renderer', s: 'a', l: 'M4' }], c: 'Fed by the Design System.' },
+  scraper: { s: 'a', t: 'Scraper', d: 'Ingests a user account social graph into the engine as source signal.', f: [{ n: 'User account', s: 'a', l: 'graph crawl' }, { n: 'feeds Agent Harness', s: 'a', l: 'source signal' }], c: 'Planned (later milestone).' }
+});
+
+function fileScore(s) { return s === 'g' ? 100 : s === 'a' ? 50 : 0; }
+function nodePct(d) {
+  if (d.f && d.f.length) {
+    var sum = 0;
+    d.f.forEach(function (x) { sum += fileScore(x.s); });
+    return Math.round(sum / d.f.length);
+  }
+  return fileScore(d.s);
+}
+function statusFromPct(p) { return p >= 100 ? 'g' : p > 0 ? 'a' : 'r'; }
+
+function ensureNodeChrome(el) {
+  if (!el.querySelector('.nd-bar-wrap')) {
+    var pri = document.createElement('span');
+    pri.className = 'nd-pri r';
+    pri.style.display = 'none';
+    el.insertBefore(pri, el.firstChild);
+    var wrap = document.createElement('div');
+    wrap.className = 'nd-bar-wrap';
+    var fill = document.createElement('div');
+    fill.className = 'nd-bar-fill r';
+    wrap.appendChild(fill);
+    el.appendChild(wrap);
+  }
+}
+
+function renderProgress() {
+  var cv = document.getElementById('cv');
+  if (cv) Array.prototype.forEach.call(cv.querySelectorAll('.nd'), function (el) { el.classList.add('dist'); });
+  var label = document.getElementById('engine-pct-label');
+  var bar = document.getElementById('engine-pct-bar');
+  var sub = document.getElementById('engine-pct-sub');
+  if (label) label.textContent = 'V2';
+  if (bar) bar.style.width = '100%';
+  if (sub) sub.textContent = 'Systems diagram — User to Backend to Frontend';
+}
+
+function od(id) {
+  var d = D[id]; if (!d) return;
+  var isNoBar = NO_BAR_KEYS.indexOf(id) >= 0;
+  var h;
+  if (isNoBar && id !== 'output') {
+    h = '<span class="dss g">Active channel</span>';
+    h += '<div class="dtt">' + d.t + '</div><div class="ddd">' + d.d + '</div>';
+  } else if (id === 'output') {
+    h = '<span class="dss g">Pipeline ready</span>';
+    h += '<div class="dtt">' + d.t + '</div><div class="ddd">' + d.d + '</div>';
+  } else {
+    var pct = nodePct(d);
+    var st = statusFromPct(pct);
+    var sl = { g: 'Complete', a: 'Partial', r: 'Not started' };
+    h = '<span class="dss ' + st + '">' + sl[st] + ' · ' + pct + '%</span>';
+    h += '<div class="dppct">' + pct + '% complete</div>';
+    h += '<div class="dppct-bar"><div class="dppct-fill nd-bar-fill ' + st + '" style="width:' + pct + '%"></div></div>';
+    h += '<div class="dtt">' + d.t + '</div><div class="ddd">' + d.d + '</div>';
+  }
+  if (d.f && d.f.length) {
+    h += '<div class="dsl">Files</div>';
+    d.f.forEach(function (f) {
+      h += '<div class="df"><span class="fd ' + f.s + '"></span>' + f.n + '<span class="fl">' + f.l + '</span></div>';
+    });
+  }
+  if (d.c) h += '<div class="dsl">Connections</div><div class="dc">' + d.c + '</div>';
+  document.getElementById('dcc').innerHTML = h;
+  document.getElementById('dp').classList.add('open');
+  document.getElementById('ov').classList.add('open');
+  document.querySelectorAll('.nd').forEach(function (n) { n.classList.remove('active'); });
+  var ev = typeof window.event !== 'undefined' ? window.event : null;
+  if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+}
+
+function cd() {
+  document.getElementById('dp').classList.remove('open');
+  document.getElementById('ov').classList.remove('open');
+  document.querySelectorAll('.nd').forEach(function (n) { n.classList.remove('active'); });
+}
+
+/* ----- Marketing Engine state ----- */
+var droppedFiles = [];
+var chatMessages = [];
+var claudeOriginal = '';
+var awaitingResponse = false;
+
+var LS = {
+  BD: 'me-lab-braindump',
+  VO: 'me-lab-voice',
+  PL: 'me-lab-platform',
+  NA: 'me-lab-narrative',
+  CHAT: 'me-lab-chat',
+  FILES: 'me-lab-dropped-files',
+  SID: 'me-lab-session-id',
+  LEARN: 'me-lab-learnings',
+  OUT: 'me-lab-claude-out',
+  EDIT: 'me-lab-edited-out',
+  DESIGN: 'me-lab-design-brief',
+  MODE: 'me-lab-intent',
+  TOPICS: 'me-lab-topic-options'
+};
+
+var labIntent = 'idea';
+var topicOptions = [];
+var selectedTopicTitle = '';
+var topicLoading = false;
+var labAnthropicEnabled = false;
+var labAnthropicModel = '';
+var labBridgeEnabled = false;
+
+var INTENT_COPY = {
+  idea: {
+    hint: 'Bring your angle, links, or rough notes — Send loads voice + rules and drafts the post.',
+    label: 'Your idea',
+    placeholder: 'Your idea, angle, links, or what you want drafted…',
+    sendTitle: 'Draft from your idea',
+    requireInput: true
+  },
+  suggest: {
+    hint: 'The engine reads topic coverage, push/rest strategy, and the latest calls, then ranks 4 topics — pick one to draft.',
+    label: 'Constraints (optional)',
+    placeholder: 'Optional: audience, platform nuance, things to avoid…',
+    sendTitle: 'Suggest topics',
+    requireInput: false
+  },
+  pick: {
+    hint: 'You chose a topic from Claude’s list (or typed one). Send drafts the full post + visual brief for that angle.',
+    label: 'Notes for this draft (optional)',
+    placeholder: 'Optional: emphasis, hook, CTA…',
+    sendTitle: 'Draft committed topic',
+    requireInput: false
+  }
+};
+
+var VISUAL_BRIEF_START = /━━━\s*PASTE INTO CLAUDE DESIGN\s*━━━/i;
+var VISUAL_BRIEF_END = /━━━\s*END VISUAL BRIEF\s*━━━/i;
+var VISUAL_IMAGE_START = /━━━\s*IMAGE SEARCH\s*\/\s*GENERATION BRIEF\s*━━━/i;
+var VISUAL_IMAGE_END = /━━━\s*END IMAGE BRIEF\s*━━━/i;
+var labSessionId = '';
+var labLearnings = [];
+var labSyncTimer = null;
+var labBundleSnapshot = null;
+
+function genEnabled() {
+  return labAnthropicEnabled || labBridgeEnabled;
+}
+
+function genSourceLabel() {
+  if (labAnthropicEnabled) return 'Anthropic API · ' + labAnthropicModel;
+  if (labBridgeEnabled) return 'Claude Code (local, no API key)';
+  return '';
+}
+
+function updateGenerateButton() {
+  var genBtn = document.getElementById('btn-generate-claude');
+  if (genBtn) {
+    genBtn.disabled = !genEnabled();
+    genBtn.title = genEnabled()
+      ? ('Generate via ' + genSourceLabel())
+      : 'Add ANTHROPIC_API_KEY to .env, or run the Claude Code bridge watcher';
+  }
+  var resp = document.getElementById('lab-response');
+  if (resp && genEnabled()) {
+    resp.setAttribute('data-placeholder', 'Generated draft appears here. Edit, then Save edits.');
+  }
+}
+
+function refreshAnthropicStatus() {
+  return fetch('/api/lab/anthropic/status')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      labAnthropicEnabled = !!(d && d.configured);
+      labAnthropicModel = (d && d.model) || '';
+      updateGenerateButton();
+      setLabIntent(labIntent, true);
+    })
+    .catch(function () {
+      labAnthropicEnabled = false;
+      updateGenerateButton();
+    });
+}
+
+function refreshBridgeStatus() {
+  return fetch('/api/lab/bridge/status')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      labBridgeEnabled = !!(d && d.available);
+      updateGenerateButton();
+      setLabIntent(labIntent, true);
+    })
+    .catch(function () {
+      labBridgeEnabled = false;
+      updateGenerateButton();
+    });
+}
+
+function refreshEngineDemoBadge() {
+  var el = document.getElementById('lab-demo-badge');
+  if (!el) return;
+  fetch('/api/engine/status')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) {
+        el.textContent = 'Status unavailable';
+        el.className = 'lab-demo-badge warn';
+        return;
+      }
+      if (d.demo_ready) {
+        el.textContent = 'Demo ready';
+        el.className = 'lab-demo-badge ready';
+        el.title = 'No pending transcripts · archives OK';
+      } else {
+        var n = (d.pending_transcripts || []).length + (d.unprocessed_raw || []).length;
+        el.textContent = n ? (n + ' transcript(s) pending') : 'Check engine status';
+        el.className = 'lab-demo-badge warn';
+        el.title = JSON.stringify(d.pending_transcripts || d.unprocessed_raw || []);
+      }
+    })
+    .catch(function () {
+      el.textContent = 'Offline';
+      el.className = 'lab-demo-badge warn';
+    });
+}
+
+function toast(msg) {
+  var t = document.getElementById('lab-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function () { t.classList.remove('show'); }, 3200);
+}
+
+function setStatus(s) {
+  /* status line removed — use toast only */
+  if (s) toast(s);
+}
+
+function initSessionFromQuery() {
+  var m = /[?&]session=([^&]+)/.exec(location.search);
+  if (!m) return;
+  labSessionId = decodeURIComponent(m[1]);
+  try { localStorage.setItem(LS.SID, labSessionId); } catch (e) {}
+}
+
+function ensureSessionId() {
+  if (labSessionId) return labSessionId;
+  initSessionFromQuery();
+  try {
+    if (!labSessionId) labSessionId = localStorage.getItem(LS.SID) || '';
+    if (!labSessionId) {
+      labSessionId = 'lab-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem(LS.SID, labSessionId);
+    }
+  } catch (e) {
+    labSessionId = 'lab-' + Date.now();
+  }
+  return labSessionId;
+}
+
+function getResponseText() {
+  return document.getElementById('lab-response').innerText.trim();
+}
+
+function setResponseText(t) {
+  document.getElementById('lab-response').textContent = t || '';
+  updateSubmitFinalUI();
+}
+
+function setResponseStatus(msg, waiting) {
+  var el = document.getElementById('response-status');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.classList.toggle('waiting', !!waiting);
+}
+
+function getDesignBriefText() {
+  var el = document.getElementById('design-brief');
+  return el ? el.value.trim() : '';
+}
+
+function setDesignBriefText(t) {
+  var el = document.getElementById('design-brief');
+  if (el) el.value = t || '';
+  updateDesignBriefStatus();
+  try { localStorage.setItem(LS.DESIGN, t || ''); } catch (e) {}
+}
+
+function updateDesignBriefStatus() {
+  var st = document.getElementById('design-brief-status');
+  var goto = document.getElementById('btn-goto-design');
+  var t = getDesignBriefText();
+  if (!st) return;
+  if (t.length > 40) {
+    st.textContent = 'Ready — ' + t.length.toLocaleString() + ' chars';
+    st.classList.add('ready');
+    if (goto) goto.hidden = false;
+  } else {
+    st.textContent = t.length ? 'Brief very short — check markers' : 'No brief yet';
+    st.classList.remove('ready');
+    if (goto) goto.hidden = true;
+  }
+}
+
+function extractVisualBrief(text) {
+  if (!text) return '';
+  var m = VISUAL_BRIEF_START.exec(text);
+  if (m) {
+    var start = m.index + m[0].length;
+    var rest = text.slice(start);
+    var endM = VISUAL_BRIEF_END.exec(rest);
+    var body = endM ? rest.slice(0, endM.index) : rest;
+    return body.trim();
+  }
+  m = VISUAL_IMAGE_START.exec(text);
+  if (m) {
+    var start2 = m.index + m[0].length;
+    var rest2 = text.slice(start2);
+    var endM2 = VISUAL_IMAGE_END.exec(rest2);
+    var body2 = endM2 ? rest2.slice(0, endM2.index) : rest2;
+    return ('IMAGE BRIEF\n\n' + body2.trim());
+  }
+  return '';
+}
+
+function stripVisualBrief(text) {
+  if (!text) return '';
+  function removeBlock(src, startRe, endRe) {
+    var m = startRe.exec(src);
+    if (!m) return src;
+    var from = m.index;
+    var rest = src.slice(from);
+    var endM = endRe.exec(rest);
+    var len = endM ? endM.index + endM[0].length : rest.length;
+    return (src.slice(0, from) + src.slice(from + len)).replace(/\n{3,}/g, '\n\n');
+  }
+  var out = removeBlock(text, VISUAL_BRIEF_START, VISUAL_BRIEF_END);
+  out = removeBlock(out, VISUAL_IMAGE_START, VISUAL_IMAGE_END);
+  return out.trim();
+}
+
+// Strip the punctuation tells of AI writing from a post: em/en dashes and colons.
+// Compound-word hyphens (open-weight, rate-limit) are kept.
+function cleanAiTells(text) {
+  if (!text) return text;
+  var out = text;
+  out = out.replace(/\s*[—–]\s*/g, ', ');       // em/en dash used as a break → comma
+  out = out.replace(/(\S) - (\S)/g, '$1, $2');   // spaced hyphen used as a dash → comma
+  out = out.replace(/:[ \t]+(?!\d)/g, '. ');      // colon + space (not 16:9 / 9:30) → period
+  out = out.replace(/,\s*,/g, ', ').replace(/\.\s*\./g, '.').replace(/[ \t]{2,}/g, ' ');
+  out = out.replace(/([.!?]\s+)([a-z])/g, function (_, p, c) { return p + c.toUpperCase(); });
+  return out;
+}
+
+// Move any Claude Design / visual-brief block to the Design tab and return the
+// post with that block removed. Used for fresh drafts and for restored content,
+// so the Content tab never shows design instructions.
+function splitBriefToDesign(raw) {
+  if (!raw) return raw;
+  var brief = extractVisualBrief(raw);
+  if (brief) { setDesignBriefText(brief); updateDesignBriefStatus(); }
+  return stripVisualBrief(raw);
+}
+
+function syncDesignFromResponse(silent) {
+  var brief = extractVisualBrief(getResponseText());
+  if (brief) {
+    setDesignBriefText(brief);
+    if (!silent) toast('Visual brief → Design tab');
+    return true;
+  }
+  if (!silent) toast('No ━━━ PASTE INTO CLAUDE DESIGN ━━━ block in Response');
+  return false;
+}
+
+function copyDesignBrief() {
+  var t = getDesignBriefText();
+  if (!t) {
+    toast('Nothing to copy — pull from Response or Save edits first');
+    return;
+  }
+  navigator.clipboard.writeText(t).then(function () {
+    toast('Copied — paste into Claude Design');
+  }).catch(function () {
+    toast('Copy failed');
+  });
+}
+
+function switchLabSub(name) {
+  var content = document.getElementById('lab-sub-content');
+  var design = document.getElementById('lab-sub-design');
+  var tContent = document.getElementById('lab-subtab-content');
+  var tDesign = document.getElementById('lab-subtab-design');
+  if (name === 'design') {
+    updateDesignBriefStatus();
+    content.classList.remove('visible');
+    design.classList.add('visible');
+    design.hidden = false;
+    tContent.classList.remove('active');
+    tDesign.classList.add('active');
+    tContent.setAttribute('aria-selected', 'false');
+    tDesign.setAttribute('aria-selected', 'true');
+  } else {
+    design.classList.remove('visible');
+    design.hidden = true;
+    content.classList.add('visible');
+    tDesign.classList.remove('active');
+    tContent.classList.add('active');
+    tDesign.setAttribute('aria-selected', 'false');
+    tContent.setAttribute('aria-selected', 'true');
+  }
+  try { localStorage.setItem('me-lab-subtab', name); } catch (e) {}
+}
+
+document.querySelectorAll('.lab-subtab').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    switchLabSub(btn.getAttribute('data-lab-sub'));
+  });
+});
+
+function updateSubmitFinalUI() {
+  var text = getResponseText();
+  var copyBtn = document.getElementById('btn-copy-output');
+  if (copyBtn) copyBtn.disabled = !text;
+  var btn = document.getElementById('btn-submit-final');
+  if (!btn) return;
+  btn.disabled = !text;
+  if (extractVisualBrief(text)) {
+    var g = document.getElementById('btn-goto-design');
+    if (g) g.hidden = false;
+  }
+}
+
+function getLabPayload() {
+  var p = {
+    id: ensureSessionId(),
+    braindump: document.getElementById('braindump').value,
+    voice: resolveVoice(),
+    platform: document.getElementById('platform').value,
+    narrative: document.getElementById('narrative').value,
+    chatMessages: chatMessages,
+    learnings: labLearnings,
+    claudeOutput: claudeOriginal,
+    editedOutput: getResponseText(),
+    droppedFiles: droppedFiles.map(function (f) { return { name: f.name, text: f.text }; }),
+    designBrief: getDesignBriefText()
+  };
+  if (window._lastLabBundle) p.lastBundle = window._lastLabBundle;
+  return p;
+}
+
+function pushSessionToServer() {
+  return fetch('/api/lab/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(getLabPayload())
+  }).catch(function () {});
+}
+
+function pullSessionFromServer() {
+  var sid = ensureSessionId();
+  return fetch('/api/lab/session?id=' + encodeURIComponent(sid))
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return;
+      if (data.braindump != null) document.getElementById('braindump').value = data.braindump;
+      if (data.platform) applyPlatformSelect(data.platform);
+      // V2: platform is not derived from voice (voice now carries the brand ref).
+      if (data.narrative != null) document.getElementById('narrative').value = data.narrative;
+      if (data.chatMessages) chatMessages = data.chatMessages;
+      if (data.learnings) labLearnings = data.learnings;
+      if (data.lastBundle) window._lastLabBundle = data.lastBundle;
+      if (data.droppedFiles && Array.isArray(data.droppedFiles)) {
+        droppedFiles = data.droppedFiles;
+        renderFileList();
+      }
+      if (data.claudeOutput) claudeOriginal = data.claudeOutput;
+      if (data.editedOutput && !/OPTION\s*1\b[\s\S]*RECOMMENDED:/i.test(data.editedOutput) && document.activeElement !== document.getElementById('lab-response')) {
+        setResponseText(cleanAiTells(splitBriefToDesign(data.editedOutput)));
+      }
+      if (data.designBrief != null) setDesignBriefText(data.designBrief);
+      updateSubmitFinalUI();
+    })
+    .catch(function () {});
+}
+
+function startLabSync() {
+  if (labSyncTimer) return;
+  labSyncTimer = setInterval(function () {
+    if (!document.getElementById('panel-lab').classList.contains('visible')) return;
+    pullSessionFromServer();
+  }, 3000);
+}
+
+function loadLabFromStorage() {
+  try {
+    ensureSessionId();
+    var bd = localStorage.getItem(LS.BD);
+    if (bd) document.getElementById('braindump').value = bd;
+    var p = localStorage.getItem(LS.PL);
+    if (p) applyPlatformSelect(p);
+    else {
+      var v = localStorage.getItem(LS.VO);
+      // V2: platform is not derived from voice (voice now carries the brand ref).
+    }
+    var n = localStorage.getItem(LS.NA); if (n) document.getElementById('narrative').value = n;
+    var c = localStorage.getItem(LS.CHAT);
+    if (c) chatMessages = JSON.parse(c);
+    var lr = localStorage.getItem(LS.LEARN);
+    if (lr) labLearnings = JSON.parse(lr);
+    var df = localStorage.getItem(LS.FILES);
+    if (df) {
+      try { droppedFiles = JSON.parse(df); renderFileList(); } catch (e) {}
+    }
+    // Topic options live in cards, never in the Response box — drop any stale option list.
+    var isOptionList = function (t) { return /OPTION\s*1\b[\s\S]*RECOMMENDED:/i.test(t || ''); };
+    var co = localStorage.getItem(LS.OUT);
+    if (co && isOptionList(co)) { localStorage.removeItem(LS.OUT); co = ''; }
+    if (co) claudeOriginal = co;
+    var ed = localStorage.getItem(LS.EDIT);
+    if (ed && isOptionList(ed)) { localStorage.removeItem(LS.EDIT); ed = ''; }
+    if (ed) setResponseText(cleanAiTells(splitBriefToDesign(ed)));
+    var db = localStorage.getItem(LS.DESIGN);
+    if (db) setDesignBriefText(db);
+    var sub = localStorage.getItem('me-lab-subtab');
+    if (sub === 'design') switchLabSub('design');
+    else switchLabSub('content');
+    var mode = localStorage.getItem(LS.MODE);
+    if (mode === 'pick') mode = 'suggest'; // legacy: pick is now a sub-state of suggest
+    if (mode === 'idea' || mode === 'suggest') labIntent = mode;
+    // Don't restore stale topic options — "Find a topic" regenerates fresh on entry.
+    try { localStorage.removeItem(LS.TOPICS); } catch (e) {}
+    topicOptions = [];
+    pullSessionFromServer();
+    startLabSync();
+    setLabIntent(labIntent || 'idea', true);
+  } catch (e) {}
+}
+
+function saveLabToStorage(silent) {
+  try {
+    localStorage.setItem(LS.BD, document.getElementById('braindump').value);
+    localStorage.setItem(LS.PL, document.getElementById('platform').value);
+    localStorage.setItem(LS.NA, document.getElementById('narrative').value);
+    localStorage.setItem(LS.CHAT, JSON.stringify(chatMessages));
+    localStorage.setItem(LS.LEARN, JSON.stringify(labLearnings));
+    localStorage.setItem(LS.OUT, claudeOriginal);
+    localStorage.setItem(LS.EDIT, getResponseText());
+    localStorage.setItem(LS.DESIGN, getDesignBriefText());
+    try { localStorage.setItem(LS.FILES, JSON.stringify(droppedFiles)); } catch (e) {}
+    localStorage.setItem(LS.MODE, labIntent);
+    try { localStorage.setItem(LS.TOPICS, JSON.stringify(topicOptions)); } catch (e) {}
+    pushSessionToServer();
+    if (!silent) toast('saved');
+  } catch (e) {
+    if (!silent) toast('save failed');
+  }
+}
+
+function migratePlatformValue(v) {
+  var map = {
+    X: 'Short posts',
+    LinkedIn: 'Articles',
+    Blog: 'Articles',
+    Discord: 'Short posts'
+  };
+  return map[v] || v;
+}
+
+function resolveVoice() {
+  // V2: the "voice" carried in every payload is the selected tenant/brand
+  // reference. The backend resolves the brand's actual voice from its config.
+  var el = document.getElementById('brand');
+  return el && el.value ? el.value : '';
+}
+
+function applyPlatformSelect(value) {
+  var el = document.getElementById('platform');
+  var v = migratePlatformValue(value || '');
+  var allowed = ['Short posts', 'Articles'];
+  if (allowed.indexOf(v) >= 0) el.value = v;
+  updateArticleUI();
+}
+
+function persistBraindump() {
+  try { localStorage.setItem(LS.BD, document.getElementById('braindump').value); } catch (e) {}
+}
+
+document.getElementById('braindump').addEventListener('input', persistBraindump);
+
+function setLabIntent(mode, silent) {
+  if (!INTENT_COPY[mode]) mode = 'idea';
+  labIntent = mode;
+  document.querySelectorAll('.lab-intent-btn').forEach(function (btn) {
+    var on = btn.getAttribute('data-lab-intent') === mode;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  var copy = INTENT_COPY[mode];
+  var hint = copy.hint;
+  if (genEnabled()) {
+    hint = hint.replace(/Send loads voice \+ rules and drafts the post\./, 'Generate drafts straight into Response below.');
+    hint = hint.replace(/Send drafts the full post \+ visual brief for that angle\./, 'Generate drafts the full post + visual brief into Response below.');
+    if (mode === 'suggest') hint = hint.replace(/Claude reads/, 'Generate reads');
+  } else if (hint.indexOf('ANTHROPIC_API_KEY') < 0) {
+    hint += ' Or Copy bundle → paste into Claude Desktop.';
+  }
+  document.getElementById('lab-intent-hint').textContent = hint;
+  document.getElementById('braindump-label').textContent = copy.label;
+  document.getElementById('braindump').placeholder = copy.placeholder;
+  var sendBtn = document.getElementById('btn-send-claude');
+  sendBtn.title = 'Copy bundle for Claude Desktop · ' + copy.sendTitle;
+  sendBtn.setAttribute('aria-label', sendBtn.title);
+  sendBtn.classList.toggle('suggest', mode === 'suggest');
+
+  var isSuggest = mode === 'suggest';
+  // "Find a topic" = only the 4 options. "I have an idea" = only the input + files.
+  var composer = document.querySelector('.lab-composer-input');
+  if (composer) composer.hidden = isSuggest;
+  var dz = document.getElementById('dropzone'); if (dz) dz.hidden = isSuggest;
+  var fl = document.getElementById('filelist'); if (fl) fl.hidden = isSuggest;
+
+  if (!isSuggest) selectedTopicTitle = '';
+  var picker = document.getElementById('topic-picker');
+  if (picker) picker.hidden = !isSuggest;
+  if (isSuggest) renderTopicCards();
+  updateDraftTopicButton();
+  updateArticleUI();
+  updateGenButtonLabel();
+  var genBtn = document.getElementById('btn-generate-claude');
+  if (genBtn) genBtn.disabled = !genEnabled();
+
+  // Entering "Find a topic" auto-generates the 4 options (with a loading icon).
+  if (isSuggest && !silent && !topicOptions.length && !topicLoading) {
+    requestTopicSuggestions();
+  }
+
+  if (!silent) {
+    try { localStorage.setItem(LS.MODE, mode); } catch (e) {}
+    saveLabToStorage(true);
+  }
+}
+
+function updateDraftTopicButton() {
+  var b = document.getElementById('btn-draft-topic');
+  if (!b) return;
+  b.hidden = !(labIntent === 'suggest' && selectedTopicTitle && !isArticles());
+  b.disabled = !genEnabled();
+}
+
+function showTopicLoading(on) {
+  topicLoading = on;
+  var el = document.getElementById('topic-loading');
+  if (el) el.hidden = !on;
+  if (on) {
+    var cards = document.getElementById('topic-cards');
+    if (cards) cards.innerHTML = '';
+    var b = document.getElementById('btn-draft-topic');
+    if (b) b.hidden = true;
+  }
+}
+
+function requestTopicSuggestions() {
+  if (!genEnabled()) { toast('Start the Claude Code bridge or add a key to find topics'); return; }
+  var picker = document.getElementById('topic-picker');
+  if (picker) picker.hidden = false;
+  selectedTopicTitle = '';
+  showTopicLoading(true);
+  updateArticleUI();
+  var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
+  toast('Finding 4 topics…' + (viaBridge ? ' (via Claude Code)' : ''));
+  runGenerate(buildGeneratePayload('suggest')).then(function (d) {
+    if (d.snapshot) labBundleSnapshot = d.snapshot;
+    topicOptions = parseTopicOptionsFromText(d.text);
+    showTopicLoading(false);
+    renderTopicCards();
+    if (!topicOptions.length) toast('No options parsed — try again');
+    else toast('Pick a topic to draft');
+    saveLabToStorage(true);
+  }).catch(function (err) {
+    showTopicLoading(false);
+    toast((err && err.message) ? err.message : 'Could not find topics');
+  });
+}
+
+document.querySelectorAll('.lab-intent-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    setLabIntent(btn.getAttribute('data-lab-intent'));
+  });
+});
+
+function buildTopicSuggestPrompt() {
+  var pl = document.getElementById('platform').value;
+  var voice = resolveVoice();
+  return [
+    'You are the Marketing Engine topic strategist — not drafting posts yet.',
+    'Content type default: ' + pl + '. Voice hint: ' + voice + '.',
+    '',
+    'Read STRATEGY (push/rest/objectives), TOPICS quantified coverage, TRANSCRIPT notes, and DO_NOT_REPEAT.',
+    'Propose exactly 3 content topics ranked for this week.',
+    '',
+    'For each option include:',
+    '- TITLE (short)',
+    '- WHY NOW (1–2 sentences tied to strategy and/or latest calls)',
+    '- GAP (what coverage gap it fills in topic-index / tracker)',
+    '- VOICE FIT (brand voice)',
+    '',
+    'Use this exact format:',
+    'OPTION 1 — [title]',
+    'WHY NOW: …',
+    'GAP: …',
+    'VOICE: …',
+    '',
+    'OPTION 2 — …',
+    '…',
+    'OPTION 3 — …',
+    '…',
+    '',
+    'RECOMMENDED: Option N — [one line final judgment]',
+    '',
+    'Do not draft the post. Do not include a visual brief.'
+  ].join('\n');
+}
+
+function buildSystemPrompt(intentOverride) {
+  var intent = intentOverride || labIntent;
+  if (intent === 'suggest') return buildTopicSuggestPrompt();
+
+  var pl = document.getElementById('platform').value;
+  var voice = resolveVoice();
+  var nar = document.getElementById('narrative').value.trim();
+  var picked = getPickedTopic();
+  var formatHints = {
+    'Short posts': 'Content type: Short posts (X). Tight, scannable, receipt aesthetic where relevant.',
+    'Articles': 'Content type: Articles (X Article / long-form). Substance over hype; structure for scanability.'
+  };
+  var lines = [
+    'You are helping draft marketing content for the selected brand.',
+    formatHints[pl] || ('Content type: ' + pl + '. Voice file: ' + voice + '.'),
+    'Produce concrete draft(s), not meta-commentary, unless asked.'
+  ];
+  if (intent === 'pick' && picked) {
+    lines.push('User committed to this topic — draft it fully: ' + picked);
+  }
+  if (nar) lines.push('Preferred narrative frame: ' + nar + '.');
+  lines.push(
+    '',
+    'After the post draft, ALWAYS append a visual brief per rules/VISUAL_BRIEF_RULES.md:',
+    'Wrap it exactly between these lines:',
+    '━━━ PASTE INTO CLAUDE DESIGN ━━━',
+    '(platform dimensions, exact on-image text, layout, notes)',
+    '━━━ END VISUAL BRIEF ━━━',
+    'If text-only is better, say so and omit the visual block.'
+  );
+  return lines.join('\n');
+}
+
+function getPickedTopic() {
+  return selectedTopicTitle || '';
+}
+
+function updateGenButtonLabel() {
+  var genBtn = document.getElementById('btn-generate-claude');
+  if (!genBtn) return;
+  if (labIntent === 'suggest') {
+    genBtn.textContent = selectedTopicTitle ? 'Draft this topic' : 'Find 4 topics';
+    genBtn.classList.toggle('suggest', !selectedTopicTitle);
+  } else {
+    genBtn.textContent = 'Generate';
+    genBtn.classList.remove('suggest');
+  }
+}
+
+function topicCardMeta(raw) {
+  if (!raw) return '';
+  var lines = raw.split('\n');
+  lines.shift(); // drop the "OPTION N — title" header line
+  return lines.join('\n').trim();
+}
+
+function selectTopicCard(title) {
+  selectedTopicTitle = title;
+  renderTopicCards();
+  updateGenButtonLabel();
+  updateDraftTopicButton();
+  updateArticleUI();
+  // Articles: seed the narrative from the chosen topic so the skeleton/sections have context.
+  if (isArticles()) {
+    var nar = document.getElementById('narrative');
+    if (nar && !nar.value.trim()) nar.value = title;
+  }
+  saveLabToStorage(true);
+}
+
+function parseTopicOptionsFromText(text) {
+  if (!text) return [];
+  var options = [];
+  var seen = {};
+  // Only match "OPTION N —" at the start of a line, so the RECOMMENDED line
+  // ("RECOMMENDED: Option 1 — …") is never captured as an option. Dedupe by number.
+  var re = /^[ \t]*OPTION\s*(\d+)\s*[—–-]\s*([\s\S]+?)(?=\n[ \t]*(?:WHY NOW|GAP|VOICE|OPTION\s*\d|RECOMMENDED)\b|$)/gim;
+  var m;
+  while ((m = re.exec(text)) !== null) {
+    var n = parseInt(m[1], 10);
+    if (seen[n]) continue;
+    var title = (m[2] || '').split('\n')[0].trim();
+    if (title) { seen[n] = true; options.push({ n: n, title: title, raw: m[0].trim() }); }
+  }
+  if (!options.length) {
+    text.split('\n').forEach(function (line) {
+      var mm = /^\s*(?:OPTION\s*)?(\d+)[.)]\s*(.+)/i.exec(line);
+      var n = mm ? parseInt(mm[1], 10) : 0;
+      if (mm && mm[2].length > 8 && !seen[n]) { seen[n] = true; options.push({ n: n, title: mm[2].trim(), raw: line }); }
+    });
+  }
+  return options;
+}
+
+function renderTopicCards() {
+  var wrap = document.getElementById('topic-cards');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  topicOptions.forEach(function (o) {
+    var selected = o.title === selectedTopicTitle;
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'topic-card' + (selected ? ' selected' : '');
+    card.setAttribute('role', 'radio');
+    card.setAttribute('aria-checked', selected ? 'true' : 'false');
+    var meta = topicCardMeta(o.raw);
+    card.innerHTML =
+      '<div class="topic-card-head"><span class="topic-card-num">Option ' + o.n + '</span></div>' +
+      '<div class="topic-card-title">' + escapeHtml(o.title) + '</div>' +
+      (meta ? '<div class="topic-card-meta">' + escapeHtml(meta) + '</div>' : '');
+    card.addEventListener('click', function () { selectTopicCard(o.title); });
+    wrap.appendChild(card);
+  });
+}
+
+function loadTopicsFromResponse() {
+  var text = getResponseText();
+  if (!text) {
+    toast('Generate topics first');
+    return;
+  }
+  topicOptions = parseTopicOptionsFromText(text);
+  if (!topicOptions.length) {
+    toast('Could not parse OPTION 1/2/3 — check format');
+    return;
+  }
+  selectedTopicTitle = '';
+  renderTopicCards();
+  var picker = document.getElementById('topic-picker');
+  if (picker) picker.hidden = false;
+  updateGenButtonLabel();
+  saveLabToStorage(true);
+}
+
+function buildContextBlock(intentOverride) {
+  var intent = intentOverride || labIntent;
+  var text = document.getElementById('braindump').value.trim();
+  var parts = ['--- CONTEXT_AND_INSTRUCTION ---'];
+  if (intent === 'pick') {
+    var picked = getPickedTopic();
+    parts.push(picked ? ('Committed topic: ' + picked) : '(no topic selected yet)');
+    if (text) parts.push('Additional notes: ' + text);
+  } else if (intent === 'suggest') {
+    parts.push(text ? text : '(no extra constraints — use strategy + topic data only)');
+  } else {
+    parts.push(text || '(empty)');
+  }
+  if (droppedFiles.length) {
+    parts.push('');
+    parts.push('--- UPLOADED FILES (read and analyze all below) ---');
+    parts.push('If you received a zip export, the same files are in the uploads/ folder.');
+    droppedFiles.forEach(function (f) {
+      parts.push('');
+      parts.push('--- FILE: ' + f.name + ' (' + f.text.length + ' chars) ---');
+      parts.push(f.text);
+    });
+  }
+  return parts.join('\n');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderFileList() {
+  var el = document.getElementById('filelist');
+  if (!el) return;
+  if (!droppedFiles.length) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = droppedFiles.map(function (f, i) {
+    var tag = f.isTranscript ? ' · transcript' : '';
+    var check = '<span class="file-loaded-icon" title="Loaded" aria-label="Loaded">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>';
+    return '<div class="file-row"><span class="file-row-main">' + check +
+      '<span class="file-name">' + escapeHtml(f.name) + '</span>' +
+      '<span class="file-meta">' + f.text.length.toLocaleString() + ' chars' + tag + ' · loaded</span></span>' +
+      '<button type="button" data-idx="' + i + '" aria-label="Remove ' + escapeHtml(f.name) + '">remove</button></div>';
+  }).join('');
+  el.querySelectorAll('button[data-idx]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var i = parseInt(btn.getAttribute('data-idx'), 10);
+      droppedFiles.splice(i, 1);
+      renderFileList();
+      saveLabToStorage(true);
+    });
+  });
+}
+
+function looksLikeTranscript(name, text) {
+  var n = (name || '').toLowerCase();
+  if (/transcript|kickoff|standup|sync|meeting|call-notes|friday.?call/i.test(n)) return true;
+  if (!text || text.length < 800) return false;
+  var signals = 0;
+  if (/\d{1,2}:\d{2}(:\d{2})?/.test(text)) signals++;
+  if (/(said|asked|replied|speaker|attendees|transcript)/i.test(text)) signals++;
+  if (/(^|\n)[A-Z][a-z]+\s*:/m.test(text)) signals++;
+  if (/\b(um|uh|yeah|okay)\b/i.test(text) && text.length > 2500) signals++;
+  return signals >= 2;
+}
+
+function isTranscriptMode() {
+  var cb = document.getElementById('flag-transcript');
+  return cb && cb.checked;
+}
+
+function labApiIngestTranscript(payload) {
+  return fetch('/api/transcripts/ingest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function (r) { return r.json(); });
+}
+
+function refreshTranscriptPendingStatus() {
+  var el = document.getElementById('transcript-pending-status');
+  if (!el) return;
+  fetch('/api/transcripts/pending')
+    .then(function (r) { return r.ok ? r.json() : { pending: [] }; })
+    .then(function (d) {
+      var pending = d.pending || [];
+      if (!pending.length) {
+        el.textContent = 'No transcripts waiting for Cursor.';
+        return;
+      }
+      el.textContent = pending.length + ' pending — newest: ' + pending[pending.length - 1].path;
+    })
+    .catch(function () { el.textContent = ''; });
+}
+
+function collectTranscriptPayloads() {
+  var payloads = [];
+  var flag = isTranscriptMode();
+  var brain = document.getElementById('braindump').value.trim();
+  if (flag && brain.length >= 200) {
+    payloads.push({ text: brain, title: '', filename: 'context-paste.txt', source: 'marketing-engine-context' });
+  }
+  droppedFiles.forEach(function (f) {
+    if (f.isTranscript || flag) {
+      payloads.push({ text: f.text, title: '', filename: f.name, source: 'marketing-engine-upload' });
+    }
+  });
+  return payloads;
+}
+
+function ingestTranscriptsFromLab() {
+  var payloads = collectTranscriptPayloads();
+  if (!payloads.length) {
+    toast('Check “Call transcript” and add paste or file (200+ chars)');
+    return Promise.resolve([]);
+  }
+  var chain = Promise.resolve([]);
+  var results = [];
+  payloads.forEach(function (p) {
+    chain = chain.then(function () {
+      return labApiIngestTranscript(p).then(function (res) {
+        if (res.ok) results.push(res);
+        else toast(res.error || 'Transcript save failed');
+      });
+    });
+  });
+  return chain.then(function () {
+    if (results.length) {
+      var last = results[results.length - 1];
+      toast('Transcript saved → ' + last.path);
+      refreshTranscriptPendingStatus();
+    }
+    return results;
+  });
+}
+
+function addFiles(fileList) {
+  var maxChars = 120000;
+  var total = droppedFiles.reduce(function (n, f) { return n + f.text.length; }, 0);
+  Array.from(fileList).forEach(function (file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var text = String(reader.result || '');
+      if (text.length > maxChars) text = text.slice(0, maxChars) + '\n\n[truncated at 120k chars]';
+      if (total + text.length > 500000) {
+        toast('Total upload size limit reached (~500k chars)');
+        return;
+      }
+      total += text.length;
+      var isTx = looksLikeTranscript(file.name, text);
+      if (isTx) {
+        var cb = document.getElementById('flag-transcript');
+        if (cb) cb.checked = true;
+      }
+      var entry = { name: file.name, text: text, isTranscript: isTx };
+      var existing = droppedFiles.findIndex(function (f) { return f.name === file.name; });
+      if (existing >= 0) droppedFiles[existing] = entry;
+      else droppedFiles.push(entry);
+      renderFileList();
+      saveLabToStorage(true);
+      toast('Added: ' + file.name + (isTx ? ' (transcript)' : ''));
+    };
+    reader.onerror = function () { toast('Could not read: ' + file.name); };
+    reader.readAsText(file);
+  });
+}
+
+function downloadLabZip() {
+  var sid = ensureSessionId();
+  if (!window._lastLabBundle) window._lastLabBundle = buildFullBundle([]);
+  return pushSessionToServer().then(function () {
+    window.location.href = '/api/lab/export?id=' + encodeURIComponent(sid);
+  });
+}
+
+function formatBundlePack(sections) {
+  if (!sections || !sections.length) return '';
+  return sections.map(function (s) {
+    return '--- ' + s.title + ' ---\n' +
+      (s.path ? '(source: ' + s.path + ')\n\n' : '\n') + s.content;
+  }).join('\n\n') + '\n\n';
+}
+
+function formatSnapshotFooter(snapshot) {
+  if (!snapshot) return '';
+  var lines = [
+    '--- SNAPSHOT (consistent read for this bundle) ---',
+    'bundlePackVersion: ' + (snapshot.bundlePackVersion || '1'),
+    'bundleIntent: ' + (snapshot.bundleIntent || ''),
+    'generatedAt: ' + (snapshot.generatedAt || ''),
+    'topicIndexGeneratedAt: ' + (snapshot.topicIndexGeneratedAt || 'unknown'),
+    'directionLastUpdated: ' + (snapshot.directionLastUpdated || 'unknown'),
+    'topicsTrackerLastUpdated: ' + (snapshot.topicsTrackerLastUpdated || 'unknown')
+  ];
+  return lines.join('\n') + '\n';
+}
+
+function fetchBundlePack(intentOverride) {
+  var voice = resolveVoice();
+  var platform = document.getElementById('platform').value;
+  var narrative = document.getElementById('narrative').value.trim();
+  var intent = intentOverride || (labIntent === 'suggest' ? 'suggest-topics' : 'draft');
+  var url = '/api/lab/bundle-pack?voice=' + encodeURIComponent(voice) +
+    '&platform=' + encodeURIComponent(platform) + '&narrative=' + encodeURIComponent(narrative) +
+    '&intent=' + encodeURIComponent(intent);
+  return fetch(url)
+    .then(function (r) { return r.ok ? r.json() : { sections: [] }; })
+    .then(function (d) {
+      labBundleSnapshot = d.snapshot || null;
+      return d.sections || [];
+    })
+    .catch(function () { labBundleSnapshot = null; return []; });
+}
+
+function labApiCommitEdits(payload) {
+  return fetch('/api/lab/commit-edits', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function (r) { return r.json(); });
+}
+
+function labApiSaveDraft(content) {
+  return fetch('/api/lab/save-draft', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      voice: resolveVoice(),
+      platform: document.getElementById('platform').value,
+      narrative: document.getElementById('narrative').value.trim(),
+      content: content,
+      stage: 'drafts',
+      sessionId: ensureSessionId()
+    })
+  }).then(function (r) { return r.json(); });
+}
+
+function labApiLogPublished(topic, draftPath, notes) {
+  return fetch('/api/lab/log-published', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      voice: resolveVoice(),
+      platform: document.getElementById('platform').value,
+      topic: topic || '',
+      draftPath: draftPath || '',
+      notes: notes || '',
+      sessionId: ensureSessionId()
+    })
+  }).then(function (r) { return r.json(); });
+}
+
+function labApiAppendLearning(summary, tips, original, edited, charDelta) {
+  return fetch('/api/lab/append-learning', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      voice: resolveVoice(),
+      platform: document.getElementById('platform').value,
+      narrative: document.getElementById('narrative').value.trim(),
+      summary: summary,
+      tips: tips,
+      original: original,
+      edited: edited,
+      charDelta: charDelta,
+      sessionId: ensureSessionId()
+    })
+  }).then(function (r) { return r.json(); });
+}
+
+function analyzeEdits(original, edited) {
+  var tips = [];
+  var oLen = original.length;
+  var eLen = edited.length;
+  var hedges = ['arguably', 'perhaps', 'might', 'delve', 'leverage', 'robust', 'seamless', 'landscape'];
+  hedges.forEach(function (h) {
+    if (original.toLowerCase().indexOf(h) >= 0 && edited.toLowerCase().indexOf(h) < 0) {
+      tips.push('Removed AI-tell phrasing ("' + h + '").');
+    }
+  });
+  if (eLen < oLen * 0.85) tips.push('Tightened copy (' + oLen + ' → ' + eLen + ' chars).');
+  if (eLen > oLen * 1.15) tips.push('Expanded the draft with more detail.');
+  if (!tips.length) tips.push('Compare line by line — note what you cut vs added for next send.');
+  return { tips: tips, summary: tips[0], charDelta: eLen - oLen };
+}
+
+function buildFullBundle(packSections, intentOverride) {
+  var intent = intentOverride || labIntent;
+  var sys = buildSystemPrompt(intent);
+  var ctx = buildContextBlock(intent);
+  var log = chatMessages.map(function (m) {
+    return '[' + m.role.toUpperCase() + ']\n' + m.content;
+  }).join('\n\n');
+  var learnBlock = '';
+  if (labLearnings.length) {
+    learnBlock = '\n--- APPLY THESE EDITS ON THE NEXT DRAFT (from Submit final) ---\n' +
+      'Match the user\'s edited version, not the raw Claude output. Patterns:\n' +
+      labLearnings.slice(-5).map(function (L, i) {
+        var block = (i + 1) + '. ' + L.summary + '\n   ' + L.tips.join(' ');
+        if (L.editedExcerpt) {
+          block += '\n   Target style (excerpt): "' + L.editedExcerpt.slice(0, 280).replace(/\n/g, ' ') + '…"';
+        }
+        return block;
+      }).join('\n') + '\n';
+  }
+  var snapBlock = formatSnapshotFooter(labBundleSnapshot);
+  return [
+    ':: MARKETING_ENGINE_BUNDLE ::',
+    '',
+    formatBundlePack(packSections),
+    snapBlock,
+    '--- SYSTEM ---',
+    sys,
+    learnBlock,
+    '',
+    ctx,
+    '',
+    '--- CHAT_SO_FAR ---',
+    log || '(no messages yet)',
+    ''
+  ].join('\n');
+}
+
+function copyBundleToClaude(bundle, hasFiles, modeLabel) {
+  return navigator.clipboard.writeText(bundle).then(function () {
+    awaitingResponse = true;
+    claudeOriginal = '';
+    setResponseText('');
+    setResponseStatus('Paste Claude’s reply below', true);
+    var fileNote = hasFiles
+      ? ' (' + droppedFiles.length + ' file(s) in bundle; zip downloading with uploads/)'
+      : '';
+    toast('Copied — ' + modeLabel + fileNote + ' — paste into Claude Desktop');
+    chatMessages.push({
+      role: 'system',
+      content: modeLabel + fileNote + '.'
+    });
+    saveLabToStorage(true);
+    if (hasFiles) setTimeout(function () { downloadLabZip(); }, 400);
+  }).catch(function () {
+    toast('Copy failed — check clipboard permissions');
+    window._lastLabBundle = bundle;
+    saveLabToStorage(true);
+  });
+}
+
+function buildGeneratePayload(intentOverride) {
+  return {
+    platform: document.getElementById('platform').value,
+    voice: resolveVoice(),
+    narrative: document.getElementById('narrative').value.trim(),
+    labIntent: intentOverride || labIntent,
+    braindump: document.getElementById('braindump').value,
+    pickedTopic: getPickedTopic(),
+    droppedFiles: droppedFiles.map(function (f) { return { name: f.name, text: f.text }; }),
+    lineage: labBundleSnapshot
+  };
+}
+
+function applyGeneratedResponse(text, intent) {
+  // Topic suggestions render as cards only — never dump the option list into the Response box.
+  if (intent === 'suggest') {
+    topicOptions = parseTopicOptionsFromText(text);
+    selectedTopicTitle = '';
+    showTopicLoading(false);
+    renderTopicCards();
+    updateGenButtonLabel();
+    saveLabToStorage(true);
+    return;
+  }
+  // Visual brief goes to the Design tab; only the cleaned post shows in the Response box.
+  var hadBrief = !!extractVisualBrief(text);
+  var post = cleanAiTells(splitBriefToDesign(text));
+  claudeOriginal = post;
+  setResponseText(post);
+  awaitingResponse = false;
+  setResponseStatus(hadBrief ? 'Generated · visual brief → Design tab' : 'Generated', false);
+  saveLabToStorage(true);
+}
+
+function runAnthropicGenerate(payload) {
+  return fetch('/api/lab/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function (r) {
+    return r.json().then(function (d) {
+      if (!r.ok || !d || !d.ok) throw new Error((d && d.error) || 'Generate failed');
+      return d;
+    });
+  });
+}
+
+function pollBridgeResult(id, tries) {
+  return fetch('/api/lab/bridge/result?id=' + encodeURIComponent(id))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.ready) {
+        if (!d.ok) throw new Error(d.error || 'Claude Code bridge failed');
+        return d;
+      }
+      if (tries > 900) throw new Error('Timed out waiting for Claude Code — is the bridge watcher running?');
+      if (tries === 8) setResponseStatus('Claude Code is drafting…', true);
+      else if (tries > 8 && tries % 30 === 0) setResponseStatus('Claude Code is still drafting… (' + Math.round(tries * 2 / 60) + ' min)', true);
+      return new Promise(function (resolve) { setTimeout(resolve, 2000); })
+        .then(function () { return pollBridgeResult(id, tries + 1); });
+    });
+}
+
+function runBridgeGenerate(payload) {
+  return fetch('/api/lab/bridge/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function (r) {
+    return r.json().then(function (d) {
+      if (!r.ok || !d || !d.ok) throw new Error((d && d.error) || 'Bridge request failed');
+      return d;
+    });
+  }).then(function (d) {
+    if (d.snapshot) labBundleSnapshot = d.snapshot;
+    return pollBridgeResult(d.id, 0);
+  });
+}
+
+// Route a generate payload to the bridge (no key) or the Anthropic API.
+function runGenerate(payload) {
+  var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
+  return viaBridge ? runBridgeGenerate(payload) : runAnthropicGenerate(payload);
+}
+
+/* ----- Article skeleton (Articles content type) ----- */
+function isArticles() {
+  return document.getElementById('platform').value === 'Articles';
+}
+
+function updateArticleUI() {
+  var box = document.getElementById('article-skeleton');
+  if (!box) return;
+  // Show the skeleton for Articles when writing from an idea, or once a topic is picked.
+  var show = isArticles() && (labIntent === 'idea' || !!selectedTopicTitle);
+  box.hidden = !show;
+}
+
+function collectSkeleton() {
+  var i = (document.getElementById('art-intro').value || '').trim();
+  var m = (document.getElementById('art-main').value || '').trim();
+  var c = (document.getElementById('art-conclusion').value || '').trim();
+  var parts = [];
+  if (i) parts.push('INTRO\n' + i);
+  if (m) parts.push('MAIN\n' + m);
+  if (c) parts.push('CONCLUSION\n' + c);
+  return parts.join('\n\n');
+}
+
+function parseSkeleton(text) {
+  var res = { intro: [], main: [], conclusion: [] };
+  var map = { INTRO: 'intro', MAIN: 'main', CONCLUSION: 'conclusion' };
+  var cur = null;
+  (text || '').split('\n').forEach(function (line) {
+    var h = line.trim().match(/^#{0,3}\s*(INTRO|MAIN|CONCLUSION)\s*:?\s*$/i);
+    if (h) { cur = map[h[1].toUpperCase()]; return; }
+    if (cur) res[cur].push(line);
+  });
+  return {
+    intro: res.intro.join('\n').trim(),
+    main: res.main.join('\n').trim(),
+    conclusion: res.conclusion.join('\n').trim()
+  };
+}
+
+function fillSkeleton(text) {
+  var p = parseSkeleton(text);
+  if (!p.intro && !p.main && !p.conclusion) p.main = (text || '').trim();
+  document.getElementById('art-intro').value = p.intro;
+  document.getElementById('art-main').value = p.main;
+  document.getElementById('art-conclusion').value = p.conclusion;
+  document.querySelectorAll('#article-skeleton .article-section').forEach(function (s) { s.classList.remove('done'); });
+  saveLabToStorage(true);
+}
+
+function appendArticleSection(section, text) {
+  var labels = { intro: 'Introduction', main: 'Body', conclusion: 'Conclusion' };
+  var clean = cleanAiTells(splitBriefToDesign(text));
+  var heading = '## ' + (labels[section] || section);
+  var cur = getResponseText();
+  var block = heading + '\n\n' + clean.trim();
+  var next = cur ? (cur + '\n\n' + block) : block;
+  claudeOriginal = next;
+  setResponseText(next);
+  saveLabToStorage(true);
+}
+
+function generateArticleSkeleton() {
+  if (!genEnabled()) { toast('Start the Claude Code bridge or add a key to Generate'); return; }
+  var btn = document.getElementById('btn-gen-skeleton');
+  btn.disabled = true;
+  var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
+  toast('Generating skeleton…' + (viaBridge ? ' (via Claude Code)' : ''));
+  var payload = buildGeneratePayload(getPickedTopic() ? 'pick' : 'idea');
+  payload.articleMode = 'outline';
+  runGenerate(payload).then(function (d) {
+    if (d.snapshot) labBundleSnapshot = d.snapshot;
+    fillSkeleton(d.text);
+    toast('Skeleton ready — edit bullets, then draft each section');
+  }).catch(function (err) {
+    toast((err && err.message) ? err.message : 'Skeleton failed');
+  }).finally(function () { btn.disabled = false; });
+}
+
+function generateArticleSection(section, btn) {
+  if (!genEnabled()) { toast('Start the Claude Code bridge or add a key to Generate'); return; }
+  var skeleton = collectSkeleton();
+  if (!skeleton) { toast('Generate the skeleton first'); return; }
+  if (btn) btn.disabled = true;
+  var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
+  var label = { intro: 'intro', main: 'main', conclusion: 'conclusion' }[section] || section;
+  setResponseStatus('Drafting ' + label + '…', true);
+  toast('Drafting ' + label + '…' + (viaBridge ? ' (via Claude Code)' : ''));
+  var payload = buildGeneratePayload(getPickedTopic() ? 'pick' : 'idea');
+  payload.articleMode = 'section';
+  payload.section = section;
+  payload.skeleton = skeleton;
+  runGenerate(payload).then(function (d) {
+    if (d.snapshot) labBundleSnapshot = d.snapshot;
+    appendArticleSection(section, d.text);
+    if (btn && btn.closest) { var sec = btn.closest('.article-section'); if (sec) sec.classList.add('done'); }
+    setResponseStatus('Drafted ' + label, false);
+    toast('Done · ' + label);
+  }).catch(function (err) {
+    toast((err && err.message) ? err.message : 'Section failed');
+    setResponseStatus('', false);
+  }).finally(function () { if (btn) btn.disabled = false; });
+}
+
+function generateToClaude(intentOverride) {
+  if (!genEnabled()) {
+    toast('Add ANTHROPIC_API_KEY to .env, or start the Claude Code bridge — or use Copy for Desktop');
+    return;
+  }
+  var intent = intentOverride || labIntent;
+  var copy = INTENT_COPY[intent] || INTENT_COPY.idea;
+  var userText = document.getElementById('braindump').value.trim();
+  if (intent === 'pick' && !getPickedTopic()) {
+    toast('Pick or type a topic first');
+    return;
+  }
+  if (copy.requireInput && !userText && !droppedFiles.length) {
+    toast('Add your idea, context, or at least one file');
+    return;
+  }
+  var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
+  var genBtn = document.getElementById('btn-generate-claude');
+  genBtn.disabled = true;
+  var loadingMsg = intent === 'suggest' ? 'Suggesting topics…' : 'Generating draft…';
+  if (viaBridge) loadingMsg += ' (via Claude Code)';
+  toast(loadingMsg);
+  setResponseStatus(viaBridge ? 'Sending to Claude Code…' : 'Generating…', true);
+  var userMsg = userText;
+  if (intent === 'pick') userMsg = '[Draft topic] ' + getPickedTopic() + (userText ? ' — ' + userText : '');
+  else if (intent === 'suggest') userMsg = userText || '[Suggest topics from strategy + coverage + transcripts]';
+  if (userMsg) chatMessages.push({ role: 'user', content: userMsg });
+  else if (droppedFiles.length) {
+    chatMessages.push({ role: 'user', content: '[Files only] ' + droppedFiles.map(function (f) { return f.name; }).join(', ') });
+  }
+  var ingestFirst = isTranscriptMode() ? ingestTranscriptsFromLab() : Promise.resolve([]);
+  ingestFirst.then(function () {
+    return runGenerate(buildGeneratePayload(intent));
+  }).then(function (data) {
+    if (data.snapshot) labBundleSnapshot = data.snapshot;
+    applyGeneratedResponse(data.text, intent);
+    var usage = data.usage || {};
+    if (usage.output_tokens) toast('Done · ' + usage.output_tokens + ' output tokens');
+    else toast(viaBridge ? 'Done · drafted by Claude Code' : 'Done');
+  }).catch(function (err) {
+    toast((err && err.message) ? err.message : 'Generate failed');
+    setResponseStatus('', false);
+  }).finally(function () {
+    genBtn.disabled = !genEnabled();
+  });
+}
+
+function sendToClaude(intentOverride) {
+  var intent = intentOverride || labIntent;
+  var copy = INTENT_COPY[intent] || INTENT_COPY.idea;
+  var userText = document.getElementById('braindump').value.trim();
+  if (intent === 'pick' && !getPickedTopic()) {
+    toast('Pick or type a topic first');
+    return;
+  }
+  if (copy.requireInput && !userText && !droppedFiles.length) {
+    toast('Add your idea, context, or at least one file');
+    return;
+  }
+  var btn = document.getElementById('btn-send-claude');
+  btn.disabled = true;
+  var loadingMsg = intent === 'suggest' ? 'Loading topic data…' : 'Loading rules + voice…';
+  toast(loadingMsg);
+  var userMsg = userText;
+  if (intent === 'pick') userMsg = '[Draft topic] ' + getPickedTopic() + (userText ? ' — ' + userText : '');
+  else if (intent === 'suggest') userMsg = userText || '[Suggest topics from strategy + coverage + transcripts]';
+  if (userMsg) chatMessages.push({ role: 'user', content: userMsg });
+  else if (droppedFiles.length) {
+    chatMessages.push({ role: 'user', content: '[Files only] ' + droppedFiles.map(function (f) { return f.name; }).join(', ') });
+  }
+  var bundleIntent = intent === 'suggest' ? 'suggest-topics' : 'draft';
+  var ingestFirst = isTranscriptMode() ? ingestTranscriptsFromLab() : Promise.resolve([]);
+  ingestFirst.then(function () {
+    return fetchBundlePack(bundleIntent);
+  }).then(function (sections) {
+    var bundle = buildFullBundle(sections, intent);
+    window._lastLabBundle = bundle;
+    saveLabToStorage(true);
+    var hasFiles = droppedFiles.length > 0;
+    var modeLabel = intent === 'suggest' ? 'Topic suggest bundle' : (intent === 'pick' ? 'Draft bundle' : 'Draft bundle');
+    return copyBundleToClaude(bundle, hasFiles, modeLabel);
+  }).catch(function () {
+    toast('Bundle failed — using thin bundle');
+    var bundle = buildFullBundle([], intent);
+    window._lastLabBundle = bundle;
+    copyBundleToClaude(bundle, false, 'Thin bundle');
+    awaitingResponse = true;
+    setResponseStatus('Paste Claude’s reply below', true);
+    saveLabToStorage(true);
+  }).finally(function () {
+    btn.disabled = false;
+  });
+}
+
+function draftPickedTopic() {
+  if (!getPickedTopic()) {
+    toast('Pick a topic first');
+    return;
+  }
+  var title = getPickedTopic();
+  var nar = document.getElementById('narrative');
+  if (!nar.value.trim()) nar.value = title.split('—')[0].split('-')[0].trim().slice(0, 80);
+  if (genEnabled()) generateToClaude('pick');
+  else sendToClaude('pick');
+}
+
+// Generate routing. "Find a topic": pick → draft; no pick → (re)find options.
+// "I have an idea": draft the idea.
+function onGenerateClick() {
+  if (labIntent === 'suggest') {
+    if (selectedTopicTitle && !isArticles()) { draftPickedTopic(); return; }
+    if (!selectedTopicTitle) { requestTopicSuggestions(); return; }
+    return; // Articles + topic picked → use the skeleton's per-section buttons
+  }
+  if (genEnabled()) generateToClaude();
+  else sendToClaude();
+}
+
+function copyOutput() {
+  var text = getResponseText();
+  if (!text) { toast('Nothing to copy yet'); return; }
+  var btn = document.getElementById('btn-copy-output');
+  navigator.clipboard.writeText(text).then(function () {
+    toast('Content copied');
+    if (btn) {
+      btn.classList.add('copied');
+      var span = btn.querySelector('span');
+      var prev = span ? span.textContent : '';
+      if (span) span.textContent = 'Copied';
+      setTimeout(function () { btn.classList.remove('copied'); if (span) span.textContent = prev || 'Copy'; }, 1600);
+    }
+  }).catch(function () { toast('Copy failed — check clipboard permissions'); });
+}
+
+document.getElementById('btn-generate-claude').addEventListener('click', onGenerateClick);
+document.getElementById('btn-send-claude').addEventListener('click', function () { sendToClaude(); });
+document.getElementById('btn-copy-output').addEventListener('click', copyOutput);
+document.getElementById('btn-draft-topic').addEventListener('click', draftPickedTopic);
+
+document.getElementById('btn-gen-skeleton').addEventListener('click', generateArticleSkeleton);
+document.querySelectorAll('.article-gen-section').forEach(function (b) {
+  b.addEventListener('click', function () { generateArticleSection(b.getAttribute('data-section'), b); });
+});
+['art-intro', 'art-main', 'art-conclusion'].forEach(function (id) {
+  var t = document.getElementById(id);
+  if (t) t.addEventListener('input', function () { saveLabToStorage(true); });
+});
+document.getElementById('platform').addEventListener('change', function () {
+  updateArticleUI();
+  saveLabToStorage(true);
+});
+
+document.getElementById('braindump').addEventListener('keydown', function (e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    onGenerateClick();
+  }
+});
+
+document.getElementById('lab-response').addEventListener('input', function () {
+  var text = getResponseText();
+  if (text && !claudeOriginal) claudeOriginal = text;
+  if (text) setResponseStatus('', false);
+  syncDesignFromResponse(true);
+  saveLabToStorage(true);
+  updateSubmitFinalUI();
+});
+
+document.getElementById('lab-response').addEventListener('paste', function () {
+  setTimeout(function () {
+    var text = getResponseText();
+    if (text && !claudeOriginal) claudeOriginal = text;
+    syncDesignFromResponse(true);
+    updateSubmitFinalUI();
+    saveLabToStorage(true);
+    if (labIntent === 'suggest' && /OPTION\s*\d/i.test(text)) {
+      topicOptions = parseTopicOptionsFromText(text);
+      if (topicOptions.length) {
+        selectedTopicTitle = '';
+        renderTopicCards();
+        document.getElementById('topic-picker').hidden = false;
+        updateGenButtonLabel();
+        toast('Topic options detected — pick one below, then Generate');
+      }
+    }
+  }, 0);
+});
+
+document.getElementById('design-brief').addEventListener('input', function () {
+  updateDesignBriefStatus();
+  saveLabToStorage(true);
+});
+
+document.getElementById('btn-copy-design').addEventListener('click', copyDesignBrief);
+document.getElementById('btn-pull-design').addEventListener('click', function () {
+  syncDesignFromResponse(false);
+});
+document.getElementById('btn-goto-design').addEventListener('click', function () {
+  switchLabSub('design');
+});
+
+document.getElementById('btn-submit-final').addEventListener('click', function () {
+  var btn = document.getElementById('btn-submit-final');
+  var original = claudeOriginal;
+  var edited = getResponseText();
+  if (!edited) {
+    toast('Paste Claude’s reply in Response, edit it, then Save edits');
+    return;
+  }
+  if (!original) original = edited;
+  var brief = extractVisualBrief(edited);
+  if (brief) setDesignBriefText(brief);
+  var draftBody = stripVisualBrief(edited).trim() || edited;
+  var analysis = analyzeEdits(original, draftBody);
+  var narrative = document.getElementById('narrative').value.trim();
+  var topicLabel = narrative || edited.split('\n').filter(Boolean)[0].slice(0, 100);
+  btn.disabled = true;
+  labApiCommitEdits({
+    content: draftBody,
+    edited: edited,
+    original: original,
+    sessionId: ensureSessionId(),
+    voice: resolveVoice(),
+    platform: document.getElementById('platform').value,
+    narrative: narrative,
+    topic: topicLabel,
+    summary: analysis.summary,
+    tips: analysis.tips,
+    charDelta: analysis.charDelta,
+    bundleIntent: labIntent === 'suggest' ? 'suggest-topics' : 'draft',
+    lineage: labBundleSnapshot
+  }).then(function (res) {
+    if (!res || !res.ok) {
+      toast((res && res.error) ? res.error : 'Save failed — is the server running?');
+      return;
+    }
+    labLearnings.push({
+      at: new Date().toISOString(),
+      summary: analysis.summary,
+      tips: analysis.tips,
+      editedExcerpt: edited.slice(0, 500)
+    });
+    chatMessages.push({ role: 'assistant', content: edited });
+    if (res.duplicate) {
+      toast('Already saved (idempotent) — ' + (res.path || ''));
+    } else {
+      toast('Saved draft → ' + res.path + ' · learnings · published log');
+    }
+    claudeOriginal = '';
+    awaitingResponse = false;
+    setResponseText('');
+    setResponseStatus('');
+    updateSubmitFinalUI();
+    saveLabToStorage(true);
+    if (brief) {
+      toast('Visual brief ready in Design tab');
+      switchLabSub('design');
+    }
+  }).catch(function () {
+    toast('Save failed');
+  }).finally(function () {
+    btn.disabled = false;
+    updateSubmitFinalUI();
+  });
+});
+
+['platform', 'narrative'].forEach(function (id) {
+  document.getElementById(id).addEventListener('change', function () { saveLabToStorage(true); });
+});
+
+var dz = document.getElementById('dropzone');
+var fp = document.getElementById('filepick');
+if (dz && fp) {
+  dz.addEventListener('click', function (e) {
+    if (e.target === fp) return;
+    fp.click();
+  });
+  dz.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fp.click(); }
+  });
+  fp.addEventListener('change', function () {
+    if (fp.files.length) addFiles(fp.files);
+    fp.value = '';
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); });
+  });
+  dz.addEventListener('drop', function (e) {
+    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+}
+
+var btnIngestTranscript = document.getElementById('btn-ingest-transcript');
+if (btnIngestTranscript) {
+  btnIngestTranscript.addEventListener('click', function () {
+    btnIngestTranscript.disabled = true;
+    ingestTranscriptsFromLab().finally(function () { btnIngestTranscript.disabled = false; });
+  });
+}
+
+loadLabFromStorage();
+updateArticleUI();
+refreshEngineDemoBadge();
+refreshAnthropicStatus();
+refreshBridgeStatus();
+// Re-poll the bridge so Generate lights up when the watcher starts (or grays out if it stops).
+setInterval(function () { if (!labAnthropicEnabled) refreshBridgeStatus(); }, 6000);
+updateSubmitFinalUI();
+updateDesignBriefStatus();
+refreshTranscriptPendingStatus();
+</script>
+<script>
+(function () {
+  function initBrands() {
+    var sel = document.getElementById('brand');
+    if (!sel) return;
+    fetch('/api/brands').then(function (r) { return r.json(); }).then(function (d) {
+      (d.brands || []).forEach(function (b) {
+        var o = document.createElement('option');
+        o.value = b.ref; o.textContent = b.name + ' (' + b.ref + ')';
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', function () {
+        try { if (typeof fetchBundlePack === 'function') fetchBundlePack(); } catch (e) {}
+      });
+    }).catch(function () {});
+  }
+  if (document.readyState !== 'loading') initBrands();
+  else document.addEventListener('DOMContentLoaded', initBrands);
+})();
+</script>
+</body>
+</html>

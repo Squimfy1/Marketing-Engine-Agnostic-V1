@@ -39,6 +39,8 @@ def assemble_run(
     tenant: TenantConfig,
     brand: BrandConfig,
     input_text: str,
+    platform_label: str | None = None,
+    platform_guidance: str = "",
 ) -> AssembledRun:
     core_rules = _read_core_rules(layout, tenant.id, brand.id)
 
@@ -69,6 +71,10 @@ def assemble_run(
 
     return AssembledRun(
         system_prompt=system_prompt,
-        run_prompt=build_run_prompt(input_text),
+        run_prompt=build_run_prompt(
+            input_text,
+            platform_label=platform_label,
+            platform_guidance=platform_guidance,
+        ),
         options=options,
     )

@@ -16,8 +16,13 @@ folders (use Grep/Read) before writing. Produce polished, ready-to-use copy —
 no preamble, no meta-commentary."""
 
 RUN_INSTRUCTIONS = """\
-Read the brand's _rules/ and _kb/ as needed, then write the requested content.
-Return only the finished copy in markdown."""
+Work efficiently — you have a limited number of tool calls:
+1. If you need facts, Glob/Grep the brand's _kb/ and read at most the 1–2 files
+   directly relevant to this request. Do NOT read the shared writing-rule files;
+   your system prompt already constrains voice and style.
+2. Then write the finished piece and stop.
+Return only the final copy in markdown — no preamble, no commentary, no notes
+about what you read."""
 
 
 def assemble_system_prompt(
@@ -48,7 +53,23 @@ def assemble_system_prompt(
     return "\n".join(parts).strip()
 
 
-def build_run_prompt(input_text: str) -> str:
-    """The user-turn prompt carrying the operator's request."""
+def build_run_prompt(
+    input_text: str,
+    *,
+    platform_label: str | None = None,
+    platform_guidance: str = "",
+) -> str:
+    """The user-turn prompt carrying the operator's request.
 
-    return f"## INPUT\n{input_text.strip()}\n\n{RUN_INSTRUCTIONS}"
+    Optionally folds in the target platform's format guidance (Short posts /
+    Articles) so the draft matches the format without bloating the cached system
+    prompt.
+    """
+
+    parts = ["## INPUT", input_text.strip()]
+    if platform_label:
+        parts += ["", f"## PLATFORM\n{platform_label}"]
+    if platform_guidance.strip():
+        parts += ["", "## PLATFORM GUIDANCE", platform_guidance.strip()]
+    parts += ["", RUN_INSTRUCTIONS]
+    return "\n".join(parts)

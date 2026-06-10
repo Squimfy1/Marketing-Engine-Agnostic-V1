@@ -43,6 +43,10 @@ def vault_root(tmp_path: Path) -> Path:
     layout = VaultLayout(tmp_path)
     layout.shared_dir.mkdir(parents=True, exist_ok=True)
     (layout.shared_dir / "house-style.md").write_text("# House style\n", encoding="utf-8")
+    _write(layout.shared_dir / "rules" / "WRITING_RULES.md", "# Writing rules\n\n- Be concrete.\n")
+    _write(layout.shared_dir / "rules" / "BANNED_PATTERNS.md", "# Banned\n\n- delve\n")
+    _write(layout.shared_dir / "platforms" / "short-posts.md", "# Short posts\n\n- 50-280 words.\n")
+    _write(layout.shared_dir / "platforms" / "articles.md", "# Articles\n\n- 900-1200 words.\n")
     _write(
         layout.tenant_config("acme-co"),
         "id: acme-co\nname: Acme Co\nnotes: Test agency.\n",

@@ -17,7 +17,8 @@ from datetime import datetime, timezone
 
 from marketing_engine.brand.assembler import assemble_run
 from marketing_engine.config.settings import Settings
-from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient
+from marketing_engine.harness.platforms import load_guidance, resolve_platform
+from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient, RunResult
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.memory_tools import append_memory
 from marketing_engine.tools.output_tools import write_output_note
@@ -56,6 +57,40 @@ class MarketingEngine:
         self.layout = VaultLayout(settings.vault_root)
         self.registry = Registry(self.layout)
         self.llm: LLMClient = llm or ClaudeAgentClient()
+
+    async def generate(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        braindump: str,
+        platform: str | None = None,
+        intent: str = "draft",
+    ) -> RunResult:
+        """Generate copy for a brand + platform from a braindump.
+
+        Returns the agent's draft text WITHOUT writing to the vault — the web
+        dashboard is the surface, and the save happens later via commit-edits.
+        Brand-isolated via the assembled, scoped options.
+        """
+
+        if not braindump.strip():
+            raise EngineError("Empty braindump — nothing to generate from.")
+
+        tenant = self.registry.get_tenant(tenant_id)
+        brand = self.registry.get_brand(tenant_id, brand_id)
+        plat = resolve_platform(platform)
+
+        assembled = assemble_run(
+            layout=self.layout,
+            settings=self.settings,
+            tenant=tenant,
+            brand=brand,
+            input_text=braindump,
+            platform_label=plat.label,
+            platform_guidance=load_guidance(self.layout, plat),
+        )
+        return await self.llm.run(assembled.run_prompt, assembled.options)
 
     async def run(
         self,

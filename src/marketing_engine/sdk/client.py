@@ -30,7 +30,7 @@ class AgentRunOptions:
     allowed_tools: list[str] = field(default_factory=lambda: ["Read", "Grep", "Glob"])
     model: str | None = None
     mcp_servers: dict[str, Any] = field(default_factory=dict)
-    max_turns: int = 12
+    max_turns: int = 30
 
 
 @dataclass
@@ -83,16 +83,23 @@ class ClaudeAgentClient:
         texts: list[str] = []
         num_turns = 0
         is_error = False
-        async for message in query(prompt=prompt, options=sdk_options):
-            if isinstance(message, AssistantMessage):
-                for block in message.content:
-                    if isinstance(block, TextBlock):
-                        texts.append(block.text)
-            elif isinstance(message, ResultMessage):
-                num_turns = message.num_turns
-                is_error = bool(message.is_error)
-                if message.result and not texts:
-                    texts.append(message.result)
+        try:
+            async for message in query(prompt=prompt, options=sdk_options):
+                if isinstance(message, AssistantMessage):
+                    for block in message.content:
+                        if isinstance(block, TextBlock):
+                            texts.append(block.text)
+                elif isinstance(message, ResultMessage):
+                    num_turns = message.num_turns
+                    is_error = bool(message.is_error)
+                    if message.result and not texts:
+                        texts.append(message.result)
+        except Exception as exc:
+            # e.g. "Reached maximum number of turns" — salvage any draft the
+            # agent already produced rather than crashing the caller.
+            is_error = not texts
+            if not texts:
+                texts.append(f"[generation error: {exc}]")
 
         return RunResult(
             text="\n\n".join(t for t in texts if t).strip(),

@@ -59,6 +59,26 @@ def run(
     typer.echo(result.text)
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Bind host."),
+    port: int = typer.Option(8765, "--port", "-p", help="Bind port."),
+    vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Use the deterministic fake model — no network, no auth."
+    ),
+) -> None:
+    """Serve the dashboard web UI and the lab API."""
+
+    from marketing_engine.server.app import serve as serve_app
+
+    settings = Settings.from_env(vault_root=vault_root)
+    llm = FakeLLMClient() if dry_run else ClaudeAgentClient()
+    if dry_run:
+        typer.secho("Running with the fake model (--dry-run).", fg=typer.colors.YELLOW)
+    serve_app(settings, host=host, port=port, llm=llm)
+
+
 @app.command(name="list")
 def list_brands(
     vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
