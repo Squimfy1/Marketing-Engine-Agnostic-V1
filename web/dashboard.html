@@ -1280,7 +1280,7 @@ textarea.lab-main-input {
       <div class="lab-header-row">
         <h1><span>Knowledge Base</span></h1>
       </div>
-      <p>Add a client&rsquo;s source material &mdash; white papers, articles, research, product notes. Files save to that brand&rsquo;s <code>_kb/</code> and the engine reads them when generating. Markdown and text files work best; convert PDFs/Word first.</p>
+      <p>Add a client&rsquo;s source material &mdash; white papers, articles, research, product notes. Files save to that brand&rsquo;s <code>_kb/</code> and the engine reads them when generating. Markdown, text, and PDF files are supported (PDFs are converted to text automatically; convert Word docs first).</p>
     </div>
     <div class="lab-box kb-card">
       <h2>Add source files</h2>
@@ -1288,7 +1288,7 @@ textarea.lab-main-input {
       <select id="kb-brand"></select>
       <div id="kb-drop" class="kb-drop" tabindex="0">
         <div class="kb-drop-title">Drop files here</div>
-        <div class="kb-drop-sub">or click to choose &mdash; add as many as you like (.md, .txt, .markdown)</div>
+        <div class="kb-drop-sub">or click to choose &mdash; add as many as you like (.md, .txt, .pdf)</div>
         <input type="file" id="kb-input" multiple style="display:none">
       </div>
       <div id="kb-status" class="kb-status"></div>
@@ -3320,7 +3320,7 @@ refreshTranscriptPendingStatus();
 (function () {
   function sel() { return document.getElementById('kb-brand'); }
   function statusEl() { return document.getElementById('kb-status'); }
-  var INGESTIBLE = ['.md', '.txt', '.markdown'];
+  var INGESTIBLE = ['.md', '.txt', '.markdown', '.pdf'];
   function ext(n) { var i = n.lastIndexOf('.'); return i < 0 ? '' : n.slice(i).toLowerCase(); }
 
   function kbList() {
@@ -3356,7 +3356,8 @@ refreshTranscriptPendingStatus();
       .then(function (d) {
         if (!d || !d.ok) { st.textContent = 'Error: ' + ((d && d.error) || 'upload failed'); return; }
         var msg = 'Added ' + d.ingested.length + ' file(s) to the knowledge base.';
-        if (d.skipped && d.skipped.length) msg += ' Skipped ' + d.skipped.length + ' (convert to .md/.txt).';
+        if (d.skipped && d.skipped.length) msg += ' Skipped ' + d.skipped.length + ' (unsupported type).';
+        if (d.notes && d.notes.length) msg += ' Note: ' + d.notes.join('; ') + '.';
         st.textContent = msg; kbList();
       }).catch(function () { st.textContent = 'Upload failed — is the server running?'; });
   }
@@ -3367,14 +3368,23 @@ refreshTranscriptPendingStatus();
     var arr = Array.prototype.slice.call(fileList);
     var readable = arr.filter(function (f) { return INGESTIBLE.indexOf(ext(f.name)) >= 0; });
     var skipped = arr.length - readable.length;
-    if (!readable.length) { st.textContent = skipped ? ('Nothing added — ' + skipped + ' file(s) need converting to .md/.txt.') : ''; return; }
+    if (!readable.length) { st.textContent = skipped ? ('Nothing added — ' + skipped + ' file(s) are an unsupported type.') : ''; return; }
     st.textContent = 'Reading ' + readable.length + ' file(s)…';
     var out = [], pending = readable.length;
     readable.forEach(function (file) {
       var rd = new FileReader();
-      rd.onload = function () { out.push({ name: file.name, content: rd.result }); if (--pending === 0) send(out); };
+      var isPdf = ext(file.name) === '.pdf';
+      rd.onload = function () {
+        if (isPdf) {
+          var str = String(rd.result); var comma = str.indexOf(',');
+          out.push({ name: file.name, content_b64: comma >= 0 ? str.slice(comma + 1) : str });
+        } else {
+          out.push({ name: file.name, content: rd.result });
+        }
+        if (--pending === 0) send(out);
+      };
       rd.onerror = function () { if (--pending === 0 && out.length) send(out); };
-      rd.readAsText(file);
+      if (isPdf) rd.readAsDataURL(file); else rd.readAsText(file);
     });
   }
 

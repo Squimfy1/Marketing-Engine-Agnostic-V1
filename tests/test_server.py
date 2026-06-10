@@ -152,6 +152,20 @@ def test_kb_upload_unknown_brand(api: Api):
     assert status == 404
 
 
+def test_kb_upload_pdf_converted(api: Api, pdf_factory):
+    import base64
+    b64 = base64.b64encode(pdf_factory("Denario whitepaper body")).decode()
+    status, payload = api.kb_upload({
+        "brand": "acme-co/acme",
+        "files": [{"name": "whitepaper.pdf", "content_b64": b64}],
+    })
+    assert status == 200 and payload["ok"]
+    assert "whitepaper.md" in payload["ingested"]  # pdf -> md
+    from marketing_engine.vault.fs_adapter import FilesystemVaultAdapter
+    vault = FilesystemVaultAdapter(api.engine.layout, "acme-co", "acme")
+    assert "Denario whitepaper body" in vault.read("_kb/whitepaper.md")
+
+
 # -- status --------------------------------------------------------------
 def test_status_endpoints_enable_generation(api: Api):
     assert api.anthropic_status()[1]["configured"] is True

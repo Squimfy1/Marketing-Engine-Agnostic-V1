@@ -80,3 +80,35 @@ def layout(vault_root: Path) -> VaultLayout:
 @pytest.fixture()
 def settings(vault_root: Path) -> Settings:
     return Settings.from_env(vault_root=vault_root)
+
+
+@pytest.fixture()
+def pdf_factory():
+    """Return a function that builds a minimal, valid single-page PDF with text."""
+
+    def make_pdf(text: str) -> bytes:
+        objs = [
+            b"<</Type/Catalog/Pages 2 0 R>>",
+            b"<</Type/Pages/Kids[3 0 R]/Count 1>>",
+            b"<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>",
+            None,
+            b"<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
+        ]
+        stream = b"BT /F1 18 Tf 20 100 Td (" + text.encode() + b") Tj ET"
+        objs[3] = b"<</Length " + str(len(stream)).encode() + b">>\nstream\n" + stream + b"\nendstream"
+        pdf = b"%PDF-1.4\n"
+        offsets = []
+        for i, o in enumerate(objs, start=1):
+            offsets.append(len(pdf))
+            pdf += ("%d 0 obj\n" % i).encode() + o + b"\nendobj\n"
+        xref = len(pdf)
+        pdf += b"xref\n0 " + str(len(objs) + 1).encode() + b"\n0000000000 65535 f \n"
+        for off in offsets:
+            pdf += ("%010d 00000 n \n" % off).encode()
+        pdf += (
+            b"trailer<</Size " + str(len(objs) + 1).encode() + b"/Root 1 0 R>>\nstartxref\n"
+            + str(xref).encode() + b"\n%%EOF"
+        )
+        return pdf
+
+    return make_pdf

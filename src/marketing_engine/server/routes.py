@@ -11,6 +11,7 @@ generation and saves stay inside the selected brand's subtree.
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import uuid
@@ -18,6 +19,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from marketing_engine.convert import ConvertError, convert
 from marketing_engine.harness.engine import EngineError, MarketingEngine
 from marketing_engine.harness.platforms import PLATFORMS
 from marketing_engine.server.bundle import assemble_bundle
@@ -183,21 +185,25 @@ class Api:
             return 404, {"ok": False, "error": str(exc)}
         files = body.get("files") or []
         vault = FilesystemVaultAdapter(self.engine.layout, tenant, brand)
-        ingested, skipped = [], []
+        ingested, skipped, notes = [], [], []
         for f in files:
             name = os.path.basename((f.get("name") or "").strip())
-            content = f.get("content")
-            if not name or content is None:
+            text = f.get("content")
+            b64 = f.get("content_b64")
+            if not name or (text is None and not b64):
                 continue
-            if os.path.splitext(name)[1].lower() not in (".md", ".txt", ".markdown"):
-                skipped.append(name)
-                continue
+            data = base64.b64decode(b64) if b64 else None
             try:
-                vault.write(f"_kb/{name}", content)
-                ingested.append(name)
-            except PermissionError:
+                result = convert(name, text=text, data=data)
+                vault.write(f"_kb/{result.name}", result.content)
+                ingested.append(result.name)
+                if result.note:
+                    notes.append(f"{result.name}: {result.note}")
+            except ConvertError:
                 skipped.append(name)
-        return 200, {"ok": True, "ingested": ingested, "skipped": skipped}
+            except Exception:
+                skipped.append(name)
+        return 200, {"ok": True, "ingested": ingested, "skipped": skipped, "notes": notes}
 
     # -- sessions (server-managed UI state) ------------------------------
     def _sessions_dir(self) -> Path:

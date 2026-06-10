@@ -8,12 +8,12 @@ the agent can ground generations in real material.
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
+from marketing_engine.convert import SUPPORTED_EXTS, ConvertError, convert
 from marketing_engine.vault.layout import BRAND_SUBDIRS, VaultLayout
 
-INGESTIBLE = {".md", ".txt", ".markdown"}
+INGESTIBLE = SUPPORTED_EXTS
 
 _BRAND_YAML = """\
 id: {brand_id}
@@ -121,8 +121,13 @@ def ingest_files(
             skipped.append(f"{src.name} (not found)")
             continue
         if src.suffix.lower() not in INGESTIBLE:
-            skipped.append(f"{src.name} (unsupported — convert to .md/.txt)")
+            skipped.append(f"{src.name} (unsupported — convert to .md/.txt/.pdf)")
             continue
-        shutil.copy2(src, kb / src.name)
-        ingested.append(src.name)
+        try:
+            result = convert(src.name, data=src.read_bytes())
+        except ConvertError:
+            skipped.append(f"{src.name} (could not convert)")
+            continue
+        (kb / result.name).write_text(result.content, encoding="utf-8")
+        ingested.append(result.name)
     return ingested, skipped
