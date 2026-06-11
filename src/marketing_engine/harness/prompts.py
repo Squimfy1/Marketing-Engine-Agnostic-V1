@@ -75,26 +75,21 @@ def assemble_system_prompt(
 
 OPTIONS_INSTRUCTIONS = """\
 First, Glob/Grep the brand's _kb/ and read the 1–2 files most relevant to the
-request, so every option is grounded in the brand's REAL product and material.
+request, so every idea is grounded in the brand's REAL product and material.
 
-Then write exactly {n} DISTINCT short-post options, each taking a DIFFERENT angle
-relevant to this brand — for example:
-  - a product explainer (what it does and for whom)
-  - an analytical insight or point of view the brand can credibly make
-  - a reaction to relevant industry news or a trend
-  - a concrete use-case, workflow, or result
+Then propose exactly {n} DISTINCT short-post IDEAS — NOT full posts. Each idea is
+a brief: a short angle/headline, then 1–2 sentences on what the post would say and
+why it fits the brand. Take DIFFERENT angles (e.g. a product explainer, an
+analytical insight, a reaction to relevant news, a concrete use-case).
 
 Rules:
-- Each option is a SHORT post of **4–8 sentences**. Concise — no walls of text,
-  no multi-paragraph essays.
-- Make each option SPECIFIC to this brand using facts from _kb/. Do NOT invent
-  facts and do NOT write generic filler; if a detail isn't in _kb/, stay
-  high-level rather than making it up.
-- Brand voice throughout, and obey the WRITING RULES in your system prompt — no
-  banned vocabulary, no filler, no AI-tell phrasing. No titles, no numbering.
-Format strictly: start EVERY option (including the first) with a line containing
-only @@@OPTION@@@, immediately followed by the post. Write nothing before the
-first @@@OPTION@@@ and no commentary anywhere."""
+- Keep each idea to **1–2 sentences. Do NOT write the full post.**
+- Make each idea SPECIFIC to this brand using facts from _kb/. Do NOT invent facts
+  and do NOT write generic filler; if a detail isn't in _kb/, stay high-level.
+- Obey the WRITING RULES and Guardrails. No numbering, no commentary.
+Format strictly: start EVERY idea (including the first) with a line containing
+only @@@OPTION@@@, immediately followed by the idea. Write nothing before the
+first @@@OPTION@@@."""
 
 
 IMAGE_BRIEF_INSTRUCTIONS = """\

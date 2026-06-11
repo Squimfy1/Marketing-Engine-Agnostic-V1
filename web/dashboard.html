@@ -1338,15 +1338,15 @@ textarea.lab-main-input {
       </div>
 
       <div id="topic-picker" class="lab-topic-pick" hidden>
-        <h4>Short-post options</h4>
-        <p class="lab-intent-hint" style="margin-bottom:10px">Generate 4 distinct short-post options, then &ldquo;Use this&rdquo; on the one you want to edit and save.</p>
-        <button type="button" class="lab-generate-btn suggest" id="btn-gen-options" onclick="requestTopicSuggestions()" style="width:100%;margin-bottom:12px">Generate 4 options</button>
+        <h4>Post ideas</h4>
+        <p class="lab-intent-hint" style="margin-bottom:10px">Generate 4 short-post ideas, select the one you like, then click Generate to write the full post.</p>
+        <button type="button" class="lab-generate-btn suggest" id="btn-gen-options" onclick="requestTopicSuggestions()" style="width:100%;margin-bottom:12px">Generate 4 ideas</button>
         <div id="topic-loading" class="topic-loading" hidden>
           <span class="topic-spinner" aria-hidden="true"></span>
-          <span>Generating 4 options&hellip;</span>
+          <span>Generating 4 ideas&hellip;</span>
         </div>
         <div id="topic-cards" class="topic-cards"></div>
-        <button type="button" class="lab-generate-btn" id="btn-draft-topic" hidden style="margin-top:12px;width:100%">Draft this topic</button>
+        <button type="button" class="lab-generate-btn" id="btn-draft-topic" hidden style="margin-top:12px;width:100%">Generate post</button>
       </div>
 
       <div id="dropzone" class="dropzone lab-dropzone" tabindex="0" role="button" aria-label="Upload context files">
@@ -1408,6 +1408,7 @@ textarea.lab-main-input {
           </button>
           <span class="lab-submit-hint" id="submit-hint">Copy the post to publish, or Save edits to teach the engine.</span>
           <button type="button" class="lab-btn secondary" id="btn-goto-design" hidden>Design →</button>
+          <button type="button" class="lab-btn secondary" id="btn-image-brief">Generate image instructions</button>
           <button type="button" class="lab-btn primary" id="btn-submit-final" disabled>Save edits</button>
         </div>
       </div>
@@ -2265,7 +2266,9 @@ function requestTopicSuggestions() {
     if (btn) btn.disabled = false;
     if (!d || !d.ok) { topicOptions = []; renderTopicCards(); toast((d && d.error) || 'Could not generate options'); return; }
     topicOptions = (d.options || []).map(function (t) { return { text: t }; });
+    selectedTopicTitle = '';
     renderTopicCards();
+    updateDraftTopicButton();
     toast(topicOptions.length ? (topicOptions.length + ' options ready — Use one to edit') : 'No options returned — try again');
     saveLabToStorage(true);
   }).catch(function (err) {
@@ -2370,17 +2373,10 @@ function topicCardMeta(raw) {
   return lines.join('\n').trim();
 }
 
-function selectTopicCard(title) {
-  selectedTopicTitle = title;
+function selectTopicCard(text) {
+  selectedTopicTitle = text;
   renderTopicCards();
-  updateGenButtonLabel();
   updateDraftTopicButton();
-  updateArticleUI();
-  // Articles: seed the narrative from the chosen topic so the skeleton/sections have context.
-  if (isArticles()) {
-    var nar = document.getElementById('narrative');
-    if (nar && !nar.value.trim()) nar.value = title;
-  }
   saveLabToStorage(true);
 }
 
@@ -2413,60 +2409,15 @@ function renderTopicCards() {
   if (!wrap) return;
   wrap.innerHTML = '';
   topicOptions.forEach(function (o, i) {
-    var card = document.createElement('div');
-    card.className = 'topic-card';
-    card.style.cursor = 'default';
+    var selected = (selectedTopicTitle === o.text);
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'topic-card' + (selected ? ' selected' : '');
+    card.style.cssText = 'text-align:left;width:100%;cursor:pointer';
     card.innerHTML =
-      '<div class="topic-card-head"><span class="topic-card-num">Option ' + (i + 1) + '</span></div>' +
-      '<div class="topic-card-title" style="white-space:pre-wrap;font-weight:400;line-height:1.5">' + escapeHtml(o.text) + '</div>';
-
-    var actions = document.createElement('div');
-    actions.style.cssText = 'margin-top:10px;display:flex;gap:8px;flex-wrap:wrap';
-
-    var use = document.createElement('button');
-    use.type = 'button';
-    use.className = 'lab-btn secondary';
-    use.textContent = 'Use this';
-    use.style.cssText = 'font-size:12px;padding:6px 12px';
-    use.addEventListener('click', function () {
-      if (typeof setResponseText === 'function') setResponseText(o.text);
-      if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ', edit then Save', false);
-      var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    var img = document.createElement('button');
-    img.type = 'button';
-    img.className = 'lab-btn secondary';
-    img.textContent = 'Generate image instructions';
-    img.style.cssText = 'font-size:12px;padding:6px 12px';
-    img.addEventListener('click', function () {
-      var brandRef = (typeof resolveVoice === 'function') ? resolveVoice() : '';
-      var plat = (document.getElementById('platform') || {}).value || 'Short posts';
-      img.disabled = true; img.textContent = 'Generating...';
-      var st = document.getElementById('design-brief-status'); if (st) st.textContent = 'Generating image instructions...';
-      fetch('/api/lab/image-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: brandRef, platform: plat, text: o.text }) })
-        .then(function (res) { return res.json(); })
-        .then(function (d) {
-          img.disabled = false; img.textContent = 'Generate image instructions';
-          if (d && d.ok && d.brief) {
-            var db = document.getElementById('design-brief'); if (db) db.value = d.brief;
-            if (st) st.textContent = 'Image instructions for Option ' + (i + 1);
-            if (typeof switchLabSub === 'function') switchLabSub('design');
-            if (typeof toast === 'function') toast('Image instructions ready in the Design tab');
-          } else {
-            if (st) st.textContent = 'Could not generate instructions';
-            if (typeof toast === 'function') toast((d && d.error) || 'Could not generate instructions');
-          }
-        })
-        .catch(function () {
-          img.disabled = false; img.textContent = 'Generate image instructions';
-          if (st) st.textContent = 'Request failed';
-        });
-    });
-
-    actions.appendChild(use);
-    actions.appendChild(img);
-    card.appendChild(actions);
+      '<div class="topic-card-head"><span class="topic-card-num">Idea ' + (i + 1) + (selected ? ' \u00b7 selected' : '') + '</span></div>' +
+      '<div class="topic-card-title" style="white-space:pre-wrap;font-weight:400;line-height:1.45">' + escapeHtml(o.text) + '</div>';
+    card.addEventListener('click', function () { selectTopicCard(o.text); });
     wrap.appendChild(card);
   });
 }
@@ -3164,7 +3115,51 @@ function copyOutput() {
 document.getElementById('btn-generate-claude').addEventListener('click', onGenerateClick);
 document.getElementById('btn-send-claude').addEventListener('click', function () { sendToClaude(); });
 document.getElementById('btn-copy-output').addEventListener('click', copyOutput);
-document.getElementById('btn-draft-topic').addEventListener('click', draftPickedTopic);
+document.getElementById('btn-draft-topic').addEventListener('click', generatePostFromSelectedIdea);
+(function () { var ib = document.getElementById('btn-image-brief'); if (ib) ib.addEventListener('click', generateImageBriefFromResponse); })();
+
+function generatePostFromSelectedIdea() {
+  var idea = selectedTopicTitle;
+  if (!idea) { if (typeof toast === 'function') toast('Select an idea first.'); return; }
+  var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
+  if (!ref) { if (typeof toast === 'function') toast('Pick a brand first.'); return; }
+  var plat = (document.getElementById('platform') || {}).value || 'Short posts';
+  var btn = document.getElementById('btn-draft-topic');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating post...'; }
+  if (typeof setResponseStatus === 'function') setResponseStatus('Writing the full post...', true);
+  fetch('/api/lab/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, braindump: idea }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; }
+      if (!d || !d.ok) { if (typeof setResponseStatus === 'function') setResponseStatus('Generation failed', false); if (typeof toast === 'function') toast((d && d.error) || 'Generation failed'); return; }
+      if (typeof setResponseText === 'function') setResponseText(d.text);
+      if (typeof setResponseStatus === 'function') setResponseStatus('Generated, edit then Save', false);
+      var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    })
+    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; } if (typeof setResponseStatus === 'function') setResponseStatus('Request failed', false); });
+}
+
+function generateImageBriefFromResponse() {
+  var text = (typeof getResponseText === 'function') ? getResponseText() : '';
+  if (!text) { if (typeof toast === 'function') toast('Generate or write a post first.'); return; }
+  var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
+  var plat = (document.getElementById('platform') || {}).value || 'Short posts';
+  var btn = document.getElementById('btn-image-brief');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+  var st = document.getElementById('design-brief-status'); if (st) st.textContent = 'Generating image instructions...';
+  fetch('/api/lab/image-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, text: text }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Generate image instructions'; }
+      if (d && d.ok && d.brief) {
+        var db = document.getElementById('design-brief'); if (db) db.value = d.brief;
+        if (st) st.textContent = 'Image instructions ready';
+        if (typeof switchLabSub === 'function') switchLabSub('design');
+        if (typeof toast === 'function') toast('Image instructions ready in the Design tab');
+      } else { if (st) st.textContent = 'Could not generate'; if (typeof toast === 'function') toast((d && d.error) || 'Could not generate'); }
+    })
+    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate image instructions'; } if (st) st.textContent = 'Request failed'; });
+}
 
 document.getElementById('btn-gen-skeleton').addEventListener('click', generateArticleSkeleton);
 document.querySelectorAll('.article-gen-section').forEach(function (b) {
