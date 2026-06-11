@@ -32,6 +32,20 @@ def _read_core_rules(layout: VaultLayout, tenant_id: str, brand_id: str) -> str:
     return ""
 
 
+def _read_shared_rules(layout: VaultLayout) -> str:
+    """Concatenate every shared rule file (anti-AI writing rules) for inlining."""
+
+    rules_dir = layout.shared_dir / "rules"
+    if not rules_dir.is_dir():
+        return ""
+    blocks = []
+    for path in sorted(rules_dir.glob("*.md")):
+        text = path.read_text(encoding="utf-8").strip()
+        if text:
+            blocks.append(text)
+    return "\n\n---\n\n".join(blocks)
+
+
 def assemble_run(
     *,
     layout: VaultLayout,
@@ -44,6 +58,7 @@ def assemble_run(
     task: str = "default",
 ) -> AssembledRun:
     core_rules = _read_core_rules(layout, tenant.id, brand.id)
+    writing_rules = _read_shared_rules(layout)
 
     system_prompt = assemble_system_prompt(
         tenant_name=tenant.name,
@@ -52,6 +67,7 @@ def assemble_run(
         brand_identity=brand.identity,
         brand_voice=brand.voice,
         core_rules=core_rules,
+        writing_rules=writing_rules,
     )
 
     model = resolve_model(

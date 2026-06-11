@@ -19,6 +19,7 @@ from marketing_engine.brand.assembler import assemble_run
 from marketing_engine.config.settings import Settings
 from marketing_engine.harness.platforms import load_guidance, resolve_platform
 from marketing_engine.harness.prompts import build_image_brief_prompt, build_options_prompt
+from marketing_engine.postprocess import clean_copy
 from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient, RunResult
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.memory_tools import append_memory
@@ -93,7 +94,9 @@ class MarketingEngine:
             platform_guidance=load_guidance(self.layout, plat),
             task=task,
         )
-        return await self.llm.run(assembled.run_prompt, assembled.options)
+        result = await self.llm.run(assembled.run_prompt, assembled.options)
+        result.text = clean_copy(result.text)
+        return result
 
     async def generate_options(
         self,
@@ -136,7 +139,9 @@ class MarketingEngine:
         prompt = build_options_prompt(
             braindump, n=n, platform_label=plat.label, platform_guidance=guidance
         )
-        return await self.llm.run(prompt, assembled.options)
+        result = await self.llm.run(prompt, assembled.options)
+        result.text = clean_copy(result.text)
+        return result
 
     async def generate_image_brief(
         self,
@@ -173,7 +178,9 @@ class MarketingEngine:
         tokens_path = self.layout.design_dir(tenant_id, brand_id) / "tokens.yaml"
         tokens = tokens_path.read_text(encoding="utf-8") if tokens_path.is_file() else ""
         prompt = build_image_brief_prompt(post_text, design_tokens=tokens)
-        return await self.llm.run(prompt, assembled.options)
+        result = await self.llm.run(prompt, assembled.options)
+        result.text = clean_copy(result.text)
+        return result
 
     async def run(
         self,
@@ -208,6 +215,7 @@ class MarketingEngine:
         )
 
         result = await self.llm.run(assembled.run_prompt, assembled.options)
+        result.text = clean_copy(result.text)
 
         # Authoritative, deterministic writes back into the vault.
         title = _title_from_input(input_text)

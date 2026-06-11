@@ -18,13 +18,14 @@ no preamble, no meta-commentary."""
 RUN_INSTRUCTIONS = """\
 Work efficiently — you have a limited number of tool calls:
 1. If you need facts, Glob/Grep the brand's _kb/ and read at most the 1–2 files
-   directly relevant to this request. Do NOT read the shared writing-rule files
-   (your system prompt already constrains voice and style), do NOT run shell
-   commands, and do NOT look outside this brand's folder.
+   directly relevant to this request. The WRITING RULES are already in your
+   system prompt — follow them; don't re-read the rule files, don't run shell
+   commands, and don't look outside this brand's folder.
 2. If _kb/ doesn't have the facts you need, write the best on-brand piece you
    can from the request itself; only if that is impossible, state briefly in one
    line what source material is missing — do not keep searching.
-3. Then write the finished piece and stop.
+3. Write the finished piece, then self-check it against the WRITING RULES and the
+   banned-vocabulary/filler lists, and fix any violations before returning.
 Return only the final copy in markdown — no preamble, no commentary, no notes
 about what you read."""
 
@@ -37,8 +38,13 @@ def assemble_system_prompt(
     brand_identity: str,
     brand_voice: str,
     core_rules: str,
+    writing_rules: str = "",
 ) -> str:
-    """Compose the per-brand system prompt (the inlined constitution)."""
+    """Compose the per-brand system prompt (the inlined constitution).
+
+    Includes the shared anti-AI WRITING RULES so every generation obeys them —
+    these are byte-stable across brands/runs, so they stay prompt-cache friendly.
+    """
 
     parts = [ENGINE_PERSONA, ""]
     parts.append(f"Account: {tenant_name}")
@@ -52,8 +58,18 @@ def assemble_system_prompt(
         parts.append(f"Voice: {brand_voice.strip()}")
     if core_rules.strip():
         parts.append("")
-        parts.append("## CORE RULES")
+        parts.append("## CORE RULES (brand)")
         parts.append(core_rules.strip())
+    if writing_rules.strip():
+        parts.append("")
+        parts.append("## WRITING RULES — apply to EVERYTHING you write")
+        parts.append(
+            "These are mandatory. Obey the banned-vocabulary and filler lists, "
+            "the sentence rules, and the structure guidance below in every draft "
+            "and every option. Do not produce AI-tell phrasing."
+        )
+        parts.append("")
+        parts.append(writing_rules.strip())
     return "\n".join(parts).strip()
 
 
@@ -74,7 +90,8 @@ Rules:
 - Make each option SPECIFIC to this brand using facts from _kb/. Do NOT invent
   facts and do NOT write generic filler; if a detail isn't in _kb/, stay
   high-level rather than making it up.
-- Brand voice throughout. No titles, no numbering, no commentary.
+- Brand voice throughout, and obey the WRITING RULES in your system prompt — no
+  banned vocabulary, no filler, no AI-tell phrasing. No titles, no numbering.
 Format strictly: start EVERY option (including the first) with a line containing
 only @@@OPTION@@@, immediately followed by the post. Write nothing before the
 first @@@OPTION@@@ and no commentary anywhere."""
