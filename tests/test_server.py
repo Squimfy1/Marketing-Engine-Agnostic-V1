@@ -99,6 +99,19 @@ def test_options_bad_ref(api: Api):
     assert status == 400
 
 
+def test_image_brief(api: Api):
+    status, payload = api.image_brief(
+        {"voice": "acme-co/acme", "platform": "Short posts", "text": "Launch the Sky Pup kit."}
+    )
+    assert status == 200 and payload["ok"]
+    assert payload["brief"].strip()
+
+
+def test_image_brief_empty_text(api: Api):
+    status, _ = api.image_brief({"voice": "acme-co/acme", "text": "  "})
+    assert status == 400
+
+
 # -- commit edits --------------------------------------------------------
 def test_commit_edits_writes_draft_and_learning(api: Api):
     body = {

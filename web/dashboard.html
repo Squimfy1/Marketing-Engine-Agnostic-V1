@@ -1710,7 +1710,7 @@ var INTENT_COPY = {
     requireInput: true
   },
   suggest: {
-    hint: 'The engine reads topic coverage, push/rest strategy, and the latest calls, then ranks 4 topics — pick one to draft.',
+    hint: 'Generate 4 short-post options grounded in the brand knowledge base, then Use one to edit and save.',
     label: 'Constraints (optional)',
     placeholder: 'Optional: audience, platform nuance, things to avoid…',
     sendTitle: 'Suggest topics',
@@ -2427,8 +2427,23 @@ function renderTopicCards() {
     use.style.cssText = 'margin-top:8px;font-size:12px;padding:6px 12px';
     use.addEventListener('click', function () {
       if (typeof setResponseText === 'function') setResponseText(o.text);
-      if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — edit, then Save', false);
       var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — generating image brief…', false);
+      var brandRef = (typeof resolveVoice === 'function') ? resolveVoice() : '';
+      var plat = (document.getElementById('platform') || {}).value || 'Short posts';
+      fetch('/api/lab/image-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: brandRef, platform: plat, text: o.text }) })
+        .then(function (res) { return res.json(); })
+        .then(function (d) {
+          if (d && d.ok && d.brief) {
+            var db = document.getElementById('design-brief'); if (db) db.value = d.brief;
+            var st = document.getElementById('design-brief-status'); if (st) st.textContent = 'Image brief generated';
+            if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — image brief ready in Design tab', false);
+            if (typeof toast === 'function') toast('Image brief generated → Design tab');
+          } else if (typeof setResponseStatus === 'function') {
+            setResponseStatus('Loaded option ' + (i + 1) + ' — edit, then Save', false);
+          }
+        })
+        .catch(function () { if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — edit, then Save', false); });
     });
     card.appendChild(use);
     wrap.appendChild(card);

@@ -151,9 +151,38 @@ class Api:
         except Exception as exc:
             return 500, {"ok": False, "error": f"options failed: {exc}"}
         opts = [o.strip() for o in result.text.split("@@@OPTION@@@") if o.strip()]
+        # If the model added a preamble before the first option, drop it.
+        if len(opts) > n:
+            opts = opts[-n:]
         return 200, {
             "ok": not result.is_error,
             "options": opts,
+            "model": result.model,
+            "usage": {"num_turns": result.num_turns, **result.usage},
+        }
+
+    # -- image brief (visual instructions for a chosen post) -------------
+    def image_brief(self, body: dict) -> tuple[int, dict]:
+        try:
+            tenant, brand = split_ref(_ref_of(body))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        text = body.get("text") or body.get("content") or ""
+        try:
+            result = asyncio.run(
+                self.engine.generate_image_brief(
+                    tenant, brand, post_text=text, platform=body.get("platform")
+                )
+            )
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        except EngineError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            return 500, {"ok": False, "error": f"image brief failed: {exc}"}
+        return 200, {
+            "ok": not result.is_error,
+            "brief": result.text,
             "model": result.model,
             "usage": {"num_turns": result.num_turns, **result.usage},
         }

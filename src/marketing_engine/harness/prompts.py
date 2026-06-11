@@ -58,17 +58,43 @@ def assemble_system_prompt(
 
 
 OPTIONS_INSTRUCTIONS = """\
-Using the brand identity and voice above, write exactly {n} DISTINCT options for
-the request below — different angles or hooks, each a complete, ready-to-post
-post in the brand's voice.
+First, Glob/Grep the brand's _kb/ and read the 1–2 files most relevant to the
+request, so every option is grounded in the brand's REAL product and material.
 
-Write them NOW from the brand identity and voice. Do NOT ask for more
-information, do NOT refuse, and do NOT add any commentary. If a specific fact
-would help but you don't have it, still write a strong angle and put a short
-[bracketed note] where a real detail belongs.
+Then write exactly {n} DISTINCT short-post options, each taking a DIFFERENT angle
+relevant to this brand — for example:
+  - a product explainer (what it does and for whom)
+  - an analytical insight or point of view the brand can credibly make
+  - a reaction to relevant industry news or a trend
+  - a concrete use-case, workflow, or result
 
-No titles, no numbering, no preamble. Separate each option with a line
-containing only @@@OPTION@@@ and nothing else."""
+Rules:
+- Each option is a SHORT post of **4–8 sentences**. Concise — no walls of text,
+  no multi-paragraph essays.
+- Make each option SPECIFIC to this brand using facts from _kb/. Do NOT invent
+  facts and do NOT write generic filler; if a detail isn't in _kb/, stay
+  high-level rather than making it up.
+- Brand voice throughout. No titles, no numbering, no commentary.
+Format strictly: start EVERY option (including the first) with a line containing
+only @@@OPTION@@@, immediately followed by the post. Write nothing before the
+first @@@OPTION@@@ and no commentary anywhere."""
+
+
+IMAGE_BRIEF_INSTRUCTIONS = """\
+Write concise image-generation instructions (a visual brief) for an image to
+accompany the post below. Cover: subject/scene, composition, art style, mood,
+colour palette, and any short text overlay. Keep it on-brand and ready to paste
+into an image tool. Output ONLY the brief — no preamble, no commentary."""
+
+
+def build_image_brief_prompt(post_text: str, *, design_tokens: str = "") -> str:
+    """Prompt for an image/visual brief for a finished post."""
+
+    parts = ["## POST", post_text.strip()]
+    if design_tokens.strip():
+        parts += ["", "## BRAND DESIGN TOKENS", design_tokens.strip()]
+    parts += ["", IMAGE_BRIEF_INSTRUCTIONS]
+    return "\n".join(parts)
 
 
 def build_options_prompt(

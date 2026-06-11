@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from marketing_engine.brand.assembler import assemble_run
 from marketing_engine.config.settings import Settings
 from marketing_engine.harness.platforms import load_guidance, resolve_platform
-from marketing_engine.harness.prompts import build_options_prompt
+from marketing_engine.harness.prompts import build_image_brief_prompt, build_options_prompt
 from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient, RunResult
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.memory_tools import append_memory
@@ -130,10 +130,49 @@ class MarketingEngine:
             platform_guidance=guidance,
             task="ideas",
         )
-        assembled.options.allowed_tools = []  # single-shot, no KB reading
+        # Read-only KB access so options are grounded in the brand's real material
+        # (still the cheap 'ideas' model tier, so it stays fast).
+        assembled.options.allowed_tools = ["Read", "Grep", "Glob"]
         prompt = build_options_prompt(
             braindump, n=n, platform_label=plat.label, platform_guidance=guidance
         )
+        return await self.llm.run(prompt, assembled.options)
+
+    async def generate_image_brief(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        post_text: str,
+        platform: str | None = None,
+    ) -> RunResult:
+        """Generate image-generation instructions (a visual brief) for a post.
+
+        Single-shot from the post + the brand's design tokens + voice. Fast/cheap
+        ('ideas' tier). This is the Design System -> Image Output step.
+        """
+
+        if not post_text.strip():
+            raise EngineError("No post text to brief an image from.")
+
+        tenant = self.registry.get_tenant(tenant_id)
+        brand = self.registry.get_brand(tenant_id, brand_id)
+        plat = resolve_platform(platform)
+
+        assembled = assemble_run(
+            layout=self.layout,
+            settings=self.settings,
+            tenant=tenant,
+            brand=brand,
+            input_text=post_text,
+            platform_label=plat.label,
+            task="ideas",
+        )
+        assembled.options.allowed_tools = []  # single-shot, no file reading
+
+        tokens_path = self.layout.design_dir(tenant_id, brand_id) / "tokens.yaml"
+        tokens = tokens_path.read_text(encoding="utf-8") if tokens_path.is_file() else ""
+        prompt = build_image_brief_prompt(post_text, design_tokens=tokens)
         return await self.llm.run(prompt, assembled.options)
 
     async def run(
