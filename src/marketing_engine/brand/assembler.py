@@ -26,10 +26,17 @@ class AssembledRun:
 
 
 def _read_core_rules(layout: VaultLayout, tenant_id: str, brand_id: str) -> str:
-    path = layout.core_rules(tenant_id, brand_id)
-    if path.is_file():
-        return path.read_text(encoding="utf-8")
-    return ""
+    """Concatenate ALL of the brand's _rules/*.md (constitution), _core first."""
+
+    rules_dir = layout.rules_dir(tenant_id, brand_id)
+    if not rules_dir.is_dir():
+        return ""
+    blocks = []
+    for path in sorted(rules_dir.glob("*.md")):  # "_core.md" sorts first
+        text = path.read_text(encoding="utf-8").strip()
+        if text:
+            blocks.append(text)
+    return "\n\n---\n\n".join(blocks)
 
 
 def _read_shared_rules(layout: VaultLayout) -> str:
