@@ -1328,7 +1328,6 @@ textarea.lab-main-input {
         <textarea id="braindump" class="lab-input" rows="5" placeholder="Your idea, angle, links, or what you want drafted…"></textarea>
         <div class="lab-composer-actions">
           <button type="button" class="lab-generate-btn" id="btn-generate-claude" disabled title="Generate via Claude Code (your account)">Generate</button>
-          <button type="button" class="lab-generate-btn suggest" id="btn-options" title="Generate 4 short-post options">4 options</button>
           <button type="button" class="lab-send-btn" id="btn-send-claude" aria-label="Copy bundle for Claude Desktop" title="Copy bundle for Claude Desktop">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -1339,23 +1338,15 @@ textarea.lab-main-input {
       </div>
 
       <div id="topic-picker" class="lab-topic-pick" hidden>
-        <h4>Pick a topic to draft</h4>
-        <p class="lab-intent-hint" style="margin-bottom:10px">Click an option, then draft it.</p>
+        <h4>Short-post options</h4>
+        <p class="lab-intent-hint" style="margin-bottom:10px">Generate 4 distinct short-post options, then &ldquo;Use this&rdquo; on the one you want to edit and save.</p>
+        <button type="button" class="lab-generate-btn suggest" id="btn-gen-options" onclick="requestTopicSuggestions()" style="width:100%;margin-bottom:12px">Generate 4 options</button>
         <div id="topic-loading" class="topic-loading" hidden>
           <span class="topic-spinner" aria-hidden="true"></span>
-          <span>Finding 4 topics from strategy, coverage &amp; latest calls…</span>
+          <span>Generating 4 options&hellip;</span>
         </div>
-        <div id="topic-cards" class="topic-cards" role="radiogroup" aria-label="Suggested topics"></div>
+        <div id="topic-cards" class="topic-cards"></div>
         <button type="button" class="lab-generate-btn" id="btn-draft-topic" hidden style="margin-top:12px;width:100%">Draft this topic</button>
-      </div>
-
-      <div id="options-panel" class="lab-topic-pick" hidden style="margin-top:14px">
-        <h4>Short-post options</h4>
-        <div id="options-loading" class="topic-loading" hidden>
-          <span class="topic-spinner" aria-hidden="true"></span>
-          <span>Generating options&hellip;</span>
-        </div>
-        <div id="options-cards" class="topic-cards"></div>
       </div>
 
       <div id="dropzone" class="dropzone lab-dropzone" tabindex="0" role="button" aria-label="Upload context files">
@@ -2230,9 +2221,7 @@ function setLabIntent(mode, silent) {
   if (genBtn) genBtn.disabled = !genEnabled();
 
   // Entering "Find a topic" auto-generates the 4 options (with a loading icon).
-  if (isSuggest && !silent && !topicOptions.length && !topicLoading) {
-    requestTopicSuggestions();
-  }
+  // "Find a topic" is button-driven: click "Generate 4 options" in that section.
 
   if (!silent) {
     try { localStorage.setItem(LS.MODE, mode); } catch (e) {}
@@ -2260,25 +2249,30 @@ function showTopicLoading(on) {
 }
 
 function requestTopicSuggestions() {
-  if (!genEnabled()) { toast('Engine not reachable — is the server running?'); return; }
+  var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
+  if (!ref) { toast('Pick a brand first.'); return; }
   var picker = document.getElementById('topic-picker');
   if (picker) picker.hidden = false;
   selectedTopicTitle = '';
+  topicLoading = true;
   showTopicLoading(true);
-  updateArticleUI();
-  var viaBridge = !labAnthropicEnabled && labBridgeEnabled;
-  toast('Finding 4 topics…' + (viaBridge ? ' (via Claude Code)' : ''));
-  runGenerate(buildGeneratePayload('suggest')).then(function (d) {
-    if (d.snapshot) labBundleSnapshot = d.snapshot;
-    topicOptions = parseTopicOptionsFromText(d.text);
-    showTopicLoading(false);
+  var btn = document.getElementById('btn-gen-options'); if (btn) btn.disabled = true;
+  var platform = (document.getElementById('platform') || {}).value || 'Short posts';
+  fetch('/api/lab/options', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ voice: ref, platform: platform, braindump: 'Suggest strong, distinct ' + platform.toLowerCase() + ' options to introduce or promote this brand.', n: 4 })
+  }).then(function (res) { return res.json(); }).then(function (d) {
+    topicLoading = false; showTopicLoading(false);
+    if (btn) btn.disabled = false;
+    if (!d || !d.ok) { topicOptions = []; renderTopicCards(); toast((d && d.error) || 'Could not generate options'); return; }
+    topicOptions = (d.options || []).map(function (t) { return { text: t }; });
     renderTopicCards();
-    if (!topicOptions.length) toast('No options parsed — try again');
-    else toast('Pick a topic to draft');
+    toast(topicOptions.length ? (topicOptions.length + ' options ready — Use one to edit') : 'No options returned — try again');
     saveLabToStorage(true);
   }).catch(function (err) {
-    showTopicLoading(false);
-    toast((err && err.message) ? err.message : 'Could not find topics');
+    topicLoading = false; showTopicLoading(false);
+    if (btn) btn.disabled = false;
+    toast((err && err.message) ? err.message : 'Could not generate options');
   });
 }
 
@@ -2419,19 +2413,24 @@ function renderTopicCards() {
   var wrap = document.getElementById('topic-cards');
   if (!wrap) return;
   wrap.innerHTML = '';
-  topicOptions.forEach(function (o) {
-    var selected = o.title === selectedTopicTitle;
-    var card = document.createElement('button');
-    card.type = 'button';
-    card.className = 'topic-card' + (selected ? ' selected' : '');
-    card.setAttribute('role', 'radio');
-    card.setAttribute('aria-checked', selected ? 'true' : 'false');
-    var meta = topicCardMeta(o.raw);
+  topicOptions.forEach(function (o, i) {
+    var card = document.createElement('div');
+    card.className = 'topic-card';
+    card.style.cursor = 'default';
     card.innerHTML =
-      '<div class="topic-card-head"><span class="topic-card-num">Option ' + o.n + '</span></div>' +
-      '<div class="topic-card-title">' + escapeHtml(o.title) + '</div>' +
-      (meta ? '<div class="topic-card-meta">' + escapeHtml(meta) + '</div>' : '');
-    card.addEventListener('click', function () { selectTopicCard(o.title); });
+      '<div class="topic-card-head"><span class="topic-card-num">Option ' + (i + 1) + '</span></div>' +
+      '<div class="topic-card-title" style="white-space:pre-wrap;font-weight:400;line-height:1.5">' + escapeHtml(o.text) + '</div>';
+    var use = document.createElement('button');
+    use.type = 'button';
+    use.className = 'lab-btn secondary';
+    use.textContent = 'Use this';
+    use.style.cssText = 'margin-top:8px;font-size:12px;padding:6px 12px';
+    use.addEventListener('click', function () {
+      if (typeof setResponseText === 'function') setResponseText(o.text);
+      if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — edit, then Save', false);
+      var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    card.appendChild(use);
     wrap.appendChild(card);
   });
 }
@@ -3406,54 +3405,6 @@ refreshTranscriptPendingStatus();
     ['dragenter', 'dragover'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.add('drag'); }); });
     ['dragleave', 'drop'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.remove('drag'); }); });
     drop.addEventListener('drop', function (ev) { handle(ev.dataTransfer.files); });
-  });
-})();
-</script>
-<script>
-(function () {
-  function ref() { return (typeof resolveVoice === 'function') ? resolveVoice() : ''; }
-  function platform() { var p = document.getElementById('platform'); return p ? p.value : 'Short posts'; }
-  function braindump() { var b = document.getElementById('braindump'); return b ? b.value : ''; }
-  function note(msg) { if (typeof toast === 'function') toast(msg); }
-
-  function render(opts) {
-    var wrap = document.getElementById('options-cards'); if (!wrap) return;
-    wrap.innerHTML = '';
-    opts.forEach(function (text, i) {
-      var card = document.createElement('div'); card.className = 'topic-card'; card.style.cursor = 'default';
-      var num = document.createElement('div'); num.className = 'topic-card-num'; num.textContent = 'Option ' + (i + 1);
-      var body = document.createElement('div'); body.style.whiteSpace = 'pre-wrap'; body.style.margin = '6px 0 10px'; body.style.fontSize = '14px'; body.style.lineHeight = '1.5'; body.textContent = text;
-      var use = document.createElement('button'); use.type = 'button'; use.className = 'lab-btn secondary'; use.textContent = 'Use this'; use.style.fontSize = '12px'; use.style.padding = '6px 12px';
-      use.addEventListener('click', function () {
-        if (typeof setResponseText === 'function') setResponseText(text);
-        if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — edit, then Save', false);
-        var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-      card.appendChild(num); card.appendChild(body); card.appendChild(use);
-      wrap.appendChild(card);
-    });
-  }
-
-  function go() {
-    var panel = document.getElementById('options-panel'), loading = document.getElementById('options-loading'),
-        cards = document.getElementById('options-cards'), btn = document.getElementById('btn-options');
-    var r = ref(); if (!r) { note('Pick a brand first.'); return; }
-    var bd = braindump(); if (!bd.trim()) { note('Add a braindump first.'); return; }
-    panel.hidden = false; cards.innerHTML = ''; loading.hidden = false; if (btn) btn.disabled = true;
-    fetch('/api/lab/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: r, platform: platform(), braindump: bd, n: 4 }) })
-      .then(function (res) { return res.json(); })
-      .then(function (d) {
-        loading.hidden = true; if (btn) btn.disabled = false;
-        if (!d || !d.ok) { cards.innerHTML = '<p class="lab-intent-hint">' + ((d && d.error) || 'Generation failed') + '</p>'; return; }
-        if (!d.options || !d.options.length) { cards.innerHTML = '<p class="lab-intent-hint">No options returned.</p>'; return; }
-        render(d.options);
-      })
-      .catch(function () { loading.hidden = true; if (btn) btn.disabled = false; cards.innerHTML = '<p class="lab-intent-hint">Request failed &mdash; is the server running?</p>'; });
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('btn-options');
-    if (btn) btn.addEventListener('click', go);
   });
 })();
 </script>
