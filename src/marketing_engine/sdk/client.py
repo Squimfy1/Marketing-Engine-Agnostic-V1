@@ -124,6 +124,12 @@ class FakeLLMClient:
     """
 
     async def run(self, prompt: str, options: AgentRunOptions) -> RunResult:
+        brand_line = _first_matching(options.system_prompt, "Brand:") or "Brand"
+        if "@@@OPTION@@@" in prompt:  # options mode → return N delimited options
+            req = (_section(prompt, "REQUEST") or prompt.strip()).split("\n\n", 1)[0].strip()
+            opts = [f"Option {i + 1} for: {req}. ({brand_line})" for i in range(4)]
+            return RunResult(text="\n@@@OPTION@@@\n".join(opts), model=options.model or "fake")
+
         section = _section(prompt, "INPUT") or prompt.strip()
         # The INPUT section is followed by run instructions; the operator's
         # actual request is its first paragraph.

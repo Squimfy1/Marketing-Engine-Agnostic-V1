@@ -113,6 +113,7 @@ def make_handler(api: Api, web_dir: Path):
             body = self._read_body()
             routes = {
                 "/api/lab/generate": lambda: api.generate(body),
+                "/api/lab/options": lambda: api.options(body),
                 "/api/lab/commit-edits": lambda: api.commit_edits(body),
                 "/api/lab/save-draft": lambda: api.commit_edits(body),
                 "/api/kb/upload": lambda: api.kb_upload(body),

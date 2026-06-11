@@ -57,6 +57,38 @@ def assemble_system_prompt(
     return "\n".join(parts).strip()
 
 
+OPTIONS_INSTRUCTIONS = """\
+Using the brand identity and voice above, write exactly {n} DISTINCT options for
+the request below — different angles or hooks, each a complete, ready-to-post
+post in the brand's voice.
+
+Write them NOW from the brand identity and voice. Do NOT ask for more
+information, do NOT refuse, and do NOT add any commentary. If a specific fact
+would help but you don't have it, still write a strong angle and put a short
+[bracketed note] where a real detail belongs.
+
+No titles, no numbering, no preamble. Separate each option with a line
+containing only @@@OPTION@@@ and nothing else."""
+
+
+def build_options_prompt(
+    input_text: str,
+    *,
+    n: int = 4,
+    platform_label: str | None = None,
+    platform_guidance: str = "",
+) -> str:
+    """Prompt for generating N distinct post options in one call."""
+
+    parts = ["## REQUEST", input_text.strip()]
+    if platform_label:
+        parts += ["", f"## PLATFORM\n{platform_label}"]
+    if platform_guidance.strip():
+        parts += ["", "## PLATFORM GUIDANCE", platform_guidance.strip()]
+    parts += ["", OPTIONS_INSTRUCTIONS.format(n=n)]
+    return "\n".join(parts)
+
+
 def build_run_prompt(
     input_text: str,
     *,

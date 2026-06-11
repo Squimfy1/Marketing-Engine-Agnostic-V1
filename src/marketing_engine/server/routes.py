@@ -127,6 +127,37 @@ class Api:
             "denied": result.denied_paths,
         }
 
+    # -- options (N distinct post options, fast) -------------------------
+    def options(self, body: dict) -> tuple[int, dict]:
+        try:
+            tenant, brand = split_ref(_ref_of(body))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        braindump = body.get("braindump") or ""
+        try:
+            n = max(2, min(8, int(body.get("n", 4))))
+        except (TypeError, ValueError):
+            n = 4
+        try:
+            result = asyncio.run(
+                self.engine.generate_options(
+                    tenant, brand, braindump=braindump, platform=body.get("platform"), n=n
+                )
+            )
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        except EngineError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            return 500, {"ok": False, "error": f"options failed: {exc}"}
+        opts = [o.strip() for o in result.text.split("@@@OPTION@@@") if o.strip()]
+        return 200, {
+            "ok": not result.is_error,
+            "options": opts,
+            "model": result.model,
+            "usage": {"num_turns": result.num_turns, **result.usage},
+        }
+
     # -- commit edits ----------------------------------------------------
     def commit_edits(self, body: dict) -> tuple[int, dict]:
         try:

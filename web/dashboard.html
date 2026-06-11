@@ -1328,6 +1328,7 @@ textarea.lab-main-input {
         <textarea id="braindump" class="lab-input" rows="5" placeholder="Your idea, angle, links, or what you want drafted…"></textarea>
         <div class="lab-composer-actions">
           <button type="button" class="lab-generate-btn" id="btn-generate-claude" disabled title="Generate via Claude Code (your account)">Generate</button>
+          <button type="button" class="lab-generate-btn suggest" id="btn-options" title="Generate 4 short-post options">4 options</button>
           <button type="button" class="lab-send-btn" id="btn-send-claude" aria-label="Copy bundle for Claude Desktop" title="Copy bundle for Claude Desktop">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -1346,6 +1347,15 @@ textarea.lab-main-input {
         </div>
         <div id="topic-cards" class="topic-cards" role="radiogroup" aria-label="Suggested topics"></div>
         <button type="button" class="lab-generate-btn" id="btn-draft-topic" hidden style="margin-top:12px;width:100%">Draft this topic</button>
+      </div>
+
+      <div id="options-panel" class="lab-topic-pick" hidden style="margin-top:14px">
+        <h4>Short-post options</h4>
+        <div id="options-loading" class="topic-loading" hidden>
+          <span class="topic-spinner" aria-hidden="true"></span>
+          <span>Generating options&hellip;</span>
+        </div>
+        <div id="options-cards" class="topic-cards"></div>
       </div>
 
       <div id="dropzone" class="dropzone lab-dropzone" tabindex="0" role="button" aria-label="Upload context files">
@@ -3396,6 +3406,54 @@ refreshTranscriptPendingStatus();
     ['dragenter', 'dragover'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.add('drag'); }); });
     ['dragleave', 'drop'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.remove('drag'); }); });
     drop.addEventListener('drop', function (ev) { handle(ev.dataTransfer.files); });
+  });
+})();
+</script>
+<script>
+(function () {
+  function ref() { return (typeof resolveVoice === 'function') ? resolveVoice() : ''; }
+  function platform() { var p = document.getElementById('platform'); return p ? p.value : 'Short posts'; }
+  function braindump() { var b = document.getElementById('braindump'); return b ? b.value : ''; }
+  function note(msg) { if (typeof toast === 'function') toast(msg); }
+
+  function render(opts) {
+    var wrap = document.getElementById('options-cards'); if (!wrap) return;
+    wrap.innerHTML = '';
+    opts.forEach(function (text, i) {
+      var card = document.createElement('div'); card.className = 'topic-card'; card.style.cursor = 'default';
+      var num = document.createElement('div'); num.className = 'topic-card-num'; num.textContent = 'Option ' + (i + 1);
+      var body = document.createElement('div'); body.style.whiteSpace = 'pre-wrap'; body.style.margin = '6px 0 10px'; body.style.fontSize = '14px'; body.style.lineHeight = '1.5'; body.textContent = text;
+      var use = document.createElement('button'); use.type = 'button'; use.className = 'lab-btn secondary'; use.textContent = 'Use this'; use.style.fontSize = '12px'; use.style.padding = '6px 12px';
+      use.addEventListener('click', function () {
+        if (typeof setResponseText === 'function') setResponseText(text);
+        if (typeof setResponseStatus === 'function') setResponseStatus('Loaded option ' + (i + 1) + ' — edit, then Save', false);
+        var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      card.appendChild(num); card.appendChild(body); card.appendChild(use);
+      wrap.appendChild(card);
+    });
+  }
+
+  function go() {
+    var panel = document.getElementById('options-panel'), loading = document.getElementById('options-loading'),
+        cards = document.getElementById('options-cards'), btn = document.getElementById('btn-options');
+    var r = ref(); if (!r) { note('Pick a brand first.'); return; }
+    var bd = braindump(); if (!bd.trim()) { note('Add a braindump first.'); return; }
+    panel.hidden = false; cards.innerHTML = ''; loading.hidden = false; if (btn) btn.disabled = true;
+    fetch('/api/lab/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: r, platform: platform(), braindump: bd, n: 4 }) })
+      .then(function (res) { return res.json(); })
+      .then(function (d) {
+        loading.hidden = true; if (btn) btn.disabled = false;
+        if (!d || !d.ok) { cards.innerHTML = '<p class="lab-intent-hint">' + ((d && d.error) || 'Generation failed') + '</p>'; return; }
+        if (!d.options || !d.options.length) { cards.innerHTML = '<p class="lab-intent-hint">No options returned.</p>'; return; }
+        render(d.options);
+      })
+      .catch(function () { loading.hidden = true; if (btn) btn.disabled = false; cards.innerHTML = '<p class="lab-intent-hint">Request failed &mdash; is the server running?</p>'; });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('btn-options');
+    if (btn) btn.addEventListener('click', go);
   });
 })();
 </script>

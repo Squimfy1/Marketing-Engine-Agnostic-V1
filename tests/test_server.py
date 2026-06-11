@@ -84,6 +84,21 @@ def test_generate_bad_ref(api: Api):
     assert status == 400
 
 
+# -- options -------------------------------------------------------------
+def test_options_returns_four(api: Api):
+    status, payload = api.options(
+        {"voice": "acme-co/acme", "platform": "Short posts", "braindump": "Launch the Sky Pup", "n": 4}
+    )
+    assert status == 200 and payload["ok"]
+    assert len(payload["options"]) == 4
+    assert all(o.strip() for o in payload["options"])
+
+
+def test_options_bad_ref(api: Api):
+    status, _ = api.options({"braindump": "x"})
+    assert status == 400
+
+
 # -- commit edits --------------------------------------------------------
 def test_commit_edits_writes_draft_and_learning(api: Api):
     body = {

@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from marketing_engine.brand.assembler import assemble_run
 from marketing_engine.config.settings import Settings
 from marketing_engine.harness.platforms import load_guidance, resolve_platform
+from marketing_engine.harness.prompts import build_options_prompt
 from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient, RunResult
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.memory_tools import append_memory
@@ -93,6 +94,47 @@ class MarketingEngine:
             task=task,
         )
         return await self.llm.run(assembled.run_prompt, assembled.options)
+
+    async def generate_options(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        braindump: str,
+        platform: str | None = None,
+        n: int = 4,
+    ) -> RunResult:
+        """Generate N distinct post options in a single fast, cheap call.
+
+        Uses the brand's 'ideas' model tier (Haiku by default) and NO file tools,
+        so it is a one-shot generation from the inlined brand voice + rules —
+        fast and token-light. The full draft (with KB reading) comes later when
+        the operator picks an option.
+        """
+
+        if not braindump.strip():
+            raise EngineError("Empty braindump — nothing to generate from.")
+
+        tenant = self.registry.get_tenant(tenant_id)
+        brand = self.registry.get_brand(tenant_id, brand_id)
+        plat = resolve_platform(platform)
+        guidance = load_guidance(self.layout, plat)
+
+        assembled = assemble_run(
+            layout=self.layout,
+            settings=self.settings,
+            tenant=tenant,
+            brand=brand,
+            input_text=braindump,
+            platform_label=plat.label,
+            platform_guidance=guidance,
+            task="ideas",
+        )
+        assembled.options.allowed_tools = []  # single-shot, no KB reading
+        prompt = build_options_prompt(
+            braindump, n=n, platform_label=plat.label, platform_guidance=guidance
+        )
+        return await self.llm.run(prompt, assembled.options)
 
     async def run(
         self,
