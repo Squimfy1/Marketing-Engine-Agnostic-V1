@@ -39,7 +39,7 @@ def test_list_brands(api: Api):
 def test_platforms(api: Api):
     status, payload = api.platforms()
     assert status == 200
-    assert {p["label"] for p in payload["platforms"]} == {"Short posts", "Articles"}
+    assert {p["label"] for p in payload["platforms"]} == {"Short posts"}
 
 
 # -- bundle pack ---------------------------------------------------------

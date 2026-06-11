@@ -21,10 +21,9 @@ class Platform:
     label: str  # what the dashboard shows / sends
 
 
-# The M2 platform set (founder-led formats dropped).
+# Focused on short posts for now (Articles deferred — re-add when needed).
 PLATFORMS: tuple[Platform, ...] = (
     Platform(id="short-posts", label="Short posts"),
-    Platform(id="articles", label="Articles"),
 )
 
 _BY_LABEL = {p.label: p for p in PLATFORMS}
