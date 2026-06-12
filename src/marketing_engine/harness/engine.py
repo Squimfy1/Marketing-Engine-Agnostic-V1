@@ -17,10 +17,10 @@ from datetime import datetime, timezone
 
 from marketing_engine.brand.assembler import assemble_run
 from marketing_engine.config.settings import Settings
-from marketing_engine.harness.platforms import load_guidance, resolve_platform
+from marketing_engine.content.platforms import load_guidance, resolve_platform
 from marketing_engine.harness.prompts import build_image_brief_prompt, build_options_prompt
-from marketing_engine.harness.validate import validate_post
-from marketing_engine.postprocess import clean_copy
+from marketing_engine.content.validate import validate_post
+from marketing_engine.content.postprocess import clean_copy
 from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient, RunResult
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.memory_tools import append_memory

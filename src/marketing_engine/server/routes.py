@@ -19,10 +19,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from marketing_engine.convert import ConvertError, convert
+from marketing_engine.inputs.convert import ConvertError, convert
 from marketing_engine.harness.engine import EngineError, MarketingEngine
-from marketing_engine.postprocess import extract_json_list
-from marketing_engine.harness.platforms import PLATFORMS
+from marketing_engine.content.postprocess import extract_json_list
+from marketing_engine.content.platforms import PLATFORMS
 from marketing_engine.server.bundle import assemble_bundle
 from marketing_engine.tenant.registry import RegistryError
 from marketing_engine.tools import learnings

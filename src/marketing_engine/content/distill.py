@@ -15,7 +15,7 @@ from marketing_engine.harness.prompts import (
     DISTILL_SYSTEM,
     build_distill_prompt,
 )
-from marketing_engine.postprocess import extract_json_obj
+from marketing_engine.content.postprocess import extract_json_obj
 from marketing_engine.sdk.client import AgentRunOptions
 from marketing_engine.sdk.models import resolve_model
 

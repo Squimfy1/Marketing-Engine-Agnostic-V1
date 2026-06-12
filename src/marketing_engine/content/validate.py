@@ -9,7 +9,7 @@ itself errors or returns nothing parseable, the post passes.
 from __future__ import annotations
 
 from marketing_engine.harness.prompts import VALIDATE_SYSTEM, build_validate_prompt
-from marketing_engine.postprocess import extract_json_obj
+from marketing_engine.content.postprocess import extract_json_obj
 from marketing_engine.sdk.client import AgentRunOptions
 from marketing_engine.sdk.models import HAIKU
 

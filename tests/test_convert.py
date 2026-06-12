@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from marketing_engine.convert import ConvertError, convert, pdf_to_text
+from marketing_engine.inputs.convert import ConvertError, convert, pdf_to_text
 
 
 def test_text_passthrough():

@@ -144,7 +144,7 @@ def distill(
 ) -> None:
     """Distill a brand's _sources/ transcripts into a public-safe narrative profile."""
 
-    from marketing_engine.harness.distill import DistillError, distill as run_distill
+    from marketing_engine.content.distill import DistillError, distill as run_distill
 
     settings = Settings.from_env(vault_root=vault_root)
     llm = FakeLLMClient() if dry_run else ClaudeAgentClient()

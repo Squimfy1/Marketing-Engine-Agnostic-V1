@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from marketing_engine.harness.engine import MarketingEngine
-from marketing_engine.harness.validate import validate_post
+from marketing_engine.content.validate import validate_post
 from marketing_engine.sdk.client import FakeLLMClient
 
 

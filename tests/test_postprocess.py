@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from marketing_engine.postprocess import clean_copy, extract_json_list
+from marketing_engine.content.postprocess import clean_copy, extract_json_list
 
 
 def test_extract_json_list_plain():

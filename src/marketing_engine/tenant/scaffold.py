@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from marketing_engine.convert import SUPPORTED_EXTS, ConvertError, convert
+from marketing_engine.inputs.convert import SUPPORTED_EXTS, ConvertError, convert
 from marketing_engine.vault.layout import BRAND_SUBDIRS, VaultLayout
 
 INGESTIBLE = SUPPORTED_EXTS

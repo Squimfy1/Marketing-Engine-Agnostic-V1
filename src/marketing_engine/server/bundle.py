@@ -14,7 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from marketing_engine.brand.schema import BrandConfig
-from marketing_engine.harness.platforms import PLATFORMS_DIR, resolve_platform
+from marketing_engine.content.platforms import PLATFORMS_DIR, resolve_platform
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.learnings import LAB_LEARNINGS
 from marketing_engine.vault.layout import VaultLayout

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from marketing_engine.harness.distill import DistillError, distill
+from marketing_engine.content.distill import DistillError, distill
 from marketing_engine.harness.engine import MarketingEngine
 from marketing_engine.sdk.client import FakeLLMClient
 
