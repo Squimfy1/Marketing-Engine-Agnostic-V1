@@ -17,9 +17,12 @@ async def test_distill_writes_profile(settings, layout):
     result = await distill(engine, "acme-co", "acme")
 
     assert result.core_narrative
-    assert "_rules/key-ideas.md" in result.files_written
-    km = (layout.rules_dir("acme-co", "acme") / "key-ideas.md").read_text(encoding="utf-8")
+    assert "_rules/strategy.md" in result.files_written
+    km = (layout.rules_dir("acme-co", "acme") / "strategy.md").read_text(encoding="utf-8")
     assert "KEY IDEAS" in km
+    # The three universal filter dimensions are present and filled.
+    assert "BUSINESS PRINCIPLES" in km and "CUSTOMER NARRATIVES" in km
+    assert result.strategy["business_principles"]
     assert (layout.kb_dir("acme-co", "acme") / "proof-points.md").is_file()
 
 

@@ -91,7 +91,8 @@ def test_options_returns_four(api: Api):
     )
     assert status == 200 and payload["ok"]
     assert len(payload["options"]) == 4
-    assert all(o.strip() for o in payload["options"])
+    assert all(o["text"].strip() for o in payload["options"])  # rich idea objects
+    assert payload["optionsText"] and all(t.strip() for t in payload["optionsText"])
 
 
 def test_options_bad_ref(api: Api):

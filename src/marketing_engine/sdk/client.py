@@ -139,6 +139,9 @@ class FakeLLMClient:
                 text=json.dumps(
                     {
                         "core_narrative": "Distilled core narrative.",
+                        "business_principles": ["Tangible backing", "Buy in small amounts"],
+                        "customer_personas": ["Everyday family protecting savings"],
+                        "customer_narratives": ["Prices keep rising and my savings erode"],
                         "trajectory": "Where the company is heading.",
                         "key_ideas": ["Idea A", "Idea B", "Idea C", "Idea D"],
                         "proof_points": ["Proof one", "Proof two"],
@@ -147,11 +150,32 @@ class FakeLLMClient:
                 ),
                 model=options.model or "fake",
             )
+        if "## CANDIDATE IDEAS" in prompt:  # strategy filter → verdict per idea
+            import json
+            import re
+
+            section = _section(prompt, "CANDIDATE IDEAS")
+            n_ideas = len([ln for ln in section.splitlines() if re.match(r"\s*\d+\.", ln)])
+            arr = [
+                {
+                    "i": k + 1,
+                    "keep": True,
+                    "principle": "tangible physical backing",
+                    "persona": "everyday family",
+                    "narrative": "prices keep rising and savings erode",
+                    "reason": "ties a business principle to a felt customer story",
+                }
+                for k in range(n_ideas)
+            ]
+            return RunResult(text=json.dumps(arr), model=options.model or "fake")
         if "JSON array" in prompt:  # options mode → return a JSON array of ideas
             import json
+            import re
 
             req = (_section(prompt, "REQUEST") or prompt.strip()).split("\n\n", 1)[0].strip()
-            opts = [f"Idea {i + 1} for: {req} ({brand_line})" for i in range(4)]
+            m = re.search(r"exactly (\d+)", prompt)
+            count = int(m.group(1)) if m else 4
+            opts = [f"Idea {i + 1} for: {req} ({brand_line})" for i in range(count)]
             return RunResult(text=json.dumps(opts), model=options.model or "fake")
 
         section = _section(prompt, "INPUT") or prompt.strip()

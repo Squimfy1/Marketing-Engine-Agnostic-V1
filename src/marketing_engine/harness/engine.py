@@ -17,10 +17,11 @@ from datetime import datetime, timezone
 
 from marketing_engine.brand.assembler import assemble_run
 from marketing_engine.config.settings import Settings
+from marketing_engine.content.filter import filter_ideas, select
 from marketing_engine.content.platforms import load_guidance, resolve_platform
 from marketing_engine.harness.prompts import build_image_brief_prompt, build_options_prompt
 from marketing_engine.content.validate import validate_post
-from marketing_engine.content.postprocess import clean_copy
+from marketing_engine.content.postprocess import clean_copy, extract_json_list
 from marketing_engine.sdk.client import ClaudeAgentClient, LLMClient, RunResult
 from marketing_engine.tenant.registry import Registry
 from marketing_engine.tools.memory_tools import append_memory
@@ -42,6 +43,19 @@ class EngineResult:
     output_relpath: str
     model: str | None
     denied_paths: list[str] = field(default_factory=list)
+    is_error: bool = False
+
+
+@dataclass
+class OptionsResult:
+    """N strategy-filtered idea briefs, each tagged with the principle + customer
+    narrative it advances (empty tags if the filter didn't run)."""
+
+    options: list[dict] = field(default_factory=list)  # FilteredIdea.as_dict()
+    model: str | None = None
+    num_turns: int = 0
+    usage: dict = field(default_factory=dict)
+    filtered: bool = False  # did the strategy filter actually run?
     is_error: bool = False
 
 
@@ -122,13 +136,14 @@ class MarketingEngine:
         braindump: str,
         platform: str | None = None,
         n: int = 4,
-    ) -> RunResult:
-        """Generate N distinct post options in a single fast, cheap call.
+    ) -> OptionsResult:
+        """Generate N strategy-filtered post ideas: brainstorm a few extra, then
+        run the cheap strategy filter and keep the ones that tie a business
+        principle to a customer narrative.
 
-        Uses the brand's 'ideas' model tier (Haiku by default) and NO file tools,
-        so it is a one-shot generation from the inlined brand voice + rules —
-        fast and token-light. The full draft (with KB reading) comes later when
-        the operator picks an option.
+        Both calls use the 'ideas' Haiku tier with NO file tools, so the pair is
+        still fast and token-light. The full draft (with KB reading) comes later
+        when the operator picks an option.
         """
 
         if not braindump.strip():
@@ -149,15 +164,38 @@ class MarketingEngine:
             platform_guidance=guidance,
             task="ideas",
         )
-        # Single-shot, no tools: ideas come from the inlined brand narrative + rules
-        # (the 'ideas' Haiku tier). Cheap, fast, and reliably structured.
+        # Single-shot, no tools: ideas come from the inlined brand narrative + rules.
+        # Brainstorm a small buffer above n so the filter can drop weak ones and
+        # still fill the slate.
         assembled.options.allowed_tools = []
+        raw_n = min(8, n + 2)
         prompt = build_options_prompt(
-            braindump, n=n, platform_label=plat.label, platform_guidance=guidance
+            braindump, n=raw_n, platform_label=plat.label, platform_guidance=guidance
         )
         result = await self.llm.run(prompt, assembled.options)
-        result.text = clean_copy(result.text)
-        return result
+        ideas = [clean_copy(i) for i in extract_json_list(result.text)]
+        if not ideas:  # legacy fallback if the model didn't return JSON
+            ideas = [clean_copy(o) for o in result.text.split("@@@OPTION@@@") if o.strip()]
+
+        outcome = await filter_ideas(
+            self,
+            tenant_id=tenant_id,
+            brand_id=brand_id,
+            ideas=ideas,
+            cwd=assembled.options.cwd,
+        )
+        chosen = select(outcome, n)
+        usage = dict(result.usage)
+        for k, v in (outcome.usage or {}).items():  # add the filter call's tokens
+            usage[k] = (usage.get(k) or 0) + (v or 0) if isinstance(v, (int, float)) else v
+        return OptionsResult(
+            options=[fi.as_dict() for fi in chosen],
+            model=result.model,
+            num_turns=result.num_turns,
+            usage=usage,
+            filtered=outcome.ran,
+            is_error=result.is_error,
+        )
 
     async def generate_image_brief(
         self,

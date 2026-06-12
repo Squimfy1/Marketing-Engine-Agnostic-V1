@@ -140,16 +140,32 @@ DISTILL_SYSTEM = (
     "material."
 )
 
-DISTILL_INSTRUCTIONS = """\
-Read the transcripts above and extract the durable strategy. Return ONLY a JSON
-object with this exact shape:
-{
+# The distiller fills a FIXED set of sections for every brand. Three of them
+# (business_principles / customer_personas / customer_narratives) come straight
+# from the universal STRATEGY_SECTIONS schema so the distiller and the filter
+# stay in lockstep; the prompt below is generated, never hand-listed.
+from marketing_engine.content.strategy import STRATEGY_SECTIONS  # noqa: E402
+
+
+def _strategy_schema_lines() -> str:
+    return "\n".join(
+        f'  "{sec.key}": ["{sec.instruction} — 3-6 items"],' for sec in STRATEGY_SECTIONS
+    )
+
+
+DISTILL_INSTRUCTIONS = f"""\
+Read the transcripts above and extract the durable strategy. Fill EVERY section
+below; if a section is not stated outright, infer the most reasonable version
+from context and never leave one empty.
+Return ONLY a JSON object with this exact shape:
+{{
   "core_narrative": "1-2 sentence central thesis the brand keeps returning to",
-  "trajectory": "1-2 sentences on where the company is heading / current priorities",
+{_strategy_schema_lines()}
   "key_ideas": ["the most important recurring narratives or angles, ranked, 6-10 items"],
+  "trajectory": "1-2 sentences on where the company is heading / current priorities",
   "proof_points": ["public-safe, citable facts the content can use, 5-10 items"],
   "avoid": ["positioning guardrails / things to never say that surfaced in the calls"]
-}
+}}
 
 CRITICAL — public-safe only. EXCLUDE all confidential internal material: people's
 names, org/HR changes, ownership, financials, fundraising, pricing or fees, roadmap
@@ -162,6 +178,35 @@ def build_distill_prompt(sources_text: str) -> str:
     """Prompt to distill a public-safe narrative profile from raw transcripts."""
 
     return "## TRANSCRIPTS\n" + sources_text.strip() + "\n\n" + DISTILL_INSTRUCTIONS
+
+
+FILTER_SYSTEM = (
+    "You are a sharp brand strategist running a tight relevance filter. For each "
+    "candidate post idea you judge whether it advances the brand's strategy — tying a "
+    "real BUSINESS PRINCIPLE to a real CUSTOMER NARRATIVE for a known PERSONA — and "
+    "you return ONLY JSON. You never rewrite the ideas."
+)
+
+FILTER_INSTRUCTIONS = """\
+For EACH numbered idea, return one JSON object. Return ONLY a JSON array, in order:
+[{"i": 1, "keep": true, "principle": "the business principle it advances, or empty",
+  "persona": "the persona it speaks to, or empty",
+  "narrative": "the customer narrative it taps, or empty",
+  "reason": "one short sentence"}]
+
+KEEP an idea (keep=true) ONLY if it clearly connects at least one BUSINESS
+PRINCIPLE to at least one CUSTOMER NARRATIVE. Drop (keep=false) anything generic,
+off-strategy, a pure feature dump, or that no real customer would feel. Quote the
+principle/persona/narrative using the wording from the strategy above. No prose
+outside the JSON, no markdown fences."""
+
+
+def build_filter_prompt(ideas: list[str], strategy_block: str) -> str:
+    """Prompt for the cheap strategy filter: score N ideas against the strategy."""
+
+    numbered = "\n".join(f"{i + 1}. {idea.strip()}" for i, idea in enumerate(ideas))
+    parts = ["## BRAND STRATEGY", strategy_block.strip(), "", "## CANDIDATE IDEAS", numbered, "", FILTER_INSTRUCTIONS]
+    return "\n".join(parts)
 
 
 def build_image_brief_prompt(post_text: str, *, design_tokens: str = "") -> str:

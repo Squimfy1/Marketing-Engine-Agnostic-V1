@@ -21,7 +21,6 @@ from pathlib import Path
 
 from marketing_engine.inputs.convert import ConvertError, convert
 from marketing_engine.harness.engine import EngineError, MarketingEngine
-from marketing_engine.content.postprocess import extract_json_list
 from marketing_engine.content.platforms import PLATFORMS
 from marketing_engine.server.bundle import assemble_bundle
 from marketing_engine.tenant.registry import RegistryError
@@ -151,12 +150,13 @@ class Api:
             return 400, {"ok": False, "error": str(exc)}
         except Exception as exc:
             return 500, {"ok": False, "error": f"options failed: {exc}"}
-        opts = extract_json_list(result.text)[:n]
-        if not opts:  # fallback if the model didn't return valid JSON
-            opts = [o.strip() for o in result.text.split("@@@OPTION@@@") if o.strip()][-n:]
+        # Rich objects (text + principle/narrative tags) for the new cards;
+        # `optionsText` keeps a plain-string list for any older UI code path.
         return 200, {
             "ok": not result.is_error,
-            "options": opts,
+            "options": result.options,
+            "optionsText": [o["text"] for o in result.options],
+            "filtered": result.filtered,
             "model": result.model,
             "usage": {"num_turns": result.num_turns, **result.usage},
         }
