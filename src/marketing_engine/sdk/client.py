@@ -128,6 +128,10 @@ class FakeLLMClient:
 
     async def run(self, prompt: str, options: AgentRunOptions) -> RunResult:
         brand_line = _first_matching(options.system_prompt, "Brand:") or "Brand"
+        if '"pass": true or false' in prompt:  # validator verdict
+            import json
+
+            return RunResult(text=json.dumps({"pass": True, "rule": "", "reason": ""}), model="fake")
         if "with this exact shape" in prompt:  # distillation mode
             import json
 

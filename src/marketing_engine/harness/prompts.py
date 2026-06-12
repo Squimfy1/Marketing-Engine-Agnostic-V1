@@ -106,6 +106,33 @@ colour palette, and any short text overlay. Keep it on-brand and ready to paste
 into an image tool. Output ONLY the brief — no preamble, no commentary."""
 
 
+VALIDATE_SYSTEM = (
+    "You are a strict but fair brand editor. You check a short post against the rules "
+    "and return a JSON verdict. You do not rewrite it."
+)
+
+VALIDATE_INSTRUCTIONS = """\
+Check the short post below. Return ONLY a JSON object:
+{"pass": true or false, "rule": "the rule it breaks, or empty", "reason": "one short sentence"}
+
+FAIL it if ANY is true:
+- It develops more than one competing idea, or reads as a feature/benefit list.
+- It does not clearly connect to the CORE NARRATIVE.
+- It uses crypto framing, or promises returns / price gains / specific pricing.
+- It does not end with a single clear call to action.
+Otherwise pass it. No prose outside the JSON."""
+
+
+def build_validate_prompt(post_text: str, core_narrative: str) -> str:
+    """Prompt for the cheap reliability gate (Haiku verdict on a short post)."""
+
+    parts = []
+    if core_narrative.strip():
+        parts += ["## CORE NARRATIVE", core_narrative.strip(), ""]
+    parts += ["## POST", post_text.strip(), "", VALIDATE_INSTRUCTIONS]
+    return "\n".join(parts)
+
+
 DISTILL_SYSTEM = (
     "You are a precise brand strategist. You distill a company's strategy from raw "
     "call transcripts into a reusable, PUBLIC-SAFE content profile. You separate the "
