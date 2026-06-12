@@ -133,9 +133,9 @@ class MarketingEngine:
             platform_guidance=guidance,
             task="ideas",
         )
-        # Read-only KB access so options are grounded in the brand's real material
-        # (still the cheap 'ideas' model tier, so it stays fast).
-        assembled.options.allowed_tools = ["Read", "Grep", "Glob"]
+        # Single-shot, no tools: ideas come from the inlined brand narrative + rules
+        # (the 'ideas' Haiku tier). Cheap, fast, and reliably structured.
+        assembled.options.allowed_tools = []
         prompt = build_options_prompt(
             braindump, n=n, platform_label=plat.label, platform_guidance=guidance
         )

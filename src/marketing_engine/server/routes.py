@@ -21,6 +21,7 @@ from pathlib import Path
 
 from marketing_engine.convert import ConvertError, convert
 from marketing_engine.harness.engine import EngineError, MarketingEngine
+from marketing_engine.postprocess import extract_json_list
 from marketing_engine.harness.platforms import PLATFORMS
 from marketing_engine.server.bundle import assemble_bundle
 from marketing_engine.tenant.registry import RegistryError
@@ -150,10 +151,9 @@ class Api:
             return 400, {"ok": False, "error": str(exc)}
         except Exception as exc:
             return 500, {"ok": False, "error": f"options failed: {exc}"}
-        opts = [o.strip() for o in result.text.split("@@@OPTION@@@") if o.strip()]
-        # If the model added a preamble before the first option, drop it.
-        if len(opts) > n:
-            opts = opts[-n:]
+        opts = extract_json_list(result.text)[:n]
+        if not opts:  # fallback if the model didn't return valid JSON
+            opts = [o.strip() for o in result.text.split("@@@OPTION@@@") if o.strip()][-n:]
         return 200, {
             "ok": not result.is_error,
             "options": opts,

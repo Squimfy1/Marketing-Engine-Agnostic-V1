@@ -14,6 +14,54 @@ EM_DASH = "—"  # —
 EN_DASH = "–"  # –
 
 
+def extract_json_list(text: str) -> list[str]:
+    """Robustly pull a JSON array of strings out of a model reply.
+
+    Tolerates surrounding prose/markdown fences (so a preamble can't break it).
+    Returns [] if no parseable array is found. Dicts in the array are flattened to
+    their idea/brief/angle text.
+    """
+
+    import json
+
+    if not text:
+        return []
+    start = text.find("[")
+    if start < 0:
+        return []
+    depth = 0
+    for i in range(start, len(text)):
+        ch = text[i]
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                try:
+                    data = json.loads(text[start : i + 1])
+                except Exception:
+                    return []
+                if not isinstance(data, list):
+                    return []
+                out: list[str] = []
+                for item in data:
+                    if isinstance(item, str):
+                        out.append(item.strip())
+                    elif isinstance(item, dict):
+                        out.append(
+                            str(
+                                item.get("idea")
+                                or item.get("brief")
+                                or item.get("angle")
+                                or json.dumps(item)
+                            ).strip()
+                        )
+                    else:
+                        out.append(str(item).strip())
+                return [o for o in out if o]
+    return []
+
+
 def clean_copy(text: str) -> str:
     """Remove em/en-dash AI-tells and tidy the spacing they leave behind."""
 

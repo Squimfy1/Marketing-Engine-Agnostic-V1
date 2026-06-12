@@ -84,22 +84,19 @@ def assemble_system_prompt(
 
 
 OPTIONS_INSTRUCTIONS = """\
-First, Glob/Grep the brand's _kb/ and read the 1–2 files most relevant to the
-request, so every idea is grounded in the brand's REAL product and material.
+Propose exactly {n} DISTINCT short-post IDEAS — NOT full posts. Each idea is one
+short angle/headline plus 1–2 sentences on what the post would say and why it fits
+the brand. Take DIFFERENT angles, each a proof point or angle on the brand's CORE
+NARRATIVE (a product explainer, an analytical insight, a reaction to relevant news,
+a concrete use-case, etc.).
 
-Then propose exactly {n} DISTINCT short-post IDEAS — NOT full posts. Each idea is
-a brief: a short angle/headline, then 1–2 sentences on what the post would say and
-why it fits the brand. Take DIFFERENT angles (e.g. a product explainer, an
-analytical insight, a reaction to relevant news, a concrete use-case).
+Ground them in the brand identity, voice, narrative, and rules already in your
+system prompt. Keep each idea to 1–2 sentences (do NOT write the full post). Obey
+the WRITING RULES and Guardrails; do not invent facts.
 
-Rules:
-- Keep each idea to **1–2 sentences. Do NOT write the full post.**
-- Make each idea SPECIFIC to this brand using facts from _kb/. Do NOT invent facts
-  and do NOT write generic filler; if a detail isn't in _kb/, stay high-level.
-- Obey the WRITING RULES and Guardrails. No numbering, no commentary.
-Format strictly: start EVERY idea (including the first) with a line containing
-only @@@OPTION@@@, immediately followed by the idea. Write nothing before the
-first @@@OPTION@@@."""
+Return ONLY a JSON array of exactly {n} strings — each string is one idea (its
+angle and 1–2 sentence brief). No prose before or after, no markdown fences.
+Example: ["The quiet-erosion angle: open with ... and tie it to ...", "..."]"""
 
 
 IMAGE_BRIEF_INSTRUCTIONS = """\
