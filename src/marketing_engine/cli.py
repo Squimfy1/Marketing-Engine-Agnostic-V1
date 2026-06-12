@@ -104,30 +104,65 @@ def new_brand(
 
 @app.command()
 def ingest(
-    files: list[Path] = typer.Argument(..., help="Source files (.md / .txt) to add to the KB."),
+    files: list[Path] = typer.Argument(..., help="Source files (.md / .txt / .pdf) to add."),
     tenant: str = typer.Option(..., "--tenant", "-t", help="Tenant id."),
     brand: str = typer.Option(..., "--brand", "-b", help="Brand id."),
+    sources: bool = typer.Option(
+        False, "--sources", "-s",
+        help="Add to _sources/ (raw transcripts the engine distills but NEVER quotes) instead of _kb/.",
+    ),
     vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
 ) -> None:
-    """Copy source files into a brand's knowledge base (_kb/)."""
+    """Copy source files into a brand's knowledge base (_kb/), or --sources for transcripts."""
 
     from marketing_engine.tenant.scaffold import ScaffoldError, ingest_files
     from marketing_engine.vault.layout import VaultLayout
 
     settings = Settings.from_env(vault_root=vault_root)
     layout = VaultLayout(settings.vault_root)
+    dest = "_sources" if sources else "_kb"
     try:
-        ingested, skipped = ingest_files(layout, tenant, brand, list(files))
+        ingested, skipped = ingest_files(layout, tenant, brand, list(files), to=dest)
     except ScaffoldError as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1)
-    typer.secho(f"Ingested {len(ingested)} file(s) into {tenant}/{brand}/_kb/", fg=typer.colors.GREEN)
+    typer.secho(f"Ingested {len(ingested)} file(s) into {tenant}/{brand}/{dest}/", fg=typer.colors.GREEN)
     for n in ingested:
         typer.echo(f"  + {n}")
     if skipped:
         typer.secho(f"Skipped {len(skipped)}:", fg=typer.colors.YELLOW)
         for n in skipped:
             typer.echo(f"  - {n}")
+
+
+@app.command()
+def distill(
+    tenant: str = typer.Option(..., "--tenant", "-t", help="Tenant id."),
+    brand: str = typer.Option(..., "--brand", "-b", help="Brand id."),
+    vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Use the fake model (no network)."),
+) -> None:
+    """Distill a brand's _sources/ transcripts into a public-safe narrative profile."""
+
+    from marketing_engine.harness.distill import DistillError, distill as run_distill
+
+    settings = Settings.from_env(vault_root=vault_root)
+    llm = FakeLLMClient() if dry_run else ClaudeAgentClient()
+    engine = MarketingEngine(settings, llm=llm)
+    try:
+        result = asyncio.run(run_distill(engine, tenant, brand))
+    except (RegistryError, EngineError) as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    except DistillError as exc:
+        typer.secho(str(exc), fg=typer.colors.YELLOW, err=True)
+        raise typer.Exit(code=1)
+    typer.secho(f"Distilled {tenant}/{brand} ({result.model})", fg=typer.colors.GREEN)
+    typer.echo(f"  Core narrative: {result.core_narrative}")
+    typer.echo(f"  Key ideas: {len(result.key_ideas)} · proof points: {len(result.proof_points)}")
+    for f in result.files_written:
+        typer.echo(f"  wrote {f}")
+    typer.echo("Review the written files, then generate.")
 
 
 @app.command(name="list")

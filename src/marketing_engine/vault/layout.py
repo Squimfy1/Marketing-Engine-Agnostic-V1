@@ -31,12 +31,13 @@ RULES_DIR = "_rules"
 MEMORY_DIR = "_memory"
 OUTPUTS_DIR = "_outputs"
 DESIGN_DIR = "_design"
+SOURCES_DIR = "_sources"  # raw call transcripts; read ONLY by distillation, never by generation
 
 CORE_RULES_FILE = "_rules/_core.md"
 DASHBOARD_FILE = "Dashboard.md"
 
 # Folders created when a brand is scaffolded.
-BRAND_SUBDIRS = (KB_DIR, RULES_DIR, MEMORY_DIR, OUTPUTS_DIR, DESIGN_DIR)
+BRAND_SUBDIRS = (KB_DIR, RULES_DIR, MEMORY_DIR, OUTPUTS_DIR, DESIGN_DIR, SOURCES_DIR)
 
 
 @dataclass(frozen=True)
@@ -91,6 +92,9 @@ class VaultLayout:
 
     def design_dir(self, tenant_id: str, brand_id: str) -> Path:
         return self.brand_dir(tenant_id, brand_id) / DESIGN_DIR
+
+    def sources_dir(self, tenant_id: str, brand_id: str) -> Path:
+        return self.brand_dir(tenant_id, brand_id) / SOURCES_DIR
 
     def dashboard(self, tenant_id: str, brand_id: str) -> Path:
         return self.brand_dir(tenant_id, brand_id) / DASHBOARD_FILE

@@ -106,6 +106,37 @@ colour palette, and any short text overlay. Keep it on-brand and ready to paste
 into an image tool. Output ONLY the brief — no preamble, no commentary."""
 
 
+DISTILL_SYSTEM = (
+    "You are a precise brand strategist. You distill a company's strategy from raw "
+    "call transcripts into a reusable, PUBLIC-SAFE content profile. You separate the "
+    "durable strategy from the chatter, and you never include confidential internal "
+    "material."
+)
+
+DISTILL_INSTRUCTIONS = """\
+Read the transcripts above and extract the durable strategy. Return ONLY a JSON
+object with this exact shape:
+{
+  "core_narrative": "1-2 sentence central thesis the brand keeps returning to",
+  "trajectory": "1-2 sentences on where the company is heading / current priorities",
+  "key_ideas": ["the most important recurring narratives or angles, ranked, 6-10 items"],
+  "proof_points": ["public-safe, citable facts the content can use, 5-10 items"],
+  "avoid": ["positioning guardrails / things to never say that surfaced in the calls"]
+}
+
+CRITICAL — public-safe only. EXCLUDE all confidential internal material: people's
+names, org/HR changes, ownership, financials, fundraising, pricing or fees, roadmap
+or launch dates, partner/supplier names, internal metrics, customer counts or
+targets. If publishing something would embarrass the company, leave it out. No
+prose outside the JSON, no markdown fences."""
+
+
+def build_distill_prompt(sources_text: str) -> str:
+    """Prompt to distill a public-safe narrative profile from raw transcripts."""
+
+    return "## TRANSCRIPTS\n" + sources_text.strip() + "\n\n" + DISTILL_INSTRUCTIONS
+
+
 def build_image_brief_prompt(post_text: str, *, design_tokens: str = "") -> str:
     """Prompt for an image/visual brief for a finished post."""
 

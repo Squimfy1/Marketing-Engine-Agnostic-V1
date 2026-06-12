@@ -100,18 +100,18 @@ def create_brand(
 
 
 def ingest_files(
-    layout: VaultLayout, tenant_id: str, brand_id: str, paths: list[Path]
+    layout: VaultLayout, tenant_id: str, brand_id: str, paths: list[Path], to: str = "_kb"
 ) -> tuple[list[str], list[str]]:
-    """Copy markdown/text source files into the brand's ``_kb/``.
+    """Copy markdown/text/pdf source files into the brand's ``to`` folder.
 
-    Returns ``(ingested_names, skipped_names)``. Non-text files (pdf/docx) are
-    skipped — convert them to markdown first. Raises ``ScaffoldError`` if the
-    brand doesn't exist.
+    ``to`` is ``_kb`` (public material, default) or ``_sources`` (raw transcripts
+    the engine distills but never quotes). Returns ``(ingested_names,
+    skipped_names)``. Raises ``ScaffoldError`` if the brand doesn't exist.
     """
 
     if not layout.brand_config(tenant_id, brand_id).is_file():
         raise ScaffoldError(f"No brand '{tenant_id}/{brand_id}' — create it first.")
-    kb = layout.kb_dir(tenant_id, brand_id)
+    kb = layout.brand_dir(tenant_id, brand_id) / to
     kb.mkdir(parents=True, exist_ok=True)
     ingested: list[str] = []
     skipped: list[str] = []

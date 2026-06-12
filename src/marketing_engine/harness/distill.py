@@ -1,0 +1,144 @@
+"""Distill a public-safe narrative profile from a brand's raw call transcripts.
+
+This runs ONCE per refresh (the expensive transcript read), turning ~tens of KB of
+calls into a compact, reusable profile that every post generation then reads — so
+the transcript cost is amortised. Crucially, the raw transcripts live in
+``_sources/`` which generation is firewalled from; only this step reads them, and
+it emits PUBLIC-SAFE output (confidential internals excluded).
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from marketing_engine.harness.prompts import (
+    DISTILL_SYSTEM,
+    build_distill_prompt,
+)
+from marketing_engine.postprocess import extract_json_obj
+from marketing_engine.sdk.client import AgentRunOptions
+from marketing_engine.sdk.models import resolve_model
+
+SOURCE_EXTS = {".txt", ".md", ".markdown"}
+MAX_SOURCE_CHARS = 150_000  # cap the single distillation call
+
+
+class DistillError(Exception):
+    pass
+
+
+@dataclass
+class DistillResult:
+    core_narrative: str
+    trajectory: str
+    key_ideas: list[str] = field(default_factory=list)
+    proof_points: list[str] = field(default_factory=list)
+    avoid: list[str] = field(default_factory=list)
+    files_written: list[str] = field(default_factory=list)
+    model: str | None = None
+    usage: dict = field(default_factory=dict)
+
+
+def _read_sources(layout, tenant_id: str, brand_id: str) -> str:
+    sdir = layout.sources_dir(tenant_id, brand_id)
+    if not sdir.is_dir():
+        return ""
+    chunks: list[str] = []
+    total = 0
+    for path in sorted(sdir.glob("*")):
+        if path.suffix.lower() not in SOURCE_EXTS or not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace").strip()
+        if not text:
+            continue
+        chunks.append(f"### {path.name}\n{text}")
+        total += len(text)
+        if total >= MAX_SOURCE_CHARS:
+            break
+    return "\n\n".join(chunks)[:MAX_SOURCE_CHARS]
+
+
+def _bullets(items) -> str:
+    return "\n".join(f"- {str(x).strip()}" for x in (items or []) if str(x).strip())
+
+
+async def distill(engine, tenant_id: str, brand_id: str) -> DistillResult:
+    """Read ``_sources/`` and write the distilled profile. Raises ``DistillError``
+    if there are no sources or the model returns no usable JSON."""
+
+    tenant = engine.registry.get_tenant(tenant_id)
+    brand = engine.registry.get_brand(tenant_id, brand_id)
+    layout = engine.layout
+
+    sources = _read_sources(layout, tenant_id, brand_id)
+    if not sources.strip():
+        raise DistillError(
+            f"No sources in {layout.sources_dir(tenant_id, brand_id)} — add transcripts first."
+        )
+
+    model = resolve_model(
+        "editor",
+        brand_models=brand.models.model_dump(),
+        tenant_default=tenant.default_model,
+        settings_default=engine.settings.default_model,
+    )
+    options = AgentRunOptions(
+        system_prompt=DISTILL_SYSTEM,
+        cwd=layout.brand_dir(tenant_id, brand_id),
+        allowed_tools=[],  # transcripts are inlined; no file reading
+        model=model,
+    )
+    result = await engine.llm.run(build_distill_prompt(sources), options)
+    data = extract_json_obj(result.text)
+    if not data or not (data.get("core_narrative") or data.get("key_ideas")):
+        raise DistillError("Distillation returned no usable profile — try again.")
+
+    core = str(data.get("core_narrative", "")).strip()
+    traj = str(data.get("trajectory", "")).strip()
+    ideas = data.get("key_ideas") or []
+    proofs = data.get("proof_points") or []
+    avoid = data.get("avoid") or []
+
+    written: list[str] = []
+
+    narrative_md = ["## CORE NARRATIVE", ""]
+    if core:
+        narrative_md.append(core)
+    if traj:
+        narrative_md += ["", f"**Strategic direction:** {traj}"]
+    if ideas:
+        narrative_md += [
+            "",
+            "## KEY IDEAS (each short post develops ONE of these, tied to the narrative)",
+            "",
+            _bullets(ideas),
+        ]
+    if avoid:
+        narrative_md += ["", "## AVOID", "", _bullets(avoid)]
+    npath = layout.rules_dir(tenant_id, brand_id) / "narrative.md"
+    npath.parent.mkdir(parents=True, exist_ok=True)
+    npath.write_text("\n".join(narrative_md).strip() + "\n", encoding="utf-8")
+    written.append(f"_rules/narrative.md")
+
+    if proofs:
+        ppath = layout.kb_dir(tenant_id, brand_id) / "proof-points.md"
+        ppath.parent.mkdir(parents=True, exist_ok=True)
+        ppath.write_text(
+            "# Proof points (public-safe, distilled)\n\n"
+            "> Auto-distilled from call transcripts. Verify before relying on specifics.\n\n"
+            + _bullets(proofs)
+            + "\n",
+            encoding="utf-8",
+        )
+        written.append("_kb/proof-points.md")
+
+    return DistillResult(
+        core_narrative=core,
+        trajectory=traj,
+        key_ideas=list(ideas),
+        proof_points=list(proofs),
+        avoid=list(avoid),
+        files_written=written,
+        model=result.model,
+        usage=result.usage,
+    )

@@ -62,6 +62,33 @@ def extract_json_list(text: str) -> list[str]:
     return []
 
 
+def extract_json_obj(text: str) -> dict:
+    """Robustly pull the first JSON object out of a model reply (tolerates
+    surrounding prose / markdown fences). Returns {} if none parses."""
+
+    import json
+
+    if not text:
+        return {}
+    start = text.find("{")
+    if start < 0:
+        return {}
+    depth = 0
+    for i in range(start, len(text)):
+        ch = text[i]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    data = json.loads(text[start : i + 1])
+                    return data if isinstance(data, dict) else {}
+                except Exception:
+                    return {}
+    return {}
+
+
 def clean_copy(text: str) -> str:
     """Remove em/en-dash AI-tells and tidy the spacing they leave behind."""
 

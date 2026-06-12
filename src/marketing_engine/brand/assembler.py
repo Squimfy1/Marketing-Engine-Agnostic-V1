@@ -90,6 +90,7 @@ def assemble_run(
         cwd=layout.brand_dir(tenant.id, brand.id),
         add_dirs=[layout.shared_dir],
         allowed_roots=list(layout.allowed_roots(tenant.id, brand.id)),
+        denied_roots=[layout.sources_dir(tenant.id, brand.id)],  # firewall: never read raw transcripts
         allowed_tools=["Read", "Grep", "Glob"],
         model=model,
     )

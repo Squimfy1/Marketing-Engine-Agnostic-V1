@@ -82,6 +82,19 @@ async def test_hook_allows_in_brand(layout: VaultLayout):
     assert out == {}
 
 
+def test_sources_denied_even_inside_brand(layout: VaultLayout):
+    """The _sources/ firewall: generation must not read raw transcripts."""
+    roots = layout.allowed_roots("acme-co", "acme")
+    denied = [layout.sources_dir("acme-co", "acme")]
+    src = str(layout.sources_dir("acme-co", "acme") / "call.txt")
+    allowed, offending = guard_decision("Read", {"file_path": src}, roots, denied_roots=denied)
+    assert not allowed and offending == [src]
+    # _kb is still allowed
+    kb = str(layout.kb_dir("acme-co", "acme") / "facts.md")
+    allowed, _ = guard_decision("Read", {"file_path": kb}, roots, denied_roots=denied)
+    assert allowed
+
+
 def test_fs_adapter_blocks_escape(layout: VaultLayout):
     vault = FilesystemVaultAdapter(layout, "acme-co", "acme")
     with pytest.raises(PermissionError):

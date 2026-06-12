@@ -45,44 +45,54 @@ def guard_decision(
     tool_input: dict[str, Any],
     allowed_roots: Iterable[Path],
     base_dir: str | Path | None = None,
+    denied_roots: Iterable[Path] = (),
 ) -> tuple[bool, list[str]]:
     """Pure isolation decision.
 
     Returns ``(allowed, offending_paths)``. Relative paths are resolved against
-    ``base_dir`` (the agent's working directory) — NOT the server process cwd —
-    so a normal ``Grep .`` inside the brand folder is allowed. A tool with no
-    path arguments is allowed (it cannot reach the filesystem directly).
-    ``Bash`` is denied outright (not in the allowlist).
+    ``base_dir`` (the agent's working directory) — NOT the server process cwd.
+    A path is denied if it falls outside ``allowed_roots`` OR inside any
+    ``denied_roots`` (e.g. ``_sources/`` raw transcripts, which generation must
+    never read). A tool with no path arguments is allowed. ``Bash`` is denied.
     """
 
     if tool_name == "Bash":
         return False, ["<bash command>"]
 
     roots = list(allowed_roots)
+    denied = list(denied_roots)
     offending = []
     for p in extract_paths(tool_name, tool_input):
         candidate = Path(p)
         if not candidate.is_absolute() and base_dir is not None:
             candidate = Path(base_dir) / candidate
-        if not is_within(candidate, roots):
+        if not is_within(candidate, roots) or (denied and is_within(candidate, denied)):
             offending.append(p)
     return (len(offending) == 0, offending)
 
 
-def make_path_guard_hook(allowed_roots: Iterable[Path], denied_log: list[str] | None = None):
+def make_path_guard_hook(
+    allowed_roots: Iterable[Path],
+    denied_log: list[str] | None = None,
+    denied_roots: Iterable[Path] = (),
+):
     """Build a ``PreToolUse`` hook callback enforcing the brand allowlist.
 
-    ``denied_log`` (if provided) collects human-readable strings for every
-    denied attempt, so the engine can report isolation violations after a run.
+    ``denied_roots`` are subtrees that are blocked even though they sit inside an
+    allowed root (e.g. the brand's ``_sources/`` raw transcripts). ``denied_log``
+    (if provided) collects human-readable strings for every denied attempt.
     """
 
     roots = [Path(r) for r in allowed_roots]
+    denied = [Path(r) for r in denied_roots]
 
     async def hook(input_data: dict[str, Any], tool_use_id: str | None, context: Any) -> dict:
         tool_name = input_data.get("tool_name", "")
         tool_input = input_data.get("tool_input", {}) or {}
         base_dir = input_data.get("cwd")  # the agent's working dir (the brand folder)
-        allowed, offending = guard_decision(tool_name, tool_input, roots, base_dir=base_dir)
+        allowed, offending = guard_decision(
+            tool_name, tool_input, roots, base_dir=base_dir, denied_roots=denied
+        )
         if allowed:
             return {}
         reason = (

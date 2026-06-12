@@ -27,6 +27,7 @@ class AgentRunOptions:
     cwd: Path
     add_dirs: list[Path] = field(default_factory=list)
     allowed_roots: list[Path] = field(default_factory=list)
+    denied_roots: list[Path] = field(default_factory=list)  # blocked even inside allowed (e.g. _sources)
     allowed_tools: list[str] = field(default_factory=lambda: ["Read", "Grep", "Glob"])
     model: str | None = None
     mcp_servers: dict[str, Any] = field(default_factory=dict)
@@ -65,7 +66,9 @@ class ClaudeAgentClient:
         )
 
         denied: list[str] = []
-        guard = make_path_guard_hook(options.allowed_roots or [options.cwd], denied)
+        guard = make_path_guard_hook(
+            options.allowed_roots or [options.cwd], denied, options.denied_roots
+        )
 
         sdk_options = ClaudeAgentOptions(
             system_prompt=options.system_prompt,
@@ -125,6 +128,21 @@ class FakeLLMClient:
 
     async def run(self, prompt: str, options: AgentRunOptions) -> RunResult:
         brand_line = _first_matching(options.system_prompt, "Brand:") or "Brand"
+        if "with this exact shape" in prompt:  # distillation mode
+            import json
+
+            return RunResult(
+                text=json.dumps(
+                    {
+                        "core_narrative": "Distilled core narrative.",
+                        "trajectory": "Where the company is heading.",
+                        "key_ideas": ["Idea A", "Idea B", "Idea C", "Idea D"],
+                        "proof_points": ["Proof one", "Proof two"],
+                        "avoid": ["Avoid this"],
+                    }
+                ),
+                model=options.model or "fake",
+            )
         if "JSON array" in prompt:  # options mode → return a JSON array of ideas
             import json
 
