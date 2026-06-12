@@ -62,3 +62,7 @@ Hard seam rules keep the system testable without a live model:
 - everything else depends on internal interfaces
 
 See `~/.claude/plans/refactored-gliding-frost.md` for the full design and roadmap.
+
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map (engine vs vault, the pipeline, onboarding).

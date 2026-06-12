@@ -17,9 +17,9 @@ async def test_distill_writes_profile(settings, layout):
     result = await distill(engine, "acme-co", "acme")
 
     assert result.core_narrative
-    assert "_rules/narrative.md" in result.files_written
-    nm = (layout.rules_dir("acme-co", "acme") / "narrative.md").read_text(encoding="utf-8")
-    assert "CORE NARRATIVE" in nm and "KEY IDEAS" in nm
+    assert "_rules/key-ideas.md" in result.files_written
+    km = (layout.rules_dir("acme-co", "acme") / "key-ideas.md").read_text(encoding="utf-8")
+    assert "KEY IDEAS" in km
     assert (layout.kb_dir("acme-co", "acme") / "proof-points.md").is_file()
 
 
@@ -44,4 +44,4 @@ async def test_distilled_narrative_reaches_system_prompt(settings, layout):
         brand=engine.registry.get_brand("acme-co", "acme"),
         input_text="x", platform_label="Short posts",
     )
-    assert "CORE NARRATIVE" in run.system_prompt  # narrative.md is inlined as a brand rule
+    assert "KEY IDEAS" in run.system_prompt  # key-ideas.md is inlined as a brand rule
