@@ -100,9 +100,35 @@ def test_options_bad_ref(api: Api):
     assert status == 400
 
 
+def test_image_options(api: Api):
+    status, payload = api.image_options(
+        {"voice": "acme-co/acme", "platform": "Short posts", "text": "Launch the Sky Pup kit."}
+    )
+    assert status == 200 and payload["ok"]
+    assert payload["recommendation"].strip()
+    assert len(payload["options"]) == 3
+    kinds = {o["kind"] for o in payload["options"]}
+    assert kinds <= {"library", "real_photo", "generated"}  # only valid source kinds
+    assert all(o["direction"].strip() for o in payload["options"])
+
+
 def test_image_brief(api: Api):
     status, payload = api.image_brief(
         {"voice": "acme-co/acme", "platform": "Short posts", "text": "Launch the Sky Pup kit."}
+    )
+    assert status == 200 and payload["ok"]
+    assert payload["brief"].strip()
+
+
+def test_image_brief_for_chosen_option(api: Api):
+    # Passing a chosen kind/direction still returns a brief (built for that choice).
+    status, payload = api.image_brief(
+        {
+            "voice": "acme-co/acme",
+            "text": "Launch the Sky Pup kit.",
+            "kind": "real_photo",
+            "direction": "A family at a kitchen table",
+        }
     )
     assert status == 200 and payload["ok"]
     assert payload["brief"].strip()

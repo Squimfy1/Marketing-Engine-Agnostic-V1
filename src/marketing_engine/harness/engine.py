@@ -197,6 +197,29 @@ class MarketingEngine:
             is_error=result.is_error,
         )
 
+    async def recommend_images(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        post_text: str,
+        platform: str | None = None,
+    ):
+        """Recommend image approaches + concrete options for a finished post.
+
+        First half of the Image Generation step: returns an
+        :class:`ImageRecommendation` (a recommendation + tagged options to pick
+        from). The picked option then goes to ``generate_image_brief``.
+        """
+
+        from marketing_engine.image.recommend import recommend_images
+
+        if not post_text.strip():
+            raise EngineError("No post text to recommend images for.")
+        return await recommend_images(
+            self, tenant_id, brand_id, post_text=post_text, platform=platform
+        )
+
     async def generate_image_brief(
         self,
         tenant_id: str,
@@ -204,11 +227,15 @@ class MarketingEngine:
         *,
         post_text: str,
         platform: str | None = None,
+        kind: str = "",
+        direction: str = "",
     ) -> RunResult:
-        """Generate image-generation instructions (a visual brief) for a post.
+        """Generate Claude Design instructions (a visual brief) for a post.
 
         Single-shot from the post + the brand's design tokens + voice. Fast/cheap
-        ('ideas' tier). This is the Design System -> Image Output step.
+        ('ideas' tier). When the operator has picked an option (``kind`` +
+        ``direction``), the brief is written FOR that choice; otherwise generic.
+        This is the Design System -> Image Output step.
         """
 
         if not post_text.strip():
@@ -231,7 +258,9 @@ class MarketingEngine:
 
         tokens_path = self.layout.design_dir(tenant_id, brand_id) / "tokens.yaml"
         tokens = tokens_path.read_text(encoding="utf-8") if tokens_path.is_file() else ""
-        prompt = build_image_brief_prompt(post_text, design_tokens=tokens)
+        prompt = build_image_brief_prompt(
+            post_text, design_tokens=tokens, kind=kind, direction=direction
+        )
         result = await self.llm.run(prompt, assembled.options)
         result.text = clean_copy(result.text)
         return result

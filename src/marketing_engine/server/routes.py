@@ -161,7 +161,34 @@ class Api:
             "usage": {"num_turns": result.num_turns, **result.usage},
         }
 
-    # -- image brief (visual instructions for a chosen post) -------------
+    # -- image options (recommendation + choices for a post) -------------
+    def image_options(self, body: dict) -> tuple[int, dict]:
+        try:
+            tenant, brand = split_ref(_ref_of(body))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        text = body.get("text") or body.get("content") or ""
+        try:
+            rec = asyncio.run(
+                self.engine.recommend_images(
+                    tenant, brand, post_text=text, platform=body.get("platform")
+                )
+            )
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        except EngineError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            return 500, {"ok": False, "error": f"image options failed: {exc}"}
+        return 200, {
+            "ok": True,
+            "recommendation": rec.recommendation,
+            "options": [o.as_dict() for o in rec.options],
+            "model": rec.model,
+            "usage": rec.usage,
+        }
+
+    # -- image brief (visual instructions for a chosen post/option) ------
     def image_brief(self, body: dict) -> tuple[int, dict]:
         try:
             tenant, brand = split_ref(_ref_of(body))
@@ -171,7 +198,12 @@ class Api:
         try:
             result = asyncio.run(
                 self.engine.generate_image_brief(
-                    tenant, brand, post_text=text, platform=body.get("platform")
+                    tenant,
+                    brand,
+                    post_text=text,
+                    platform=body.get("platform"),
+                    kind=body.get("kind", ""),
+                    direction=body.get("direction", ""),
                 )
             )
         except RegistryError as exc:

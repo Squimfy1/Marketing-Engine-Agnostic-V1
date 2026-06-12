@@ -1406,16 +1406,24 @@ textarea.lab-main-input {
             <span>Copy post</span>
           </button>
           <span class="lab-submit-hint" id="submit-hint">Copy the post to publish, or Save edits to teach the engine.</span>
-          <button type="button" class="lab-btn secondary" id="btn-image-brief">Generate image instructions</button>
+          <button type="button" class="lab-btn secondary" id="btn-image-brief">Generate image options</button>
           <button type="button" class="lab-btn primary" id="btn-submit-final" disabled>Save edits</button>
         </div>
         <div id="image-out" hidden style="margin-top:14px;border:0.5px solid rgba(127,127,127,.25);border-radius:14px;padding:16px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <strong style="font-size:13px">Image instructions</strong>
+            <strong style="font-size:13px">Image options</strong>
             <span id="image-out-status" style="font-size:12px;opacity:.7"></span>
           </div>
-          <textarea id="image-out-text" class="lab-input" rows="12" readonly placeholder="Click Generate image instructions to create a visual brief for the post above."></textarea>
-          <div style="margin-top:8px"><button type="button" class="lab-btn secondary" id="btn-copy-image">Copy instructions</button></div>
+          <div id="image-rec" style="font-size:13px;opacity:.85;margin-bottom:10px"></div>
+          <div id="image-options" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div id="image-instructions-wrap" hidden style="margin-top:14px;border-top:0.5px solid rgba(127,127,127,.2);padding-top:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <strong style="font-size:13px">Claude Design instructions</strong>
+              <span id="image-instructions-status" style="font-size:12px;opacity:.7"></span>
+            </div>
+            <textarea id="image-out-text" class="lab-input" rows="12" readonly placeholder="Pick an option above, then Generate instructions."></textarea>
+            <div style="margin-top:8px"><button type="button" class="lab-btn secondary" id="btn-copy-image">Copy instructions</button></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2231,7 +2239,7 @@ function requestTopicSuggestions() {
     topicLoading = false; showTopicLoading(false);
     if (btn) btn.disabled = false;
     if (!d || !d.ok) { topicOptions = []; renderTopicCards(); toast((d && d.error) || 'Could not generate options'); return; }
-    topicOptions = (d.options || []).map(function (t) { return { text: t }; });
+    topicOptions = (d.options || []).map(function (o) { return (typeof o === 'string') ? { text: o } : o; });
     selectedTopicTitle = '';
     renderTopicCards();
     updateDraftTopicButton();
@@ -2380,9 +2388,17 @@ function renderTopicCards() {
     card.type = 'button';
     card.className = 'topic-card' + (selected ? ' selected' : '');
     card.style.cssText = 'text-align:left;width:100%;cursor:pointer';
+    var tagBits = [];
+    if (o.principle) tagBits.push(escapeHtml(o.principle));
+    if (o.narrative) tagBits.push(escapeHtml(o.narrative));
+    var tagLine = tagBits.length
+      ? '<div class="topic-card-tags" style="margin-top:8px;font-size:11px;opacity:.7;line-height:1.4">' +
+        '<span style="opacity:.6">why: </span>' + tagBits.join(' <span style="opacity:.4">\u00b7</span> ') + '</div>'
+      : '';
     card.innerHTML =
       '<div class="topic-card-head"><span class="topic-card-num">Idea ' + (i + 1) + (selected ? ' \u00b7 selected' : '') + '</span></div>' +
-      '<div class="topic-card-title" style="white-space:pre-wrap;font-weight:400;line-height:1.45">' + escapeHtml(o.text) + '</div>';
+      '<div class="topic-card-title" style="white-space:pre-wrap;font-weight:400;line-height:1.45">' + escapeHtml(o.text) + '</div>' +
+      tagLine;
     card.addEventListener('click', function () { selectTopicCard(o.text); });
     wrap.appendChild(card);
   });
@@ -3106,28 +3122,88 @@ function generatePostFromSelectedIdea() {
     .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; } if (typeof setResponseStatus === 'function') setResponseStatus('Request failed', false); });
 }
 
+var imageOptions = [];
+var selectedImageIdx = -1;
+var IMAGE_KIND_LABELS = { library: 'From library', real_photo: 'Real photo', generated: 'Generated' };
+
+// Step 1: ask the engine to recommend image approaches + concrete options.
 function generateImageBriefFromResponse() {
   var box = document.getElementById('image-out');
-  var out = document.getElementById('image-out-text');
   var st = document.getElementById('image-out-status');
+  var rec = document.getElementById('image-rec');
   var text = (typeof getResponseText === 'function') ? getResponseText() : '';
   if (box) box.hidden = false;
   if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  if (!text) { if (out) out.value = ''; if (st) st.textContent = 'Generate or write a post first.'; return; }
+  // Reset the chosen-instructions panel from any prior run.
+  imageOptions = []; selectedImageIdx = -1;
+  var wrap = document.getElementById('image-instructions-wrap'); if (wrap) wrap.hidden = true;
+  var optsEl = document.getElementById('image-options'); if (optsEl) optsEl.innerHTML = '';
+  if (rec) rec.textContent = '';
+  if (!text) { if (st) st.textContent = 'Generate or write a post first.'; return; }
   var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
   var plat = (document.getElementById('platform') || {}).value || 'Short posts';
   var btn = document.getElementById('btn-image-brief');
-  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
-  if (out) out.value = '';
-  if (st) st.textContent = 'Generating image instructions...';
-  fetch('/api/lab/image-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, text: text }) })
+  if (btn) { btn.disabled = true; btn.textContent = 'Finding options...'; }
+  if (st) st.textContent = 'Recommending image options...';
+  fetch('/api/lab/image-options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, text: text }) })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Generate image instructions'; }
-      if (d && d.ok && d.brief) { if (out) out.value = d.brief; if (st) st.textContent = 'Ready'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Generate image options'; }
+      if (!d || !d.ok) { if (st) st.textContent = (d && d.error) || 'Could not generate'; return; }
+      imageOptions = d.options || [];
+      if (rec && d.recommendation) rec.innerHTML = '<span style="opacity:.6">Recommendation: </span>' + escapeHtml(d.recommendation);
+      renderImageOptions();
+      if (st) st.textContent = imageOptions.length ? 'Pick an option, then Generate instructions' : 'No options returned — try again';
+    })
+    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate image options'; } if (st) st.textContent = 'Request failed'; });
+}
+
+function renderImageOptions() {
+  var wrap = document.getElementById('image-options');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  imageOptions.forEach(function (o, i) {
+    var selected = (selectedImageIdx === i);
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'topic-card' + (selected ? ' selected' : '');
+    card.style.cssText = 'text-align:left;width:100%;cursor:pointer';
+    var badge = IMAGE_KIND_LABELS[o.kind] || o.kind || 'Image';
+    card.innerHTML =
+      '<div class="topic-card-head"><span class="topic-card-num">' + escapeHtml(badge) + (selected ? ' · selected' : '') + '</span></div>' +
+      '<div class="topic-card-title" style="white-space:pre-wrap;font-weight:400;line-height:1.45">' + escapeHtml(o.direction || '') + '</div>' +
+      (o.rationale ? '<div style="margin-top:6px;font-size:11px;opacity:.7">' + escapeHtml(o.rationale) + '</div>' : '');
+    card.addEventListener('click', function () { selectImageCard(i); });
+    wrap.appendChild(card);
+  });
+}
+
+function selectImageCard(i) {
+  selectedImageIdx = i;
+  renderImageOptions();
+  var wrap = document.getElementById('image-instructions-wrap');
+  if (wrap) wrap.hidden = false;
+  generateImageInstructions();
+}
+
+// Step 2: write the Claude Design instructions for the chosen option.
+function generateImageInstructions() {
+  if (selectedImageIdx < 0 || !imageOptions[selectedImageIdx]) return;
+  var opt = imageOptions[selectedImageIdx];
+  var out = document.getElementById('image-out-text');
+  var st = document.getElementById('image-instructions-status');
+  var text = (typeof getResponseText === 'function') ? getResponseText() : '';
+  var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
+  var plat = (document.getElementById('platform') || {}).value || 'Short posts';
+  if (out) out.value = '';
+  if (st) st.textContent = 'Writing instructions...';
+  fetch('/api/lab/image-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, text: text, kind: opt.kind, direction: opt.direction }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.ok && d.brief) { if (out) out.value = d.brief; if (st) st.textContent = 'Ready for Claude Design'; }
       else { if (st) st.textContent = (d && d.error) || 'Could not generate'; }
     })
-    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate image instructions'; } if (st) st.textContent = 'Request failed'; });
+    .catch(function () { if (st) st.textContent = 'Request failed'; });
 }
 
 document.getElementById('btn-gen-skeleton').addEventListener('click', generateArticleSkeleton);

@@ -106,6 +106,50 @@ colour palette, and any short text overlay. Keep it on-brand and ready to paste
 into an image tool. Output ONLY the brief — no preamble, no commentary."""
 
 
+# Image SOURCE kinds the recommender chooses between. All are produced via Claude
+# Code; they differ in where the raw image comes from.
+IMAGE_KINDS = {
+    "library": "pick an existing image from the brand's image library",
+    "real_photo": "a real photograph to source online and bring into Claude Design",
+    "generated": "generate the image from scratch in Claude Design",
+}
+
+IMAGE_RECOMMEND_SYSTEM = (
+    "You are an art director for a brand. Given a finished post, you recommend how "
+    "to illustrate it and offer a few concrete options to choose from. You return "
+    "ONLY JSON."
+)
+
+IMAGE_RECOMMEND_INSTRUCTIONS = """\
+Recommend how to illustrate the post above. Choose the image SOURCE per option:
+- "library": pick an existing image from the brand's image library
+- "real_photo": a real photograph to source online and bring into Claude Design
+- "generated": generate the image from scratch in Claude Design
+Let the content decide (e.g. a product explainer often suits a generated diagram;
+a news reaction often suits a real photo).
+
+Return ONLY a JSON object:
+{
+  "recommendation": "one sentence on the best overall approach and why",
+  "options": [
+    {"kind": "library|real_photo|generated",
+     "direction": "a short concrete visual direction (subject/scene + feel)",
+     "rationale": "one short clause on why it fits this post"}
+  ]
+}
+Give 3 DISTINCT options. Keep everything on-brand. No prose outside the JSON."""
+
+
+def build_image_recommend_prompt(post_text: str, *, design_tokens: str = "") -> str:
+    """Prompt to recommend image approaches + concrete options for a post."""
+
+    parts = ["## POST", post_text.strip()]
+    if design_tokens.strip():
+        parts += ["", "## BRAND DESIGN TOKENS", design_tokens.strip()]
+    parts += ["", IMAGE_RECOMMEND_INSTRUCTIONS]
+    return "\n".join(parts)
+
+
 VALIDATE_SYSTEM = (
     "You are a strict but fair brand editor. You check a short post against the rules "
     "and return a JSON verdict. You do not rewrite it."
@@ -209,12 +253,37 @@ def build_filter_prompt(ideas: list[str], strategy_block: str) -> str:
     return "\n".join(parts)
 
 
-def build_image_brief_prompt(post_text: str, *, design_tokens: str = "") -> str:
-    """Prompt for an image/visual brief for a finished post."""
+def build_image_brief_prompt(
+    post_text: str, *, design_tokens: str = "", kind: str = "", direction: str = ""
+) -> str:
+    """Prompt for an image/visual brief for a finished post.
+
+    When the operator has already picked an option (``kind`` + ``direction``), the
+    brief is written FOR that choice (e.g. instructions to source a real photo vs.
+    generate one); otherwise it's a generic brief.
+    """
 
     parts = ["## POST", post_text.strip()]
     if design_tokens.strip():
         parts += ["", "## BRAND DESIGN TOKENS", design_tokens.strip()]
+    if kind or direction:
+        chosen = ["", "## CHOSEN OPTION"]
+        if kind:
+            chosen.append(f"Source: {kind} — {IMAGE_KINDS.get(kind, kind)}")
+        if direction:
+            chosen.append(f"Direction: {direction.strip()}")
+        chosen.append(
+            "Write the instructions FOR this chosen source and direction"
+            + (
+                " — describe the exact photo to find and how to adapt it"
+                if kind == "real_photo"
+                else " — describe the image to pick from the library"
+                if kind == "library"
+                else " — describe the image to generate"
+            )
+            + "."
+        )
+        parts += chosen
     parts += ["", IMAGE_BRIEF_INSTRUCTIONS]
     return "\n".join(parts)
 

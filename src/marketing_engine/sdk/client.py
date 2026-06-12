@@ -150,6 +150,22 @@ class FakeLLMClient:
                 ),
                 model=options.model or "fake",
             )
+        if "Recommend how to illustrate" in prompt:  # image recommendation
+            import json
+
+            return RunResult(
+                text=json.dumps(
+                    {
+                        "recommendation": "Lead with a calm, tangible visual that feels trustworthy.",
+                        "options": [
+                            {"kind": "generated", "direction": "A clean chart showing steady monthly growth", "rationale": "makes the value tangible"},
+                            {"kind": "real_photo", "direction": "A family at a kitchen table reviewing finances", "rationale": "grounds it in real life"},
+                            {"kind": "library", "direction": "Brand shot of vaulted silver granules", "rationale": "reinforces physical backing"},
+                        ],
+                    }
+                ),
+                model=options.model or "fake",
+            )
         if "## CANDIDATE IDEAS" in prompt:  # strategy filter → verdict per idea
             import json
             import re
