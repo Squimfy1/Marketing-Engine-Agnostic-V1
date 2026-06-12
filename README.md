@@ -14,37 +14,58 @@ Claude Code login.
 ## System diagram
 
 ```
-        INPUTS                          +---------------------------+
-  +-------------------+                 |          FRONTEND         |
-  | transcripts  [L]  |                 |        web dashboard      |
-  | public docs _kb   |                 +-----+---------------^-----+
-  | scraper/news  *   |          braindump    |               | post + image
-  | MCP connectors *  |                        v               |   instructions
-  +---------+---------+                 +---------------------------+     +--------------------+
-            | feeds                     |       AGENT HARNESS       |<--->| CLAUDE  Opus/Haiku |
-            v                           |        (the brain)        |     +--------------------+
-       +---------+   writes             |  reads Rules + strategy   |
-       | distill |---------> strategy.md|  reads the Obsidian vault |
-       +---------+                      +-------------+-------------+
-                                                      | orchestrates
-                                                      v
-        +-------------------------------------------------------------------------+
-        |  CONTENT GENERATION                                                     |
-        |    ideas --> FILTER --> post --> GATE --> image options                 |
-        |              (principle x narrative)                  --> Claude Design |
-        +-----------------------------------------+-------------------------------+
-                                                  | post + image instructions
-                                                  v   (shown in the dashboard)
-        +-------------------+
-        |  OBSIDIAN VAULT   |   KB . memory . outputs . rules
-        |   (memory / KB)   |<------  edits + learnings  (manual feedback loop)
-        +-------------------+
+BACKEND                                         FRONTEND
 
-  legend:  --> built       *  planned (scraper, MCP connectors)       [L] firewalled (_sources)
+┌────────────────┐
+│ Rules+strategy │──┐
+└────────────────┘  │
+┌────────────────┐  │                        ┌──────────────┐
+│ Knowledge Base │──┤                    ┌──▶│    Input     │
+│     (_kb)      │  │                    │   │ (braindump)  │
+└────────────────┘  │                    │   └──────┬───────┘
+┌────────────────┐  │     ┌──────────┐   │          │
+│ Design System  │──┼────▶│  AGENT   │   │   ┌──────┴───────┐
+└────────────────┘  │     │ HARNESS  │───┘   │   Routing    │
+┌────────────────┐  │     │  + LLM   │       │ brand / plat │
+│ Memory (vault) │──┘     └────┬─────┘       └──────┬───────┘
+└────────────────┘             ▲                    │
+       ▲                       │            ┌───────┴───────┐
+       │                  ┌────┴─────┐      ▼               ▼
+       │                  │ distill  │  ┌─────────┐    ┌──────────┐
+       │                  │(_sources)│  │  Ideas  │    │  Brain   │
+       │                  └──────────┘  │   Gen   │    │   Dump   │
+       │                                └────┬────┘    └────┬─────┘
+       │                                     │              │
+       │                                ┌────┴─────┐   ┌────┴─────┐
+       │                                │ Strategy │   │Structure │
+       │                                │  Filter  │   │ + Match  │
+       │                                └────┬─────┘   └────┬─────┘
+       │                                     └──────┬───────┘
+       │                                            ▼
+       │                                    ┌───────────────┐
+       │                                    │   Full Post   │
+       │                                    └──────┬────────┘
+       │                                           ▼
+       │                                    ┌───────────────┐
+       │                                    │ Quality Gate  │
+       │                                    │ (auto review) │
+       │                                    └──────┬────────┘
+       │                                           ▼
+       │                                    ┌───────────────┐
+       │                                    │ Manual Edits  │
+       │                                    └──────┬────────┘
+       │                                           ▼
+       │                                    ┌───────────────┐
+       │                                    │ Image Options │──▶ Claude Design
+       │                                    └──────┬────────┘
+       │                                           ▼
+       │                                    ┌───────────────┐
+       └────────────────────────────────────│    Output     │──▶ _outputs
+                                            └───────────────┘
+
+distill reads the firewalled _sources transcripts and writes Rules+strategy;
+generation never touches _sources. Scraper / news + MCP connectors are next.
 ```
-
-The `_sources` transcripts are read **only** by `distill` and are firewalled from
-generation. `*` boxes are the next items on the roadmap.
 
 ## How it works
 
