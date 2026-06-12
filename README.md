@@ -11,6 +11,53 @@ Claude Code login.
 
 ---
 
+## System diagram
+
+```mermaid
+flowchart LR
+  subgraph INPUTS["Inputs"]
+    direction TB
+    SRC["Call transcripts<br/>_sources 🔒"]
+    DOCS["Public docs · _kb"]
+    SCR["Scraper · News<br/>(planned)"]
+    MCP["MCP: Notion · Slack · LinkedIn<br/>(planned)"]
+  end
+
+  DISTILL["distill<br/>fills strategy schema"]
+
+  subgraph BRAIN["Agent Harness"]
+    direction TB
+    HARNESS["Harness"]
+    RULES["Rules + strategy.md"]
+    MEM[("Obsidian vault<br/>KB · memory · outputs")]
+    LLM["Claude · Opus + Haiku"]
+  end
+
+  subgraph GEN["Content Generation"]
+    direction LR
+    IDEAS["ideas"] --> FILTER{"strategy filter<br/>principle × narrative"} --> POST["full post"] --> GATE{"quality gate"} --> IMG["image options<br/>→ Claude Design"]
+  end
+
+  DASH["Dashboard (Frontend)"]
+
+  SRC --> DISTILL --> RULES
+  DOCS --> MEM
+  SCR -.-> MEM
+  MCP -.-> MEM
+
+  DASH -->|braindump| HARNESS
+  RULES --> HARNESS
+  MEM --> HARNESS
+  HARNESS <--> LLM
+  HARNESS --> IDEAS
+  IMG --> DASH
+  POST -. "edits + learnings (manual)" .-> MEM
+```
+
+Solid arrows are built; dotted arrows and `(planned)` boxes are next on the
+roadmap. The `_sources` transcripts are read **only** by `distill` and are
+firewalled from generation.
+
 ## How it works
 
 ```
