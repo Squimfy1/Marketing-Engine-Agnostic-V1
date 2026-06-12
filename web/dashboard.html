@@ -1311,7 +1311,6 @@ textarea.lab-main-input {
 
   <div class="lab-subtabs" role="tablist" aria-label="Lab mode">
     <button type="button" class="lab-subtab active" id="lab-subtab-content" data-lab-sub="content" role="tab" aria-selected="true">Content</button>
-    <button type="button" class="lab-subtab" id="lab-subtab-design" data-lab-sub="design" role="tab" aria-selected="false">Design</button>
   </div>
 
   <div id="lab-sub-content" class="lab-subpanel visible" role="tabpanel">
@@ -1407,9 +1406,16 @@ textarea.lab-main-input {
             <span>Copy post</span>
           </button>
           <span class="lab-submit-hint" id="submit-hint">Copy the post to publish, or Save edits to teach the engine.</span>
-          <button type="button" class="lab-btn secondary" id="btn-goto-design" hidden>Design →</button>
           <button type="button" class="lab-btn secondary" id="btn-image-brief">Generate image instructions</button>
           <button type="button" class="lab-btn primary" id="btn-submit-final" disabled>Save edits</button>
+        </div>
+        <div id="image-out" hidden style="margin-top:14px;border:0.5px solid rgba(127,127,127,.25);border-radius:14px;padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <strong style="font-size:13px">Image instructions</strong>
+            <span id="image-out-status" style="font-size:12px;opacity:.7"></span>
+          </div>
+          <textarea id="image-out-text" class="lab-input" rows="12" readonly placeholder="Click Generate image instructions to create a visual brief for the post above."></textarea>
+          <div style="margin-top:8px"><button type="button" class="lab-btn secondary" id="btn-copy-image">Copy instructions</button></div>
         </div>
       </div>
     </div>
@@ -1425,26 +1431,6 @@ textarea.lab-main-input {
       <input type="hidden" id="narrative" value="" />
     </aside>
   </div>
-  </div>
-
-  <div id="lab-sub-design" class="lab-subpanel" role="tabpanel" hidden>
-    <div class="lab-box lab-design-wrap">
-      <h2>Design lab</h2>
-      <ol class="lab-design-steps">
-        <li>Content tab — paste Claude’s reply, edit the post, click <strong>Save edits</strong></li>
-        <li>This box fills with the visual brief (or paste instructions here)</li>
-        <li><strong>Copy for Claude Design</strong> → paste in Claude Design (your brand loaded)</li>
-        <li>Download image → attach when you publish</li>
-      </ol>
-      <label for="design-brief">Claude Design instructions</label>
-      <textarea id="design-brief" class="lab-input" rows="14" placeholder="Visual brief appears here after Save edits, or paste / write instructions for Claude Design…"></textarea>
-      <div class="lab-design-actions">
-        <button type="button" class="lab-btn primary" id="btn-copy-design">Copy for Claude Design</button>
-        <button type="button" class="lab-btn secondary" id="btn-pull-design">Pull from Response</button>
-        <span id="design-brief-status" class="lab-design-status">No brief yet</span>
-      </div>
-      <p class="lab-workflow-note">Export zip from Send includes rules + <code>VISUAL_BRIEF_RULES.md</code> for your brand's Claude Project. Ask for post + visual brief in one reply — markers <code>━━━ PASTE INTO CLAUDE DESIGN ━━━</code> auto-fill this box.</p>
-    </div>
   </div>
 </div>
 </div>
@@ -1978,28 +1964,10 @@ function copyDesignBrief() {
 
 function switchLabSub(name) {
   var content = document.getElementById('lab-sub-content');
-  var design = document.getElementById('lab-sub-design');
   var tContent = document.getElementById('lab-subtab-content');
-  var tDesign = document.getElementById('lab-subtab-design');
-  if (name === 'design') {
-    updateDesignBriefStatus();
-    content.classList.remove('visible');
-    design.classList.add('visible');
-    design.hidden = false;
-    tContent.classList.remove('active');
-    tDesign.classList.add('active');
-    tContent.setAttribute('aria-selected', 'false');
-    tDesign.setAttribute('aria-selected', 'true');
-  } else {
-    design.classList.remove('visible');
-    design.hidden = true;
-    content.classList.add('visible');
-    tDesign.classList.remove('active');
-    tContent.classList.add('active');
-    tDesign.setAttribute('aria-selected', 'false');
-    tContent.setAttribute('aria-selected', 'true');
-  }
-  try { localStorage.setItem('me-lab-subtab', name); } catch (e) {}
+  if (content) content.classList.add('visible');
+  if (tContent) { tContent.classList.add('active'); tContent.setAttribute('aria-selected', 'true'); }
+  try { localStorage.setItem('me-lab-subtab', 'content'); } catch (e) {}
 }
 
 document.querySelectorAll('.lab-subtab').forEach(function (btn) {
@@ -2112,9 +2080,7 @@ function loadLabFromStorage() {
     if (ed) setResponseText(cleanAiTells(splitBriefToDesign(ed)));
     var db = localStorage.getItem(LS.DESIGN);
     if (db) setDesignBriefText(db);
-    var sub = localStorage.getItem('me-lab-subtab');
-    if (sub === 'design') switchLabSub('design');
-    else switchLabSub('content');
+    switchLabSub('content');
     var mode = localStorage.getItem(LS.MODE);
     if (mode === 'pick') mode = 'suggest'; // legacy: pick is now a sub-state of suggest
     if (mode === 'idea' || mode === 'suggest') labIntent = mode;
@@ -3117,6 +3083,7 @@ document.getElementById('btn-send-claude').addEventListener('click', function ()
 document.getElementById('btn-copy-output').addEventListener('click', copyOutput);
 document.getElementById('btn-draft-topic').addEventListener('click', generatePostFromSelectedIdea);
 (function () { var ib = document.getElementById('btn-image-brief'); if (ib) ib.addEventListener('click', generateImageBriefFromResponse); })();
+(function () { var cb = document.getElementById('btn-copy-image'); if (cb) cb.addEventListener('click', function () { var t = document.getElementById('image-out-text'); if (t && t.value) { t.removeAttribute('readonly'); t.select(); try { document.execCommand('copy'); } catch (e) {} t.setAttribute('readonly', ''); if (typeof toast === 'function') toast('Copied'); } }); })();
 
 function generatePostFromSelectedIdea() {
   var idea = selectedTopicTitle;
@@ -3140,23 +3107,25 @@ function generatePostFromSelectedIdea() {
 }
 
 function generateImageBriefFromResponse() {
+  var box = document.getElementById('image-out');
+  var out = document.getElementById('image-out-text');
+  var st = document.getElementById('image-out-status');
   var text = (typeof getResponseText === 'function') ? getResponseText() : '';
-  if (!text) { if (typeof toast === 'function') toast('Generate or write a post first.'); return; }
+  if (box) box.hidden = false;
+  if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!text) { if (out) out.value = ''; if (st) st.textContent = 'Generate or write a post first.'; return; }
   var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
   var plat = (document.getElementById('platform') || {}).value || 'Short posts';
   var btn = document.getElementById('btn-image-brief');
   if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
-  var st = document.getElementById('design-brief-status'); if (st) st.textContent = 'Generating image instructions...';
+  if (out) out.value = '';
+  if (st) st.textContent = 'Generating image instructions...';
   fetch('/api/lab/image-brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, text: text }) })
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (btn) { btn.disabled = false; btn.textContent = 'Generate image instructions'; }
-      if (d && d.ok && d.brief) {
-        var db = document.getElementById('design-brief'); if (db) db.value = d.brief;
-        if (st) st.textContent = 'Image instructions ready';
-        if (typeof switchLabSub === 'function') switchLabSub('design');
-        if (typeof toast === 'function') toast('Image instructions ready in the Design tab');
-      } else { if (st) st.textContent = 'Could not generate'; if (typeof toast === 'function') toast((d && d.error) || 'Could not generate'); }
+      if (d && d.ok && d.brief) { if (out) out.value = d.brief; if (st) st.textContent = 'Ready'; }
+      else { if (st) st.textContent = (d && d.error) || 'Could not generate'; }
     })
     .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate image instructions'; } if (st) st.textContent = 'Request failed'; });
 }
@@ -3210,18 +3179,7 @@ document.getElementById('lab-response').addEventListener('paste', function () {
   }, 0);
 });
 
-document.getElementById('design-brief').addEventListener('input', function () {
-  updateDesignBriefStatus();
-  saveLabToStorage(true);
-});
-
-document.getElementById('btn-copy-design').addEventListener('click', copyDesignBrief);
-document.getElementById('btn-pull-design').addEventListener('click', function () {
-  syncDesignFromResponse(false);
-});
-document.getElementById('btn-goto-design').addEventListener('click', function () {
-  switchLabSub('design');
-});
+// (Design tab removed; image instructions render inline under Content)
 
 document.getElementById('btn-submit-final').addEventListener('click', function () {
   var btn = document.getElementById('btn-submit-final');
@@ -3276,10 +3234,6 @@ document.getElementById('btn-submit-final').addEventListener('click', function (
     setResponseStatus('');
     updateSubmitFinalUI();
     saveLabToStorage(true);
-    if (brief) {
-      toast('Visual brief ready in Design tab');
-      switchLabSub('design');
-    }
   }).catch(function () {
     toast('Save failed');
   }).finally(function () {
