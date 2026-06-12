@@ -13,50 +13,38 @@ Claude Code login.
 
 ## System diagram
 
-```mermaid
-flowchart LR
-  subgraph INPUTS["Inputs"]
-    direction TB
-    SRC["Call transcripts<br/>_sources 🔒"]
-    DOCS["Public docs · _kb"]
-    SCR["Scraper · News<br/>(planned)"]
-    MCP["MCP: Notion · Slack · LinkedIn<br/>(planned)"]
-  end
+```
+        INPUTS                          +---------------------------+
+  +-------------------+                 |          FRONTEND         |
+  | transcripts  [L]  |                 |        web dashboard      |
+  | public docs _kb   |                 +-----+---------------^-----+
+  | scraper/news  *   |          braindump    |               | post + image
+  | MCP connectors *  |                        v               |   instructions
+  +---------+---------+                 +---------------------------+     +--------------------+
+            | feeds                     |       AGENT HARNESS       |<--->| CLAUDE  Opus/Haiku |
+            v                           |        (the brain)        |     +--------------------+
+       +---------+   writes             |  reads Rules + strategy   |
+       | distill |---------> strategy.md|  reads the Obsidian vault |
+       +---------+                      +-------------+-------------+
+                                                      | orchestrates
+                                                      v
+        +-------------------------------------------------------------------------+
+        |  CONTENT GENERATION                                                     |
+        |    ideas --> FILTER --> post --> GATE --> image options                 |
+        |              (principle x narrative)                  --> Claude Design |
+        +-----------------------------------------+-------------------------------+
+                                                  | post + image instructions
+                                                  v   (shown in the dashboard)
+        +-------------------+
+        |  OBSIDIAN VAULT   |   KB . memory . outputs . rules
+        |   (memory / KB)   |<------  edits + learnings  (manual feedback loop)
+        +-------------------+
 
-  DISTILL["distill<br/>fills strategy schema"]
-
-  subgraph BRAIN["Agent Harness"]
-    direction TB
-    HARNESS["Harness"]
-    RULES["Rules + strategy.md"]
-    MEM[("Obsidian vault<br/>KB · memory · outputs")]
-    LLM["Claude · Opus + Haiku"]
-  end
-
-  subgraph GEN["Content Generation"]
-    direction LR
-    IDEAS["ideas"] --> FILTER{"strategy filter<br/>principle × narrative"} --> POST["full post"] --> GATE{"quality gate"} --> IMG["image options<br/>→ Claude Design"]
-  end
-
-  DASH["Dashboard (Frontend)"]
-
-  SRC --> DISTILL --> RULES
-  DOCS --> MEM
-  SCR -.-> MEM
-  MCP -.-> MEM
-
-  DASH -->|braindump| HARNESS
-  RULES --> HARNESS
-  MEM --> HARNESS
-  HARNESS <--> LLM
-  HARNESS --> IDEAS
-  IMG --> DASH
-  POST -. "edits + learnings (manual)" .-> MEM
+  legend:  --> built       *  planned (scraper, MCP connectors)       [L] firewalled (_sources)
 ```
 
-Solid arrows are built; dotted arrows and `(planned)` boxes are next on the
-roadmap. The `_sources` transcripts are read **only** by `distill` and are
-firewalled from generation.
+The `_sources` transcripts are read **only** by `distill` and are firewalled from
+generation. `*` boxes are the next items on the roadmap.
 
 ## How it works
 
