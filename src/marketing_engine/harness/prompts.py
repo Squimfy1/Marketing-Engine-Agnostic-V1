@@ -25,7 +25,11 @@ Work efficiently — you have a limited number of tool calls:
    can from the request itself; only if that is impossible, state briefly in one
    line what source material is missing — do not keep searching.
 3. Write the finished piece, then self-check it against the WRITING RULES and the
-   banned-vocabulary/filler lists, and fix any violations before returning.
+   banned-vocabulary/filler lists. For a short post, also enforce ONE IDEA PER
+   SHORT POST: it must develop exactly one idea (not a mix), must NOT read as a
+   feature/benefit dump, must connect clearly to the brand's CORE NARRATIVE, and
+   must end on a single call to action. If any of these fail, name the rule it
+   broke and rewrite before returning.
 Return only the final copy in markdown — no preamble, no commentary, no notes
 about what you read."""
 
@@ -37,6 +41,7 @@ def assemble_system_prompt(
     brand_name: str,
     brand_identity: str,
     brand_voice: str,
+    core_narrative: str = "",
     core_rules: str,
     writing_rules: str = "",
 ) -> str:
@@ -56,6 +61,11 @@ def assemble_system_prompt(
         parts.append(f"Identity: {brand_identity.strip()}")
     if brand_voice.strip():
         parts.append(f"Voice: {brand_voice.strip()}")
+    if core_narrative.strip():
+        parts.append("")
+        parts.append("## CORE NARRATIVE")
+        parts.append("Every short post is ONE angle or proof point on this. Connect back to it.")
+        parts.append(core_narrative.strip())
     if core_rules.strip():
         parts.append("")
         parts.append("## CORE RULES (brand)")

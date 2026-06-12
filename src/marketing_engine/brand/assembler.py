@@ -73,6 +73,7 @@ def assemble_run(
         brand_name=brand.name,
         brand_identity=brand.identity,
         brand_voice=brand.voice,
+        core_narrative=brand.narrative,
         core_rules=core_rules,
         writing_rules=writing_rules,
     )

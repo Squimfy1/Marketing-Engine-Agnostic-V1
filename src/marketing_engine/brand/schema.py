@@ -36,6 +36,12 @@ class BrandConfig(BaseModel):
         default="",
         description="Tone-of-voice guidance applied to every piece of copy.",
     )
+    narrative: str = Field(
+        default="",
+        description="The brand's core narrative / central thesis. Each short post is "
+        "one angle or proof point on it. Falls back to identity if unset; usually "
+        "populated by the narrative-distillation step from the client's call sources.",
+    )
     models: ModelPolicy = Field(default_factory=ModelPolicy)
     design_tokens: str = Field(
         default="_design/tokens.yaml",
