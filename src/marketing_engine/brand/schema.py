@@ -19,6 +19,22 @@ class ModelPolicy(BaseModel):
     ideas: str | None = None
     editor: str | None = None
     image_brief: str | None = None
+    news: str | None = None  # the news scraper (web research + summarise)
+
+
+class NewsPolicy(BaseModel):
+    """Optional news-scraper config. All fields optional — if ``queries`` is empty
+    the scraper derives its own searches from the brand identity + strategy, so a
+    brand needs no news config to work (fully agnostic)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    queries: list[str] = Field(
+        default_factory=list,
+        description="Seed search queries. Empty = let the engine derive them from the brand.",
+    )
+    lookback_days: int = Field(default=30, description="Only keep news newer than this.")
+    max_items: int = Field(default=8, description="Max news items to keep per scrape.")
 
 
 class BrandConfig(BaseModel):
@@ -43,6 +59,7 @@ class BrandConfig(BaseModel):
         "populated by the narrative-distillation step from the client's call sources.",
     )
     models: ModelPolicy = Field(default_factory=ModelPolicy)
+    news: NewsPolicy = Field(default_factory=NewsPolicy)
     design_tokens: str = Field(
         default="_design/tokens.yaml",
         description="Path (relative to the brand folder) to design tokens.",

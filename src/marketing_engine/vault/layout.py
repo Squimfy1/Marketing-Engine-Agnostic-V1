@@ -27,6 +27,7 @@ TENANT_CONFIG = "tenant.yaml"
 BRAND_CONFIG = "brand.yaml"
 
 KB_DIR = "_kb"
+NEWS_DIR = "_kb/news"  # scraped, relevance-filtered news; a public KB the agent may read
 RULES_DIR = "_rules"
 MEMORY_DIR = "_memory"
 OUTPUTS_DIR = "_outputs"
@@ -77,6 +78,9 @@ class VaultLayout:
 
     def kb_dir(self, tenant_id: str, brand_id: str) -> Path:
         return self.brand_dir(tenant_id, brand_id) / KB_DIR
+
+    def news_dir(self, tenant_id: str, brand_id: str) -> Path:
+        return self.brand_dir(tenant_id, brand_id) / NEWS_DIR
 
     def rules_dir(self, tenant_id: str, brand_id: str) -> Path:
         return self.brand_dir(tenant_id, brand_id) / RULES_DIR

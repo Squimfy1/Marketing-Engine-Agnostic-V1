@@ -253,6 +253,55 @@ def build_filter_prompt(ideas: list[str], strategy_block: str) -> str:
     return "\n".join(parts)
 
 
+SCRAPE_SYSTEM = (
+    "You are a news scout for a brand. You search the web for RECENT, genuinely "
+    "relevant news in the brand's market and for its customers, then return a tight, "
+    "relevance-filtered, PUBLIC-SAFE digest as JSON. You judge relevance through the "
+    "brand's strategy: a story matters only if it advances a BUSINESS PRINCIPLE or "
+    "speaks to a CUSTOMER NARRATIVE. You never invent stories or URLs."
+)
+
+SCRAPE_INSTRUCTIONS = """\
+Find recent news (within the lookback window) relevant to THIS brand's market and
+customers. Use WebSearch to find stories and WebFetch to confirm details. Derive
+your own searches from the brand's identity + strategy above; the seed queries (if
+any) are only a starting point — branch out to the topics the customers actually
+care about.
+
+For each story, judge relevance through the strategy: keep it ONLY if it advances a
+BUSINESS PRINCIPLE or speaks to a CUSTOMER NARRATIVE. Drop promotional fluff,
+pure competitor PR, anything off-topic, and anything you cannot verify.
+
+Return ONLY a JSON array, best first, at most {max_items} items:
+[{{"title": "headline", "url": "source url", "source": "publication",
+   "date": "YYYY-MM-DD or best estimate", "summary": "2-3 factual sentences",
+   "principle": "the business principle it advances, or empty",
+   "narrative": "the customer narrative it taps, or empty",
+   "angle": "one line: how a post could use this, tied to the brand",
+   "relevance": "high|medium|low"}}]
+
+Public-safe and factual only. No prose outside the JSON, no markdown fences."""
+
+
+def build_scrape_prompt(
+    *,
+    brand_identity: str,
+    strategy_block: str,
+    queries: list[str],
+    max_items: int,
+    today: str,
+    lookback_days: int,
+) -> str:
+    parts = ["## BRAND", brand_identity.strip()]
+    if strategy_block.strip():
+        parts += ["", "## BRAND STRATEGY", strategy_block.strip()]
+    parts += ["", f"## TODAY\n{today} — only keep news from the last {lookback_days} days."]
+    if queries:
+        parts += ["", "## SEED QUERIES", "\n".join(f"- {q}" for q in queries)]
+    parts += ["", SCRAPE_INSTRUCTIONS.format(max_items=max_items)]
+    return "\n".join(parts)
+
+
 def build_image_brief_prompt(
     post_text: str, *, design_tokens: str = "", kind: str = "", direction: str = ""
 ) -> str:
@@ -294,14 +343,25 @@ def build_options_prompt(
     n: int = 4,
     platform_label: str | None = None,
     platform_guidance: str = "",
+    news_headlines: list[str] | None = None,
 ) -> str:
-    """Prompt for generating N distinct post options in one call."""
+    """Prompt for generating N distinct post options in one call.
+
+    When recent ``news_headlines`` are supplied, the model is nudged to make some
+    ideas news-reactive (the Product/News axis) while staying on-brand.
+    """
 
     parts = ["## REQUEST", input_text.strip()]
     if platform_label:
         parts += ["", f"## PLATFORM\n{platform_label}"]
     if platform_guidance.strip():
         parts += ["", "## PLATFORM GUIDANCE", platform_guidance.strip()]
+    if news_headlines:
+        parts += [
+            "",
+            "## RECENT RELEVANT NEWS (for news-reactive angles — optional, only if it fits)",
+            "\n".join(f"- {h}" for h in news_headlines),
+        ]
     parts += ["", OPTIONS_INSTRUCTIONS.format(n=n)]
     return "\n".join(parts)
 

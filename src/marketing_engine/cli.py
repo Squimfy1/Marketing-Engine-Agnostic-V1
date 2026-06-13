@@ -165,6 +165,40 @@ def distill(
     typer.echo("Review the written files, then generate.")
 
 
+@app.command()
+def scrape(
+    tenant: str = typer.Option(..., "--tenant", "-t", help="Tenant id."),
+    brand: str = typer.Option(..., "--brand", "-b", help="Brand id."),
+    max_items: Optional[int] = typer.Option(None, "--max", help="Max news items to keep."),
+    query: list[str] = typer.Option(None, "--query", "-q", help="Seed query (repeatable)."),
+    vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Use the fake model (no network)."),
+) -> None:
+    """Scrape recent, relevant news into a brand's _kb/news/ (web research agent)."""
+
+    settings = Settings.from_env(vault_root=vault_root)
+    llm = FakeLLMClient() if dry_run else ClaudeAgentClient()
+    engine = MarketingEngine(settings, llm=llm)
+    try:
+        result = asyncio.run(
+            engine.scrape_news(tenant, brand, max_items=max_items, queries=query or None)
+        )
+    except (RegistryError, EngineError) as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2)
+    if not result.items:
+        typer.secho("No relevant news found this run.", fg=typer.colors.YELLOW)
+        return
+    typer.secho(
+        f"Scraped {len(result.items)} item(s) for {tenant}/{brand} ({result.model})",
+        fg=typer.colors.GREEN,
+    )
+    for it in result.items:
+        typer.echo(f"  [{it.relevance}] {it.title}  ({it.source})")
+    if result.file_written:
+        typer.echo(f"  wrote {result.file_written}")
+
+
 @app.command(name="list")
 def list_brands(
     vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),

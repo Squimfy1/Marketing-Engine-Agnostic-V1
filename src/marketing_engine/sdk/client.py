@@ -150,6 +150,35 @@ class FakeLLMClient:
                 ),
                 model=options.model or "fake",
             )
+        if "## SEED QUERIES" in prompt or "Find recent news" in prompt:  # news scraper
+            import json
+
+            return RunResult(
+                text=json.dumps(
+                    [
+                        {
+                            "title": "Inflation ticks up again, squeezing household budgets",
+                            "url": "https://example.com/news/inflation",
+                            "source": "Example Wire",
+                            "date": "2026-06-10",
+                            "summary": "Consumer prices rose again last month, with everyday essentials leading the increase.",
+                            "principle": "purchasing-power protection",
+                            "narrative": "prices keep rising and savings erode",
+                            "angle": "Tie rising prices to the case for holding something real.",
+                            "relevance": "high",
+                        },
+                        {
+                            "title": "Unrelated celebrity gossip",
+                            "url": "https://example.com/news/gossip",
+                            "source": "Tabloid",
+                            "date": "2026-06-09",
+                            "summary": "Not relevant to the brand.",
+                            "relevance": "low",
+                        },
+                    ]
+                ),
+                model=options.model or "fake",
+            )
         if "Recommend how to illustrate" in prompt:  # image recommendation
             import json
 

@@ -169,8 +169,15 @@ class MarketingEngine:
         # still fill the slate.
         assembled.options.allowed_tools = []
         raw_n = min(8, n + 2)
+        from marketing_engine.inputs.scraper import latest_news_headlines
+
+        news = latest_news_headlines(self.layout, tenant_id, brand_id)
         prompt = build_options_prompt(
-            braindump, n=raw_n, platform_label=plat.label, platform_guidance=guidance
+            braindump,
+            n=raw_n,
+            platform_label=plat.label,
+            platform_guidance=guidance,
+            news_headlines=news,
         )
         result = await self.llm.run(prompt, assembled.options)
         ideas = [clean_copy(i) for i in extract_json_list(result.text)]
@@ -195,6 +202,26 @@ class MarketingEngine:
             usage=usage,
             filtered=outcome.ran,
             is_error=result.is_error,
+        )
+
+    async def scrape_news(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        max_items: int | None = None,
+        queries: list[str] | None = None,
+    ):
+        """Pull recent, relevant, strategy-filtered news into ``_kb/news/``.
+
+        The News input from the diagram. Runs a web-research agent (WebSearch +
+        WebFetch) over your Claude Code login; returns a ``ScrapeResult``.
+        """
+
+        from marketing_engine.inputs.scraper import scrape_news
+
+        return await scrape_news(
+            self, tenant_id, brand_id, max_items=max_items, queries=queries
         )
 
     async def recommend_images(
