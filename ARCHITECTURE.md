@@ -56,11 +56,11 @@ Folders mirror the systems diagram — each box is one zone:
 | Content Generation | **content/** | `strategy.py`, `filter.py`, `distill.py`, `validate.py`, `platforms.py`, `postprocess.py` | the universal strategy schema; the strategy filter; distillation; the Haiku quality gate; platform format; parsing |
 | LLM | **sdk/** | `client.py`, `isolation.py`, `models.py` | the ONLY place that talks to Claude; the brand-isolation + `_sources` firewall hook; model tiers |
 | Obsidian Memory / KB | **vault/** | `layout.py`, `fs_adapter.py`, … | the ONLY place that touches files; path conventions |
-| Integrations + Scraper | **inputs/** | `convert.py` (PDF→text) | feeds into a brand's vault; MCP connectors + scraper land here |
+| Integrations + Scraper | **inputs/** | `scraper.py`, `convert.py` (PDF→text) | the news scraper (web research → `_kb/news/`); file conversion; MCP connectors land here next |
 | Image Generation | **image/** | `recommend.py` | recommend image approaches + options → Claude Design instructions |
 | Frontend | **server/** | `app.py`, `routes.py`, `bundle.py` | the dashboard HTTP backend (`/api/*`) |
 | — | **tools/** | `learnings.py`, `output_tools.py`, `memory_tools.py` | the writers (drafts, learnings, memory notes) |
-| — | **cli.py** | | `run` `serve` `new-brand` `ingest` `distill` `list` |
+| — | **cli.py** | | `run` `serve` `new-brand` `ingest` `distill` `scrape` `list` |
 
 Two invariants: **only `sdk/` imports Claude; only `vault/` touches files.** So
 the rest is testable offline with a fake model.

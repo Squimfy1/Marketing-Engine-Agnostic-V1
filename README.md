@@ -64,7 +64,8 @@ BACKEND                                         FRONTEND
                                             └───────────────┘
 
 distill reads the firewalled _sources transcripts and writes Rules+strategy;
-generation never touches _sources. Scraper / news + MCP connectors are next.
+the news scraper pulls relevant, strategy-filtered news into _kb/news/ (it feeds
+Knowledge Base above). generation never touches _sources. MCP connectors are next.
 ```
 
 ## How it works
@@ -151,11 +152,13 @@ engine new-brand -t <acct> -b <client>
 engine ingest <transcripts...> -t <acct> -b <client> --sources   # -> _sources/ (firewalled)
 engine ingest <public docs...> -t <acct> -b <client>             # -> _kb/
 engine distill -t <acct> -b <client>                             # writes strategy.md + proof-points.md
+engine scrape  -t <acct> -b <client>                             # pulls relevant news -> _kb/news/
 # review the written files, edit brand.yaml, then generate
 ```
 
 ## Status
 
 Built: the agnostic engine spine, the dashboard, transcript distillation + the
-`_sources` firewall, the strategy filter, the quality gate, and the image-options
-flow. Next: a coverage memory loop, scraper/news inputs, and MCP connectors.
+`_sources` firewall, the strategy filter, the quality gate, the image-options
+flow, and the **news scraper** (web research → strategy-filtered `_kb/news/`).
+Next: a coverage memory loop and MCP connectors (Notion / Slack / LinkedIn).
