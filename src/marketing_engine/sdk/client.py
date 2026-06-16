@@ -182,6 +182,23 @@ class FakeLLMClient:
                 ),
                 model=options.model or "fake",
             )
+        if '"pivots_from_default"' in prompt:  # assignment extraction
+            import json
+
+            req = (_section(prompt, "OPERATOR REQUEST") or prompt.strip()).split("\n\n", 1)[0].strip()
+            return RunResult(
+                text=json.dumps(
+                    {
+                        "specific": bool(req),
+                        "subject": req[:80],
+                        "angle": "",
+                        "audience": "",
+                        "must_cover": [],
+                        "pivots_from_default": False,
+                    }
+                ),
+                model=options.model or "fake",
+            )
         if "image SOURCE per option" in prompt:  # image recommendation
             import json
 

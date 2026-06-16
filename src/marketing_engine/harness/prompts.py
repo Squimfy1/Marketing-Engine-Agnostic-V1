@@ -222,6 +222,38 @@ narrative is only the expected angle when no REQUEST is given.
 Otherwise pass it. No prose outside the JSON."""
 
 
+ASSIGNMENT_SYSTEM = (
+    "You turn a marketing operator's rough request into a precise assignment for a "
+    "copywriter. You identify exactly what THIS post must be about, even when that "
+    "differs from the brand's usual message. You return ONLY JSON."
+)
+
+ASSIGNMENT_INSTRUCTIONS = """\
+Convert the operator request into an assignment. Return ONLY a JSON object:
+{
+  "specific": true or false,
+  "subject": "the exact subject this post must be about, in a few words",
+  "angle": "the framing/perspective requested, or empty",
+  "audience": "intended audience if named, else empty",
+  "must_cover": ["concrete points the request explicitly asks for"],
+  "pivots_from_default": true or false
+}
+"specific" is true when the request names a particular subject, angle, audience, or
+topic (not merely "write something on brand"). "pivots_from_default" is true when
+the requested subject is NOT the brand's default message shown above — i.e. the
+writer must resist drifting back to that default. No prose outside the JSON."""
+
+
+def build_assignment_prompt(braindump: str, core_narrative: str = "") -> str:
+    """Prompt to extract a binding assignment from the operator's request."""
+
+    parts = ["## OPERATOR REQUEST", braindump.strip()]
+    if core_narrative.strip():
+        parts += ["", "## BRAND DEFAULT MESSAGE (for pivot detection only)", core_narrative.strip()]
+    parts += ["", ASSIGNMENT_INSTRUCTIONS]
+    return "\n".join(parts)
+
+
 def build_validate_prompt(post_text: str, core_narrative: str, request: str = "") -> str:
     """Prompt for the cheap reliability gate (Haiku verdict on a short post).
 

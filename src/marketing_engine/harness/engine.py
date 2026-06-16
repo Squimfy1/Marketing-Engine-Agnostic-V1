@@ -109,7 +109,21 @@ class MarketingEngine:
             platform_guidance=load_guidance(self.layout, plat),
             task=task,
         )
-        result = await self.llm.run(assembled.run_prompt, assembled.options)
+
+        # Pin the post to what the operator actually asked for BEFORE writing, so the
+        # brand's default narrative can't pull it off-brief. The binding assignment
+        # leads the run prompt (most salient position).
+        from marketing_engine.content.brief import extract_assignment
+
+        assignment = await extract_assignment(
+            self, brand, braindump, cwd=assembled.options.cwd
+        )
+        run_prompt = assembled.run_prompt
+        block = assignment.block()
+        if block:
+            run_prompt = block + "\n\n" + run_prompt
+
+        result = await self.llm.run(run_prompt, assembled.options)
         result.text = clean_copy(result.text)
 
         # Cheap Haiku reliability gate + ONE bounded retry on failure.
@@ -118,7 +132,7 @@ class MarketingEngine:
         )
         if not ok and reason:
             retry_prompt = (
-                assembled.run_prompt
+                run_prompt
                 + "\n\n## REVISION NEEDED\nA reviewer flagged this draft: "
                 + reason
                 + "\nRewrite the post to fix it — develop the ONE idea the operator asked "
