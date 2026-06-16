@@ -117,41 +117,54 @@ Example: ["The quiet-erosion angle: open with ... and tie it to ...", "..."]"""
 
 
 IMAGE_BRIEF_INSTRUCTIONS = """\
-Write concise image-generation instructions (a visual brief) for an image to
-accompany the post below. Cover: subject/scene, composition, art style, mood,
-colour palette, and any short text overlay. Keep it on-brand and ready to paste
-into an image tool. Output ONLY the brief — no preamble, no commentary."""
+First, in one line, state the post's CORE IDEA (the single message a reader takes
+away). Then write concise image-generation instructions for an image that
+ILLUSTRATES THAT IDEA — the post and the image must read as one piece. Draw the
+subject/scene from what the post actually talks about; do NOT default to a bare
+logo, brand mark, or generic abstract motif unless the post is literally about the
+brand's identity. Cover: subject/scene (grounded in the post), composition, art
+style, mood, colour palette, and any short text overlay (pull wording from the
+post if used). Keep it on-brand and ready to paste into an image tool. Output ONLY
+the one-line core idea followed by the brief — no other preamble or commentary."""
 
 
 # Image SOURCE kinds the recommender chooses between. All are produced via Claude
-# Code; they differ in where the raw image comes from.
+# Code; they differ in where the raw image comes from. Each must depict THIS post.
 IMAGE_KINDS = {
-    "library": "pick an existing image from the brand's image library",
-    "real_photo": "a real photograph to source online and bring into Claude Design",
-    "generated": "generate the image from scratch in Claude Design",
+    "library": "an existing image from the brand's library that depicts THIS post's idea",
+    "real_photo": "a real photograph (sourced online) that depicts THIS post's idea",
+    "generated": "an image generated from scratch that illustrates THIS post's idea",
 }
 
 IMAGE_RECOMMEND_SYSTEM = (
     "You are an art director for a brand. Given a finished post, you recommend how "
-    "to illustrate it and offer a few concrete options to choose from. You return "
-    "ONLY JSON."
+    "to illustrate ITS SPECIFIC IDEA and offer concrete options to choose from. "
+    "Every option must visually express what the post is actually about — never a "
+    "generic logo or brand mark unless the post is about the brand identity itself. "
+    "You return ONLY JSON."
 )
 
 IMAGE_RECOMMEND_INSTRUCTIONS = """\
-Recommend how to illustrate the post above. Choose the image SOURCE per option:
-- "library": pick an existing image from the brand's image library
-- "real_photo": a real photograph to source online and bring into Claude Design
-- "generated": generate the image from scratch in Claude Design
+Identify the post's CORE IDEA, then recommend how to illustrate THAT idea. Every
+option's `direction` must describe a subject/scene a reader of THIS post would
+recognise as illustrating it — do NOT fall back to a bare logo, brand mark, or
+generic brand motif unless the post is literally about the brand's identity.
+
+Choose the image SOURCE per option:
+- "library": an existing image from the brand's library that fits this post's idea
+- "real_photo": a real photograph (sourced online) that depicts this post's idea
+- "generated": an image generated from scratch that illustrates this post's idea
 Let the content decide (e.g. a product explainer often suits a generated diagram;
 a news reaction often suits a real photo).
 
 Return ONLY a JSON object:
 {
+  "core_idea": "one line: the single message this post conveys",
   "recommendation": "one sentence on the best overall approach and why",
   "options": [
     {"kind": "library|real_photo|generated",
-     "direction": "a short concrete visual direction (subject/scene + feel)",
-     "rationale": "one short clause on why it fits this post"}
+     "direction": "a concrete subject/scene that illustrates the post's idea + the feel",
+     "rationale": "one short clause on how it connects to THIS post"}
   ]
 }
 Give 3 DISTINCT options. Keep everything on-brand. No prose outside the JSON."""
@@ -344,7 +357,7 @@ def build_image_brief_prompt(
     generate one); otherwise it's a generic brief.
     """
 
-    parts = ["## POST", post_text.strip()]
+    parts = ["## POST (the image must illustrate THIS post's idea)", post_text.strip()]
     if design_tokens.strip():
         parts += ["", "## BRAND DESIGN TOKENS", design_tokens.strip()]
     if kind or direction:
@@ -354,13 +367,16 @@ def build_image_brief_prompt(
         if direction:
             chosen.append(f"Direction: {direction.strip()}")
         chosen.append(
-            "Write the instructions FOR this chosen source and direction"
+            "Write the instructions FOR this chosen source and direction, and keep "
+            "them anchored to the post's core idea above"
             + (
-                " — describe the exact photo to find and how to adapt it"
+                " — describe the exact photo to find (its subject/scene tied to the post) "
+                "and how to adapt it"
                 if kind == "real_photo"
-                else " — describe the image to pick from the library"
+                else " — describe which library image to pick and why it fits the post; "
+                "if only a logo/brand mark is available, still tie its use to the post's idea"
                 if kind == "library"
-                else " — describe the image to generate"
+                else " — describe the image to generate, depicting the post's idea"
             )
             + "."
         )

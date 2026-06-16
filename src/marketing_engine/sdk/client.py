@@ -179,7 +179,7 @@ class FakeLLMClient:
                 ),
                 model=options.model or "fake",
             )
-        if "Recommend how to illustrate" in prompt:  # image recommendation
+        if "image SOURCE per option" in prompt:  # image recommendation
             import json
 
             return RunResult(
