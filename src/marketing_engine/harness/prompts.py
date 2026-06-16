@@ -268,6 +268,12 @@ your own searches from the brand's identity + strategy above; the seed queries (
 any) are only a starting point — branch out to the topics the customers actually
 care about.
 
+PRIORITISE the brand's TARGET MARKET and GEOGRAPHY as stated in its identity and
+personas (e.g. a brand for Swiss families should weight Swiss/Switzerland-specific
+news, local sources, and the region's cost-of-living/regulatory context over
+generic global coverage). Prefer local-market stories a real customer there would
+actually see.
+
 For each story, judge relevance through the strategy: keep it ONLY if it advances a
 BUSINESS PRINCIPLE or speaks to a CUSTOMER NARRATIVE. Drop promotional fluff,
 pure competitor PR, anything off-topic, and anything you cannot verify.

@@ -14,58 +14,59 @@ Claude Code login.
 ## System diagram
 
 ```
-BACKEND                                         FRONTEND
+                          MARKETING ENGINE V2 — SYSTEMS DIAGRAM
 
-┌────────────────┐
-│ Rules+strategy │──┐
-└────────────────┘  │
-┌────────────────┐  │                        ┌──────────────┐
-│ Knowledge Base │──┤                    ┌──▶│    Input     │
-│     (_kb)      │  │                    │   │ (braindump)  │
-└────────────────┘  │                    │   └──────┬───────┘
-┌────────────────┐  │     ┌──────────┐   │          │
-│ Design System  │──┼────▶│  AGENT   │   │   ┌──────┴───────┐
-└────────────────┘  │     │ HARNESS  │───┘   │   Routing    │
-┌────────────────┐  │     │  + LLM   │       │ brand / plat │
-│ Memory (vault) │──┘     └────┬─────┘       └──────┬───────┘
-└────────────────┘             ▲                    │
-       ▲                       │            ┌───────┴───────┐
-       │                  ┌────┴─────┐      ▼               ▼
-       │                  │ distill  │  ┌─────────┐    ┌──────────┐
-       │                  │(_sources)│  │  Ideas  │    │  Brain   │
-       │                  └──────────┘  │   Gen   │    │   Dump   │
-       │                                └────┬────┘    └────┬─────┘
-       │                                     │              │
-       │                                ┌────┴─────┐   ┌────┴─────┐
-       │                                │ Strategy │   │Structure │
-       │                                │  Filter  │   │ + Match  │
-       │                                └────┬─────┘   └────┬─────┘
-       │                                     └──────┬───────┘
-       │                                            ▼
-       │                                    ┌───────────────┐
-       │                                    │   Full Post   │
-       │                                    └──────┬────────┘
-       │                                           ▼
-       │                                    ┌───────────────┐
-       │                                    │ Quality Gate  │
-       │                                    │ (auto review) │
-       │                                    └──────┬────────┘
-       │                                           ▼
-       │                                    ┌───────────────┐
-       │                                    │ Manual Edits  │
-       │                                    └──────┬────────┘
-       │                                           ▼
-       │                                    ┌───────────────┐
-       │                                    │ Image Options │──▶ Claude Design
-       │                                    └──────┬────────┘
-       │                                           ▼
-       │                                    ┌───────────────┐
-       └────────────────────────────────────│    Output     │──▶ _outputs
-                                            └───────────────┘
+ INTEGRATIONS (MCP servers)         BACKEND · REPO                       FRONTEND
+ ┌────────────────────┐
+ │ Notion (work org)  │──┐
+ └────────────────────┘  │
+ ┌────────────────────┐  │     ┌──────────────────────────┐       ┌──────────────────┐
+ │ Call transcripts   │──┤     │ ┌──────────────────────┐ │   ┌──▶│      Input       │
+ └────────────────────┘  │ MCP │ │ Obsidian Memory (KB) │ │   │   └────────┬─────────┘
+ ┌────────────────────┐  │     │ └──────────────────────┘ │   │            ▼
+ │ Slack / Telegram   │──┼────▶│ ┌──────────────────────┐ │   │   ┌──────────────────┐
+ └────────────────────┘  │     │ │ Rules + strategy.md  │ │   │   │ llm Ideas Gen /  │
+ ┌────────────────────┐  │     │ └──────────────────────┘ │   │   │ Insert BrainDump │
+ │ LinkedIn           │──┤     │ ┌──────────────────────┐ │   │   └────────┬─────────┘
+ └────────────────────┘  │     │ │  Agent Harness       │◀┼───┘            ▼
+ ┌────────────────────┐  │     │ └──────────────────────┘ │       ┌──────────────────┐
+ │ Email              │──┘     │ ┌──────────────────────┐ │       │ Manual Edits +   │
+ └────────────────────┘        │ │  LLM (Opus · Haiku)  │ │       │ Feedback         │
+ ┌────────────────────┐        │ └──────────────────────┘ │       └───┬─────────┬────┘
+ │ SCRAPER            │  news  │ ┌──────────────────────┐ │           ▼         ▼
+ │  scans news +      │───────▶│ │  Design System       │ │      Text Output  Image Output
+ │  key accounts      │        │ └──────────────────────┘ │           │
+ │   → _kb/news/      │        └──────────────────────────┘           │
+ └────────────────────┘                    ▲                          │
+                                            └── edits + feedback improve Rules / KB ◀┘
 
-distill reads the firewalled _sources transcripts and writes Rules+strategy;
-the news scraper pulls relevant, strategy-filtered news into _kb/news/ (it feeds
-Knowledge Base above). generation never touches _sources. MCP connectors are next.
+
+ CONTENT GENERATION                              IMAGE GENERATION
+ Rules + Agent Harness ──▶ LLM ──▶ Text Output   Curate a reference folder, upload to Design once
+        │                                               │
+        ▼                                               ▼
+ ┌──────────────────┐                            Image-search MCP ──▶ Claude Design ──▶ Image Output
+ │ Short Posts /    │
+ │ Articles         │
+ └───┬──────────┬───┘
+     ▼          ▼
+  Product     News Related ──▶ Obsidian Memory (KB)
+  Related                      * tracks how a topic has been mentioned
+                                 + current marketing-strategy direction
+
+
+ SCRAPER (multi-step research)
+ Daily Websearch Compilation ──▶ Agent 1 ──▶ Synthesiser Agent
+   (a second agent reviews the selected items; a final agent verifies the
+    chain of thought and updates the script for future scans)
+
+
+ Built today: Repo (Obsidian Memory + Rules/strategy) · Agent Harness + LLM · the
+ dashboard (Input → Ideas/BrainDump → Edits → Text + Image output) · the strategy
+ filter · the news scraper (→ _kb/news/) · image options → Claude Design.
+ Planned: MCP connectors (Notion/Slack/LinkedIn/Email) · the multi-step scraper
+ chain · Articles · topic-coverage tracking · Image-search MCP.
+ The 🔒 _sources transcripts are read only by `distill`, never by generation.
 ```
 
 ## How it works
