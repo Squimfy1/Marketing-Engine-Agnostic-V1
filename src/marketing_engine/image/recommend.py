@@ -117,9 +117,30 @@ async def recommend_images(
                 rationale=str(item.get("rationale", "")).strip(),
             )
         )
+    # Backstop: a logo/wordmark-only direction is never a valid post image. Drop
+    # those when post-connected options remain; if ALL are logo-ish (model ignored
+    # the rule), keep them rather than return nothing.
+    non_logo = [o for o in opts if not _is_logo_only(o.direction)]
+    opts = non_logo or opts
     return ImageRecommendation(
         recommendation=str(data.get("recommendation", "")).strip(),
         options=opts,
         model=result.model,
         usage=result.usage,
     )
+
+
+_LOGO_TERMS = ("logo", "wordmark", "brand mark", "brandmark", "lockup", "logotype")
+
+
+def _is_logo_only(direction: str) -> bool:
+    """True when the direction's subject is essentially the logo/brand mark rather
+    than a scene depicting the post (a small corner watermark mention is fine)."""
+
+    d = direction.lower()
+    if not any(t in d for t in _LOGO_TERMS):
+        return False
+    # If it also describes a real scene, it's not logo-ONLY (allow watermark use).
+    scene_cues = ("photo", "scene", "diagram", "chart", "illustration", "person",
+                  "people", "hand", "table", "vault", "macro", "landscape", "graph")
+    return not any(c in d for c in scene_cues)

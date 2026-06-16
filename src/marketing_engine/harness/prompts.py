@@ -137,22 +137,34 @@ angle and 1–2 sentence brief). No prose before or after, no markdown fences.
 Example: ["The quiet-erosion angle: open with ... and tie it to ...", "..."]"""
 
 
-IMAGE_BRIEF_INSTRUCTIONS = """\
+# The single hard rule shared by every image step: depict the post, never the logo.
+IMAGE_HARD_RULE = (
+    "HARD RULE: the image's MAIN SUBJECT must be the specific idea/scene of THIS post. "
+    "A logo, wordmark, brand mark, or generic brand/abstract motif is NEVER the main "
+    "image (it may appear only as a small optional corner watermark). If you cannot "
+    "picture a concrete scene for the post, describe the closest literal depiction of "
+    "what the post talks about — never substitute a brand mark."
+)
+
+IMAGE_BRIEF_INSTRUCTIONS = (
+    """\
 First, in one line, state the post's CORE IDEA (the single message a reader takes
-away). Then write concise image-generation instructions for an image that
-ILLUSTRATES THAT IDEA — the post and the image must read as one piece. Draw the
-subject/scene from what the post actually talks about; do NOT default to a bare
-logo, brand mark, or generic abstract motif unless the post is literally about the
-brand's identity. Cover: subject/scene (grounded in the post), composition, art
-style, mood, colour palette, and any short text overlay (pull wording from the
-post if used). Keep it on-brand and ready to paste into an image tool. Output ONLY
-the one-line core idea followed by the brief — no other preamble or commentary."""
+away) and the concrete SUBJECT/SCENE that depicts it. Then write concise
+image-generation instructions for an image that ILLUSTRATES THAT SUBJECT — the post
+and the image must read as one piece. """
+    + IMAGE_HARD_RULE
+    + """ Cover: subject/scene (grounded in the post), composition, art style, mood,
+colour palette, and any short text overlay (pull wording from the post if used).
+Keep it on-brand and ready to paste into an image tool. Output ONLY the one-line
+core idea + subject followed by the brief — no other preamble or commentary."""
+)
 
 
 # Image SOURCE kinds the recommender chooses between. All are produced via Claude
-# Code; they differ in where the raw image comes from. Each must depict THIS post.
+# Code; they differ in where the raw image comes from. Each must depict THIS post —
+# and per IMAGE_HARD_RULE none may be the logo/brand mark.
 IMAGE_KINDS = {
-    "library": "an existing image from the brand's library that depicts THIS post's idea",
+    "library": "an existing on-brand IMAGE (photo or graphic, NOT the logo/wordmark) that depicts THIS post's idea",
     "real_photo": "a real photograph (sourced online) that depicts THIS post's idea",
     "generated": "an image generated from scratch that illustrates THIS post's idea",
 }
@@ -160,19 +172,17 @@ IMAGE_KINDS = {
 IMAGE_RECOMMEND_SYSTEM = (
     "You are an art director for a brand. Given a finished post, you recommend how "
     "to illustrate ITS SPECIFIC IDEA and offer concrete options to choose from. "
-    "Every option must visually express what the post is actually about — never a "
-    "generic logo or brand mark unless the post is about the brand identity itself. "
-    "You return ONLY JSON."
+    + IMAGE_HARD_RULE
+    + " You return ONLY JSON."
 )
 
 IMAGE_RECOMMEND_INSTRUCTIONS = """\
 Identify the post's CORE IDEA, then recommend how to illustrate THAT idea. Every
-option's `direction` must describe a subject/scene a reader of THIS post would
-recognise as illustrating it — do NOT fall back to a bare logo, brand mark, or
-generic brand motif unless the post is literally about the brand's identity.
+option's `direction` must describe a concrete subject/scene a reader of THIS post
+would recognise as illustrating it. """ + IMAGE_HARD_RULE + """
 
 Choose the image SOURCE per option:
-- "library": an existing image from the brand's library that fits this post's idea
+- "library": an existing on-brand image (photo/graphic, NOT the logo) that fits this post's idea
 - "real_photo": a real photograph (sourced online) that depicts this post's idea
 - "generated": an image generated from scratch that illustrates this post's idea
 Let the content decide (e.g. a product explainer often suits a generated diagram;
@@ -426,13 +436,15 @@ def build_image_brief_prompt(
                 " — describe the exact photo to find (its subject/scene tied to the post) "
                 "and how to adapt it"
                 if kind == "real_photo"
-                else " — describe which library image to pick and why it fits the post; "
-                "if only a logo/brand mark is available, still tie its use to the post's idea"
+                else " — describe the library IMAGE (photo/graphic, NOT the logo) that "
+                "depicts the post's idea; if the library lacks a fitting image, specify "
+                "the image to create instead"
                 if kind == "library"
                 else " — describe the image to generate, depicting the post's idea"
             )
             + "."
         )
+        chosen.append(IMAGE_HARD_RULE)
         parts += chosen
     parts += ["", IMAGE_BRIEF_INSTRUCTIONS]
     return "\n".join(parts)
