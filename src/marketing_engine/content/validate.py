@@ -14,9 +14,12 @@ from marketing_engine.sdk.client import AgentRunOptions
 from marketing_engine.sdk.models import HAIKU
 
 
-async def validate_post(engine, brand, post_text: str, *, cwd=None) -> tuple[bool, str]:
+async def validate_post(engine, brand, post_text: str, *, request: str = "", cwd=None) -> tuple[bool, str]:
     """Return ``(ok, reason)``. Always Haiku, no tools. Fails open (ok=True) if the
-    verdict can't be parsed, so the gate never silently drops a good post."""
+    verdict can't be parsed, so the gate never silently drops a good post.
+
+    ``request`` is the operator's brief — when present, the gate checks the post
+    answers IT (not the brand's default narrative)."""
 
     if not post_text.strip():
         return True, ""
@@ -27,7 +30,7 @@ async def validate_post(engine, brand, post_text: str, *, cwd=None) -> tuple[boo
         allowed_tools=[],
         model=HAIKU,
     )
-    result = await engine.llm.run(build_validate_prompt(post_text, narrative), options)
+    result = await engine.llm.run(build_validate_prompt(post_text, narrative, request), options)
     data = extract_json_obj(result.text)
     if not data:
         return True, ""

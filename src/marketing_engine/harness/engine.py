@@ -113,14 +113,17 @@ class MarketingEngine:
         result.text = clean_copy(result.text)
 
         # Cheap Haiku reliability gate + ONE bounded retry on failure.
-        ok, reason = await validate_post(self, brand, result.text, cwd=assembled.options.cwd)
+        ok, reason = await validate_post(
+            self, brand, result.text, request=braindump, cwd=assembled.options.cwd
+        )
         if not ok and reason:
             retry_prompt = (
                 assembled.run_prompt
                 + "\n\n## REVISION NEEDED\nA reviewer flagged this draft: "
                 + reason
-                + "\nRewrite the post to fix it — develop ONE idea, connect it to the core "
-                "narrative, and end on a single call to action. Return only the post."
+                + "\nRewrite the post to fix it — develop the ONE idea the operator asked "
+                "for above (honour their angle/topic, do not substitute the brand's "
+                "default message), and end on a single call to action. Return only the post."
             )
             retried = await self.llm.run(retry_prompt, assembled.options)
             retried.text = clean_copy(retried.text)

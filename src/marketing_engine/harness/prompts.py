@@ -16,20 +16,28 @@ folders (use Grep/Read) before writing. Produce polished, ready-to-use copy —
 no preamble, no meta-commentary."""
 
 RUN_INSTRUCTIONS = """\
+THE OPERATOR'S REQUEST IS THE BRIEF — it takes priority. Write the specific post
+they asked for: honour the angle, audience, topic, and focus they named, even when
+that differs from the brand's default CORE NARRATIVE. Do NOT swap their idea for a
+safer or more familiar brand message. The brand voice, rules, and guardrails still
+apply; the core narrative is only the fallback angle when the request doesn't
+specify one.
+
 Work efficiently — you have a limited number of tool calls:
-1. If you need facts, Glob/Grep the brand's _kb/ and read at most the 1–2 files
-   directly relevant to this request. The WRITING RULES are already in your
-   system prompt — follow them; don't re-read the rule files, don't run shell
-   commands, and don't look outside this brand's folder.
-2. If _kb/ doesn't have the facts you need, write the best on-brand piece you
-   can from the request itself; only if that is impossible, state briefly in one
-   line what source material is missing — do not keep searching.
-3. Write the finished piece, then self-check it against the WRITING RULES and the
-   banned-vocabulary/filler lists. For a short post, also enforce ONE IDEA PER
-   SHORT POST: it must develop exactly one idea (not a mix), must NOT read as a
-   feature/benefit dump, must connect clearly to the brand's CORE NARRATIVE, and
-   must end on a single call to action. If any of these fail, name the rule it
-   broke and rewrite before returning.
+1. If the request points you to specific source material (e.g. "look at the
+   litepaper"), READ it first. Otherwise, if you need facts, Glob/Grep the brand's
+   _kb/ and read the 1–2 files directly relevant to this request. The WRITING
+   RULES are already in your system prompt — follow them; don't re-read the rule
+   files, don't run shell commands, and don't look outside this brand's folder.
+2. If _kb/ doesn't have the facts you need, write the best piece you can from the
+   request itself; only if that is impossible, state briefly in one line what
+   source material is missing — do not keep searching.
+3. Write the finished piece, then self-check it. For a short post, enforce ONE
+   IDEA PER SHORT POST: it must develop exactly the ONE idea the operator asked
+   for (not a mix, and not replaced by a different brand message), must NOT read
+   as a feature/benefit dump, and must end on a single call to action. Obey the
+   WRITING RULES and the banned-vocabulary/filler lists. If any of these fail,
+   name the rule it broke and rewrite before returning.
 Return only the final copy in markdown — no preamble, no commentary, no notes
 about what you read."""
 
@@ -63,8 +71,14 @@ def assemble_system_prompt(
         parts.append(f"Voice: {brand_voice.strip()}")
     if core_narrative.strip():
         parts.append("")
-        parts.append("## CORE NARRATIVE")
-        parts.append("Every short post is ONE angle or proof point on this. Connect back to it.")
+        parts.append("## CORE NARRATIVE (the brand's DEFAULT angle)")
+        parts.append(
+            "This is the brand's central story. Use it as the default angle when the "
+            "operator's request does not specify one. When the request DOES name a "
+            "specific angle, audience, or topic, follow the request and develop that — "
+            "relate it to the brand where it fits naturally, but never override the "
+            "operator's explicit brief with this narrative."
+        )
         parts.append(core_narrative.strip())
     if core_rules.strip():
         parts.append("")
@@ -161,18 +175,27 @@ Check the short post below. Return ONLY a JSON object:
 
 FAIL it if ANY is true:
 - It develops more than one competing idea, or reads as a feature/benefit list.
-- It does not clearly connect to the CORE NARRATIVE.
+- A REQUEST is given and the post ignores it — wrong angle/topic/audience, or it
+  drifts to a different (e.g. the brand's default) message instead of the one asked for.
 - It uses crypto framing, or promises returns / price gains / specific pricing.
 - It does not end with a single clear call to action.
+Do NOT fail a post merely for differing from the CORE NARRATIVE when the REQUEST
+asked for a specific angle — answering the request is what matters. The core
+narrative is only the expected angle when no REQUEST is given.
 Otherwise pass it. No prose outside the JSON."""
 
 
-def build_validate_prompt(post_text: str, core_narrative: str) -> str:
-    """Prompt for the cheap reliability gate (Haiku verdict on a short post)."""
+def build_validate_prompt(post_text: str, core_narrative: str, request: str = "") -> str:
+    """Prompt for the cheap reliability gate (Haiku verdict on a short post).
+
+    The operator's ``request`` (when present) is the primary thing the post must
+    satisfy; the core narrative is only the default-angle reference."""
 
     parts = []
+    if request.strip():
+        parts += ["## REQUEST (what the operator asked for — this is the brief)", request.strip(), ""]
     if core_narrative.strip():
-        parts += ["## CORE NARRATIVE", core_narrative.strip(), ""]
+        parts += ["## CORE NARRATIVE (brand default angle, only if no REQUEST)", core_narrative.strip(), ""]
     parts += ["## POST", post_text.strip(), "", VALIDATE_INSTRUCTIONS]
     return "\n".join(parts)
 
