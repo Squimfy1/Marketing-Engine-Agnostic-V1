@@ -91,7 +91,9 @@ def assemble_run(
         add_dirs=[layout.shared_dir],
         allowed_roots=list(layout.allowed_roots(tenant.id, brand.id)),
         denied_roots=[layout.sources_dir(tenant.id, brand.id)],  # firewall: never read raw transcripts
-        allowed_tools=["Read", "Grep", "Glob"],
+        # File reading within the brand subtree + web research (Google/Safari-style
+        # search) for when the brief asks the agent to research current/external facts.
+        allowed_tools=["Read", "Grep", "Glob", "WebSearch", "WebFetch"],
         model=model,
     )
 

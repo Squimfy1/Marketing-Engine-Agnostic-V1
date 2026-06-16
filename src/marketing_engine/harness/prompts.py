@@ -28,10 +28,13 @@ Work efficiently — you have a limited number of tool calls:
    litepaper"), READ it first. Otherwise, if you need facts, Glob/Grep the brand's
    _kb/ and read the 1–2 files directly relevant to this request. The WRITING
    RULES are already in your system prompt — follow them; don't re-read the rule
-   files, don't run shell commands, and don't look outside this brand's folder.
-2. If _kb/ doesn't have the facts you need, write the best piece you can from the
-   request itself; only if that is impossible, state briefly in one line what
-   source material is missing — do not keep searching.
+   files, don't run shell commands, and don't read outside this brand's folder.
+2. RESEARCH: when the request asks you to research, or needs current/external facts
+   (recent news, prices, events, third-party context), use WebSearch to find them
+   and WebFetch to confirm details from the source. Check _kb/ first; go to the web
+   for what isn't there. Use only facts you can verify, attribute claims fairly, and
+   keep everything public-safe — never state confidential or unverifiable specifics.
+   If a needed fact can't be found, say so in one line rather than inventing it.
 3. Write the finished piece, then self-check it. For a short post, enforce ONE
    IDEA PER SHORT POST: it must develop exactly the ONE idea the operator asked
    for (not a mix, and not replaced by a different brand message), must NOT read

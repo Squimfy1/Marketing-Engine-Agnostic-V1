@@ -35,7 +35,8 @@ def test_options_scope_to_brand_subtree(layout, settings):
     run = _assemble(layout, settings, "acme")
     assert run.options.cwd == layout.brand_dir("acme-co", "acme")
     assert layout.shared_dir in run.options.add_dirs
-    assert run.options.allowed_tools == ["Read", "Grep", "Glob"]
+    # File tools (brand subtree) + web research for briefs that need current facts.
+    assert run.options.allowed_tools == ["Read", "Grep", "Glob", "WebSearch", "WebFetch"]
     assert run.options.model == "claude-opus-4-8"
 
 
