@@ -75,23 +75,29 @@ def make_path_guard_hook(
     allowed_roots: Iterable[Path],
     denied_log: list[str] | None = None,
     denied_roots: Iterable[Path] = (),
+    base_dir: str | Path | None = None,
 ):
     """Build a ``PreToolUse`` hook callback enforcing the brand allowlist.
 
     ``denied_roots`` are subtrees that are blocked even though they sit inside an
     allowed root (e.g. the brand's ``_sources/`` raw transcripts). ``denied_log``
     (if provided) collects human-readable strings for every denied attempt.
+    ``base_dir`` is the brand folder the agent runs in; relative tool paths resolve
+    against it. We prefer this known value over the SDK-reported ``cwd`` (which can
+    be the launch directory, not the agent's folder) so a relative ``_kb/x.md`` read
+    resolves inside the brand, not the repo root.
     """
 
     roots = [Path(r) for r in allowed_roots]
     denied = [Path(r) for r in denied_roots]
+    fixed_base = Path(base_dir) if base_dir is not None else None
 
     async def hook(input_data: dict[str, Any], tool_use_id: str | None, context: Any) -> dict:
         tool_name = input_data.get("tool_name", "")
         tool_input = input_data.get("tool_input", {}) or {}
-        base_dir = input_data.get("cwd")  # the agent's working dir (the brand folder)
+        resolve_base = fixed_base or input_data.get("cwd")
         allowed, offending = guard_decision(
-            tool_name, tool_input, roots, base_dir=base_dir, denied_roots=denied
+            tool_name, tool_input, roots, base_dir=resolve_base, denied_roots=denied
         )
         if allowed:
             return {}

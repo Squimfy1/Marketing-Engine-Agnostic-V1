@@ -67,7 +67,10 @@ class ClaudeAgentClient:
 
         denied: list[str] = []
         guard = make_path_guard_hook(
-            options.allowed_roots or [options.cwd], denied, options.denied_roots
+            options.allowed_roots or [options.cwd],
+            denied,
+            options.denied_roots,
+            base_dir=options.cwd,  # resolve relative tool paths inside the brand folder
         )
 
         sdk_options = ClaudeAgentOptions(
@@ -229,7 +232,7 @@ class FakeLLMClient:
         request = section.split("\n\n", 1)[0].strip()
         brand_line = _first_matching(options.system_prompt, "Brand:")
         voice_line = _first_matching(options.system_prompt, "Voice:")
-        rules = _section(options.system_prompt, "CORE RULES")
+        rules = _section(options.system_prompt, "BRAND RULES")
 
         lines = [f"# {request}", ""]
         if brand_line:

@@ -63,6 +63,29 @@ def assemble_system_prompt(
     """
 
     parts = [ENGINE_PERSONA, ""]
+
+    # The priority hierarchy frames everything below it. Without this, the brand's
+    # own rules ("lead with X", the core-narrative emphasis) dominate and every post
+    # collapses to the same default story even when the operator asked for a
+    # different, specific angle.
+    parts.append("## HOW TO PRIORITISE")
+    parts.append(
+        "1. The operator's REQUEST sets the TOPIC and ANGLE of the post. If it names "
+        "a subject, the post is ABOUT that subject, even when that is not the brand's "
+        "usual focus. Develop exactly what was asked; never substitute a more familiar "
+        "brand message.\n"
+        "2. ALWAYS apply, whatever the request: the brand VOICE and tone, the GUARDRAILS "
+        "and compliance limits, the WRITING RULES, ONE idea per short post, and a single "
+        "call to action.\n"
+        "3. DEFAULT-ANGLE guidance ONLY — the CORE NARRATIVE, any \"lead with X\" "
+        "positioning, and the key-ideas / angle menus in the brand rules — applies when "
+        "the request does NOT specify an angle. A specific request OVERRIDES it. Relate "
+        "the requested topic to the brand where it fits naturally; do not force the "
+        "default story, and feel free to branch into adjacent territory the request "
+        "calls for (legal structure, a news reaction, an investor angle, etc.)."
+    )
+
+    parts.append("")
     parts.append(f"Account: {tenant_name}")
     if tenant_notes.strip():
         parts.append(f"Account notes: {tenant_notes.strip()}")
@@ -74,18 +97,16 @@ def assemble_system_prompt(
         parts.append(f"Voice: {brand_voice.strip()}")
     if core_narrative.strip():
         parts.append("")
-        parts.append("## CORE NARRATIVE (the brand's DEFAULT angle)")
-        parts.append(
-            "This is the brand's central story. Use it as the default angle when the "
-            "operator's request does not specify one. When the request DOES name a "
-            "specific angle, audience, or topic, follow the request and develop that — "
-            "relate it to the brand where it fits naturally, but never override the "
-            "operator's explicit brief with this narrative."
-        )
+        parts.append("## CORE NARRATIVE (default angle — overridden by a specific request; see HOW TO PRIORITISE)")
         parts.append(core_narrative.strip())
     if core_rules.strip():
         parts.append("")
-        parts.append("## CORE RULES (brand)")
+        parts.append("## BRAND RULES")
+        parts.append(
+            "VOICE and GUARDRAILS below ALWAYS apply. Any angle/positioning guidance "
+            "(e.g. \"lead with X\", the key-ideas menu) is DEFAULT-ONLY and yields to a "
+            "specific operator request per HOW TO PRIORITISE."
+        )
         parts.append(core_rules.strip())
     if writing_rules.strip():
         parts.append("")

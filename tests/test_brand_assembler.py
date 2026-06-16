@@ -21,7 +21,8 @@ def test_system_prompt_inlines_voice_and_core_rules(layout, settings):
     run = _assemble(layout, settings, "acme")
     assert "Brand: Acme Rockets" in run.system_prompt
     assert "Playful and warm." in run.system_prompt
-    assert "## CORE RULES" in run.system_prompt
+    assert "## BRAND RULES" in run.system_prompt
+    assert "## HOW TO PRIORITISE" in run.system_prompt  # request > default-angle hierarchy
     assert "Always sound fun." in run.system_prompt
 
 
