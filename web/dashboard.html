@@ -1306,6 +1306,7 @@ textarea.lab-main-input {
     <div class="lab-header-row">
       <h1><img src="assets/lemur-logo.png" alt="" class="lab-logo" width="36" height="36" decoding="async" /><span>Marketing Engine</span></h1>
       <span id="lab-demo-badge" class="lab-demo-badge loading" title="Engine health">Checking…</span>
+      <span id="lab-version" style="font-size:11px;opacity:.55;margin-left:8px" title="Server build this dashboard is talking to. If this looks old, the server is stale — restart it.">engine …</span>
     </div>
   </div>
 
@@ -1806,6 +1807,21 @@ function refreshEngineDemoBadge() {
       el.textContent = 'Offline';
       el.className = 'lab-demo-badge warn';
     });
+  refreshEngineVersion();
+}
+
+function refreshEngineVersion() {
+  var el = document.getElementById('lab-version');
+  if (!el) return;
+  fetch('/api/version')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) { el.textContent = 'engine ?'; return; }
+      el.textContent = 'engine ' + (d.commit || '?');
+      el.title = 'Server build: ' + (d.commit || '?') + ' · started ' + (d.started || '?') +
+                 ' · port ' + location.port + '. If this commit looks old, the server is stale — restart it.';
+    })
+    .catch(function () { el.textContent = 'engine offline'; });
 }
 
 function toast(msg) {

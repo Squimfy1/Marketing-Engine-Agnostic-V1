@@ -90,6 +90,7 @@ def make_handler(api: Api, web_dir: Path):
                 "/api/lab/anthropic/status": api.anthropic_status,
                 "/api/lab/bridge/status": api.bridge_status,
                 "/api/engine/status": api.engine_status,
+                "/api/version": api.version,
             }
             if path in routes:
                 status, payload = routes[path]()

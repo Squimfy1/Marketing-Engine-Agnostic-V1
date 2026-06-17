@@ -100,6 +100,12 @@ def test_options_bad_ref(api: Api):
     assert status == 400
 
 
+def test_version_reports_build(api: Api):
+    status, payload = api.version()
+    assert status == 200 and payload["ok"]
+    assert "commit" in payload and "started" in payload  # staleness stamp
+
+
 def test_image_options(api: Api):
     status, payload = api.image_options(
         {"voice": "acme-co/acme", "platform": "Short posts", "text": "Launch the Sky Pup kit."}

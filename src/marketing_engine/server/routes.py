@@ -30,6 +30,29 @@ from marketing_engine.vault.fs_adapter import FilesystemVaultAdapter
 SESSIONS_DIRNAME = "_sessions"
 
 
+def _build_info() -> dict:
+    """The code revision this SERVER PROCESS loaded, read ONCE at import. A stale
+    server (old code in memory) keeps reporting its old commit, so the dashboard's
+    version stamp reveals at a glance whether you're on the current engine."""
+
+    import subprocess
+
+    commit = "unknown"
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True, text=True, timeout=3,
+        ).stdout.strip() or "unknown"
+    except Exception:
+        pass
+    return {"commit": commit, "started": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+
+
+# Computed once when this module is first imported (i.e. when the server starts).
+BUILD_INFO = _build_info()
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -331,6 +354,9 @@ class Api:
 
     def engine_status(self) -> tuple[int, dict]:
         return 200, {"demo_ready": True, "auth": "claude-code"}
+
+    def version(self) -> tuple[int, dict]:
+        return 200, {"ok": True, **BUILD_INFO, "model": self.engine.settings.default_model}
 
     def not_implemented(self, name: str) -> tuple[int, dict]:
         return 501, {"ok": False, "error": f"{name} is deferred to a later milestone"}
