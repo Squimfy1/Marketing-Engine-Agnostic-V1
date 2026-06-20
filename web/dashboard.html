@@ -2370,6 +2370,19 @@ function selectTopicCard(text) {
   saveLabToStorage(true);
 }
 
+// Wipe the picked idea AND the whole batch of short-post ideas. Called once a
+// full piece of content is done (copied or saved) so stale ideas never carry
+// into the next post — the picker keeps its "Generate 4 ideas" button to restart.
+function clearTopicSelection() {
+  selectedTopicTitle = '';
+  topicOptions = [];
+  try { localStorage.removeItem(LS.TOPICS); } catch (e) {}
+  if (typeof renderTopicCards === 'function') renderTopicCards();
+  if (typeof updateDraftTopicButton === 'function') updateDraftTopicButton();
+  if (typeof updateGenButtonLabel === 'function') updateGenButtonLabel();
+  saveLabToStorage(true);
+}
+
 function parseTopicOptionsFromText(text) {
   if (!text) return [];
   var options = [];
@@ -3107,6 +3120,9 @@ function copyOutput() {
       if (span) span.textContent = 'Copied';
       setTimeout(function () { btn.classList.remove('copied'); if (span) span.textContent = prev || 'Copy'; }, 1600);
     }
+    // The piece is done once it's copied out — clear the picked idea + ideas batch
+    // so the next post starts from a clean picker.
+    if (typeof clearTopicSelection === 'function') clearTopicSelection();
   }).catch(function () { toast('Copy failed — check clipboard permissions'); });
 }
 
@@ -3119,23 +3135,34 @@ document.getElementById('btn-draft-topic').addEventListener('click', generatePos
 
 function generatePostFromSelectedIdea() {
   var idea = selectedTopicTitle;
-  if (!idea) { if (typeof toast === 'function') toast('Select an idea first.'); return; }
+  if (!idea) { toast('Select an idea first.'); return; }
   var ref = (typeof resolveVoice === 'function') ? resolveVoice() : '';
-  if (!ref) { if (typeof toast === 'function') toast('Pick a brand first.'); return; }
-  var plat = (document.getElementById('platform') || {}).value || 'Short posts';
+  if (!ref) { toast('Pick a brand first.'); return; }
+  // No engine reachable → fall back to the bundle-for-Claude path, same as every draft.
+  if (!genEnabled()) { sendToClaude('pick'); return; }
   var btn = document.getElementById('btn-draft-topic');
   if (btn) { btn.disabled = true; btn.textContent = 'Generating post...'; }
-  if (typeof setResponseStatus === 'function') setResponseStatus('Writing the full post...', true);
-  fetch('/api/lab/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: ref, platform: plat, braindump: idea }) })
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; }
-      if (!d || !d.ok) { if (typeof setResponseStatus === 'function') setResponseStatus('Generation failed', false); if (typeof toast === 'function') toast((d && d.error) || 'Generation failed'); return; }
-      if (typeof setResponseText === 'function') setResponseText(d.text);
-      if (typeof setResponseStatus === 'function') setResponseStatus('Generated, edit then Save', false);
-      var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    })
-    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; } if (typeof setResponseStatus === 'function') setResponseStatus('Request failed', false); });
+  setResponseStatus('Writing the full post...', true);
+  // Draft the selected idea with the brand's FULL context (narrative, files, lineage)
+  // and intent='pick' — identical to the main Generate button. Force braindump to the
+  // idea so the picked option is always the binding assignment, never lost to leftover
+  // notes. applyGeneratedResponse cleans the reply, routes the visual brief to Design,
+  // and sets claudeOriginal so "Save edits" can diff.
+  var payload = buildGeneratePayload('pick');
+  payload.braindump = idea;
+  payload.pickedTopic = idea;
+  runGenerate(payload).then(function (d) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; }
+    if (d && d.snapshot) labBundleSnapshot = d.snapshot;
+    applyGeneratedResponse(d.text, 'pick');
+    var r = document.getElementById('lab-response'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var usage = d.usage || {};
+    toast(usage.output_tokens ? ('Done · ' + usage.output_tokens + ' output tokens') : 'Done');
+  }).catch(function (err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate post'; }
+    setResponseStatus('', false);
+    toast((err && err.message) ? err.message : 'Generation failed');
+  });
 }
 
 var imageOptions = [];
@@ -3324,6 +3351,8 @@ document.getElementById('btn-submit-final').addEventListener('click', function (
     awaitingResponse = false;
     setResponseText('');
     setResponseStatus('');
+    // Saved = the piece is done — clear the picked idea + ideas batch too.
+    if (typeof clearTopicSelection === 'function') clearTopicSelection();
     updateSubmitFinalUI();
     saveLabToStorage(true);
   }).catch(function () {
