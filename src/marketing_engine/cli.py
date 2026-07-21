@@ -170,7 +170,13 @@ def scrape(
     tenant: str = typer.Option(..., "--tenant", "-t", help="Tenant id."),
     brand: str = typer.Option(..., "--brand", "-b", help="Brand id."),
     max_items: Optional[int] = typer.Option(None, "--max", help="Max news items to keep."),
+    lookback: Optional[int] = typer.Option(
+        None, "--lookback", help="Only keep news newer than this many days (overrides brand config)."
+    ),
     query: list[str] = typer.Option(None, "--query", "-q", help="Seed query (repeatable)."),
+    no_verify: bool = typer.Option(
+        False, "--no-verify", help="Skip the adversarial fact-check pass (faster, cheaper, unchecked)."
+    ),
     vault_root: Optional[Path] = typer.Option(None, "--vault", help="Vault root."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Use the fake model (no network)."),
 ) -> None:
@@ -181,20 +187,30 @@ def scrape(
     engine = MarketingEngine(settings, llm=llm)
     try:
         result = asyncio.run(
-            engine.scrape_news(tenant, brand, max_items=max_items, queries=query or None)
+            engine.scrape_news(
+                tenant, brand, max_items=max_items, queries=query or None,
+                verify=False if no_verify else None, lookback_days=lookback,
+            )
         )
     except (RegistryError, EngineError) as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2)
     if not result.items:
         typer.secho("No relevant news found this run.", fg=typer.colors.YELLOW)
+        if result.dropped:
+            typer.echo(f"  (fact-check dropped all {len(result.dropped)} candidate(s))")
         return
+    check = "fact-checked" if result.verified else "UNVERIFIED (fact-check did not run)"
     typer.secho(
-        f"Scraped {len(result.items)} item(s) for {tenant}/{brand} ({result.model})",
-        fg=typer.colors.GREEN,
+        f"Scraped {len(result.items)} item(s) for {tenant}/{brand} ({result.model}) — {check}",
+        fg=typer.colors.GREEN if result.verified or no_verify else typer.colors.YELLOW,
     )
     for it in result.items:
         typer.echo(f"  [{it.relevance}] {it.title}  ({it.source})")
+    if result.dropped:
+        typer.secho(f"  dropped {len(result.dropped)} by fact-check:", fg=typer.colors.YELLOW)
+        for d in result.dropped:
+            typer.echo(f"    ✗ {d['title']} — {d['reason']}")
     if result.file_written:
         typer.echo(f"  wrote {result.file_written}")
 

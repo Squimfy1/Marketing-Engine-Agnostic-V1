@@ -153,7 +153,7 @@ class FakeLLMClient:
                 ),
                 model=options.model or "fake",
             )
-        if "## SEED QUERIES" in prompt or "Find recent news" in prompt:  # news scraper
+        if "## CANDIDATE POOL" in prompt:  # news scraper relevance/reliability filter
             import json
 
             return RunResult(

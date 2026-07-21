@@ -90,17 +90,29 @@ def extract_json_obj(text: str) -> dict:
 
 
 def clean_copy(text: str) -> str:
-    """Remove em/en-dash AI-tells and tidy the spacing they leave behind."""
+    """Strip AI-tell punctuation and tidy the spacing the swaps leave behind.
+
+    Removes em/en dashes, semicolons, and spaced-hyphen clause breaks ("word - word"
+    and "word -- word") — the marks cheaper models reach for once told to avoid em
+    dashes. Real hyphens inside compounds (``well-made``, ``999.9-purity``) are kept:
+    they have no surrounding spaces, so only a hyphen used as a clause break is hit.
+    """
 
     if not text:
         return text
     t = text
+    # Double hyphen used as an em-dash substitute -> comma.
+    t = t.replace(" -- ", ", ").replace("--", ", ")
     # En dash: a range/compound joiner -> hyphen (e.g. "250–500" -> "250-500").
     t = t.replace(f" {EN_DASH} ", ", ").replace(EN_DASH, "-")
     # Em dash: a clause break -> comma (handles spaced and unspaced forms).
     t = t.replace(f" {EM_DASH} ", ", ").replace(EM_DASH, ", ")
+    # Single hyphen flanked by spaces = a clause break, not a compound -> comma.
+    t = re.sub(r" +- +", ", ", t)
+    # Semicolon -> comma (an AI-tell in short marketing copy).
+    t = t.replace(";", ",")
     # Tidy the punctuation the swaps can leave.
-    t = re.sub(r"\s+([,.;:!?])", r"\1", t)   # no space before punctuation
+    t = re.sub(r"\s+([,.:!?])", r"\1", t)    # no space before punctuation
     t = re.sub(r",\s*,", ", ", t)              # collapse double commas
     t = re.sub(r",\s*\.", ".", t)              # ", ." -> "."
     t = re.sub(r"[ \t]{2,}", " ", t)           # collapse runs of spaces

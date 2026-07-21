@@ -31,10 +31,57 @@ class NewsPolicy(BaseModel):
 
     queries: list[str] = Field(
         default_factory=list,
-        description="Seed search queries. Empty = let the engine derive them from the brand.",
+        description="Legacy flat seed queries. Prefer ``topics`` (the categorised matrix). "
+        "Empty = let the engine derive searches from the brand.",
+    )
+    topics: dict[str, dict[str, list[str]]] = Field(
+        default_factory=dict,
+        description="The query MATRIX: category -> language ('de'|'fr'|'it'|'en'|'any') -> "
+        "list of queries. Coverage becomes a property of this taxonomy, scanned across every "
+        "configured locale, so gaps (a topic with no queries in a language) are auditable.",
+    )
+    locales: list[str] = Field(
+        default_factory=list,
+        description="Google News locales to scan, e.g. ['de-CH','fr-CH','it-CH','en']. Empty "
+        "= the default trilingual Swiss + English set. Switzerland is multilingual, so scan all.",
+    )
+    feeds: list[dict] = Field(
+        default_factory=list,
+        description="Optional direct RSS feeds (primary sources / outlet sections) pulled every "
+        "run regardless of query, e.g. [{'url': '...', 'source': 'SNB', 'category': '...'}].",
+    )
+    focus: str = Field(
+        default="",
+        description="One line: what kind of news to prioritise (the audience reality to "
+        "weight). Steers both the scout's own searches and what it keeps.",
+    )
+    exclude: list[str] = Field(
+        default_factory=list,
+        description="Hard exclusions — topic classes to drop even if otherwise on-brand "
+        "(e.g. 'global macro / central-bank reserves', 'price forecasts'). The scout must "
+        "not return a story that is primarily about any of these.",
+    )
+    preferred_sources: list[str] = Field(
+        default_factory=list,
+        description="Trusted outlets to weight first (e.g. national + local papers, "
+        "official statistics). The scout still searches the open web, but prefers these "
+        "and the kind of local/national coverage they represent.",
     )
     lookback_days: int = Field(default=30, description="Only keep news newer than this.")
     max_items: int = Field(default=8, description="Max news items to keep per scrape.")
+    verify: bool = Field(
+        default=True,
+        description="Run the adversarial fact-check pass after the scout selects items: "
+        "re-open each cited source, confirm it exists and actually supports the claim, "
+        "and drop anything hallucinated, misquoted, stale, or unverifiable.",
+    )
+    reputable_only: bool = Field(
+        default=True,
+        description="During verification, keep only items from a reputable, identifiable "
+        "outlet (established news orgs, primary institutions, recognised research houses) "
+        "— drops blogs, forums, content farms, PR wires, and anonymous sources. Requires "
+        "``verify`` to be on.",
+    )
 
 
 class BrandConfig(BaseModel):

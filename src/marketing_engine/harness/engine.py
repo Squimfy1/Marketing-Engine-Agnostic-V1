@@ -186,15 +186,20 @@ class MarketingEngine:
         # still fill the slate.
         assembled.options.allowed_tools = []
         raw_n = min(8, n + 2)
-        from marketing_engine.inputs.scraper import latest_news_headlines
+        from marketing_engine.inputs.scraper import (
+            latest_news_headlines,
+            load_evergreen_concepts,
+        )
 
         news = latest_news_headlines(self.layout, tenant_id, brand_id)
+        concepts = load_evergreen_concepts(self.layout, tenant_id, brand_id)
         prompt = build_options_prompt(
             braindump,
             n=raw_n,
             platform_label=plat.label,
             platform_guidance=guidance,
             news_headlines=news,
+            concepts=concepts,
         )
         result = await self.llm.run(prompt, assembled.options)
         ideas = [clean_copy(i) for i in extract_json_list(result.text)]
@@ -228,17 +233,63 @@ class MarketingEngine:
         *,
         max_items: int | None = None,
         queries: list[str] | None = None,
+        verify: bool | None = None,
+        lookback_days: int | None = None,
     ):
         """Pull recent, relevant, strategy-filtered news into ``_kb/news/``.
 
         The News input from the diagram. Runs a web-research agent (WebSearch +
-        WebFetch) over your Claude Code login; returns a ``ScrapeResult``.
+        WebFetch) over your Claude Code login, then an adversarial fact-check pass
+        that re-opens each cited source and drops anything unconfirmed or from a
+        non-reputable outlet. ``verify`` defaults to the brand's news config; pass
+        ``False`` to skip the fact-check pass. Returns a ``ScrapeResult``.
         """
 
         from marketing_engine.inputs.scraper import scrape_news
 
         return await scrape_news(
-            self, tenant_id, brand_id, max_items=max_items, queries=queries
+            self, tenant_id, brand_id, max_items=max_items, queries=queries, verify=verify,
+            lookback_days=lookback_days,
+        )
+
+    async def scan_topics(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        category: str,
+        max_subtopics: int = 6,
+    ):
+        """Scan ONE category for the Scraper map: web-research a topic, group into
+        subtopics, and attach the real sources behind each (for fact-checking).
+
+        Same web-research agent and brand lens as ``scrape_news``, organised by topic.
+        Returns a dict ``{category, subtopics, scanned, model, usage}``.
+        """
+
+        from marketing_engine.inputs.topics import scan_category
+
+        return await scan_category(
+            self, tenant_id, brand_id, category=category, max_subtopics=max_subtopics
+        )
+
+    async def derive_topic_map(
+        self,
+        tenant_id: str,
+        brand_id: str,
+        *,
+        min_n: int = 6,
+        max_n: int = 9,
+    ):
+        """Agnostic Scraper map: infer the audience + topic categories from the brand's
+        OWN identity, strategy, and uploaded ``_kb/`` docs (read-only agent). Lets the
+        map self-update as the knowledge base grows. Returns ``{center, categories}``.
+        """
+
+        from marketing_engine.inputs.topics import derive_topic_map
+
+        return await derive_topic_map(
+            self, tenant_id, brand_id, min_n=min_n, max_n=max_n
         )
 
     async def recommend_images(
@@ -300,10 +351,14 @@ class MarketingEngine:
         )
         assembled.options.allowed_tools = []  # single-shot, no file reading
 
-        tokens_path = self.layout.design_dir(tenant_id, brand_id) / "tokens.yaml"
+        design_dir = self.layout.design_dir(tenant_id, brand_id)
+        tokens_path = design_dir / "tokens.yaml"
         tokens = tokens_path.read_text(encoding="utf-8") if tokens_path.is_file() else ""
+        # Brand's fixed post-image composition (e.g. 70% photo / 30% brand panel).
+        layout_path = design_dir / "layout.md"
+        layout = layout_path.read_text(encoding="utf-8") if layout_path.is_file() else ""
         prompt = build_image_brief_prompt(
-            post_text, design_tokens=tokens, kind=kind, direction=direction
+            post_text, design_tokens=tokens, kind=kind, direction=direction, layout=layout
         )
         result = await self.llm.run(prompt, assembled.options)
         result.text = clean_copy(result.text)

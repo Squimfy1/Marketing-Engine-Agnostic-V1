@@ -1194,74 +1194,11 @@ textarea.lab-main-input {
 <body>
 
 <nav class="tab-bar" role="tablist">
-  <button type="button" class="active" data-tab="arch" id="tab-arch" aria-selected="true">Architecture</button>
-  <button type="button" data-tab="lab" id="tab-lab" aria-selected="false">Marketing Engine</button>
+  <button type="button" class="active" data-tab="lab" id="tab-lab" aria-selected="true">Marketing Engine</button>
   <button type="button" data-tab="kb" id="tab-kb" aria-selected="false">Knowledge Base</button>
 </nav>
 
-<div id="panel-arch" class="tab-panel visible" role="tabpanel">
-<div class="arch-layout">
-<aside class="next-sidebar" aria-label="Next steps">
-  <h2>Engine progress</h2>
-  <div class="engine-total">
-    <div class="pct-big" id="engine-pct-label">—%</div>
-    <div class="pct-bar-wrap"><div class="pct-bar-fill" id="engine-pct-bar" style="width:0%"></div></div>
-    <div class="next-meta" id="engine-pct-sub">Across backend → publish pipeline</div>
-  </div>
-</aside>
-<div class="cv-wrap">
-<div class="pg">
-<div class="hd">
-<div class="ti">Marketing Engine V2 — Systems diagram</div>
-<div class="lg"><span><span class="lgd" style="background:#f59e0b"></span>Backend / engine</span><span><span class="lgd" style="background:#5b9bd5"></span>User + Frontend</span> · <span style="color:var(--text-3)">click a box for detail</span></div>
-</div>
-<div class="cv" id="cv" style="position:relative;height:720px;background:#15171a;border-radius:12px;overflow:hidden">
 
-<svg style="position:absolute;top:0;left:0;z-index:1" width="1040" height="720" id="svg">
-<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#777" stroke-width="1.2" stroke-linecap="round"/></marker></defs>
-</svg>
-
-<div style="position:absolute;left:285px;top:34px;height:430px;border-left:1px dashed #3a3a3a;z-index:0"></div>
-<div style="position:absolute;left:705px;top:34px;height:430px;border-left:1px dashed #3a3a3a;z-index:0"></div>
-
-<div style="position:absolute;left:18px;top:4px;font-size:13px;font-weight:600;color:#e2e8f0">User</div>
-<div style="position:absolute;left:18px;top:22px;font-size:8px;color:#777;letter-spacing:.6px">AUTOMATIONS / INTEGRATIONS</div>
-<div style="position:absolute;left:26px;top:44px;font-size:8px;color:#666">MCP servers</div>
-<div style="position:absolute;left:300px;top:4px;font-size:13px;font-weight:600;color:#fbbf24">Backend</div>
-<div style="position:absolute;left:305px;top:48px;font-size:10px;color:#fbbf24">Repo</div>
-<div style="position:absolute;left:740px;top:4px;font-size:13px;font-weight:600;color:#9ec5e8">Frontend</div>
-<div style="position:absolute;left:168px;top:498px;font-size:12px;font-weight:600;color:#e2e8f0">Scraper</div>
-
-<div class="nd dist" id="u0" style="left:24px;top:66px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('notion')"><div class="nl">Work Organiser (Notion)</div></div>
-<div class="nd dist" id="u1" style="left:24px;top:120px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('transcripts')"><div class="nl">Call Transcripts</div></div>
-<div class="nd dist" id="u2" style="left:24px;top:162px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('messaging')"><div class="nl">Company Messaging tool (Slack/Telegram)</div></div>
-<div class="nd dist" id="u3" style="left:24px;top:222px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('li_mcp')"><div class="nl">LinkedIn</div></div>
-<div class="nd dist" id="u4" style="left:24px;top:262px;width:165px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('email')"><div class="nl">Email</div></div>
-
-<div class="nd dist" id="kb" style="left:315px;top:70px;width:150px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('kb')"><div class="nl">Knowledge Base</div></div>
-<div class="nd dist" id="rules" style="left:315px;top:116px;width:100px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('rules')"><div class="nl">Rules</div></div>
-<div class="nd dist" id="harness" style="left:308px;top:248px;width:120px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('harness')"><div class="nl">Agent Harness</div></div>
-<div class="nd dist" id="llm" style="left:505px;top:205px;width:72px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('llmnode')"><div class="nl">LLM</div></div>
-<div class="nd dist" id="design" style="left:360px;top:352px;width:140px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('design')"><div class="nl">Design System</div></div>
-<div class="nd dist" id="memory" style="left:356px;top:398px;width:156px;border:1px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24" onclick="od('memory')"><div class="nl">Obsidian Memory</div></div>
-
-<div class="nd dist" id="input" style="left:835px;top:66px;width:90px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('input')"><div class="nl">Input</div></div>
-<div class="nd dist" id="ideas" style="left:742px;top:138px;width:128px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('ideas')"><div class="nl">llm Ideas Generation</div></div>
-<div class="nd dist" id="braindump" style="left:888px;top:138px;width:118px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('braindump')"><div class="nl">Insert BrainDump</div></div>
-<div class="nd dist" id="edits" style="left:760px;top:212px;width:216px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('edits')"><div class="nl">Manual Edits + Feedback</div></div>
-<div class="nd dist" id="textout" style="left:846px;top:294px;width:100px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('textout')"><div class="nl">Text Output</div></div>
-<div class="nd dist" id="imageout" style="left:846px;top:362px;width:100px;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('imageout')"><div class="nl">Image Output</div></div>
-
-<div class="nd dist" id="account" style="left:214px;top:582px;width:82px;border-radius:50%;border:1px solid #5b9bd5;background:rgba(91,155,213,.08);color:#9ec5e8" onclick="od('scraper')"><div class="nl" style="font-size:10px">User Account</div></div>
-
-</div>
-</div>
-</div>
-</div>
-
-<div class="ov" id="ov" onclick="cd()"></div>
-<div class="dp" id="dp"><button class="dx" onclick="cd()">✕</button><div id="dcc"></div></div>
-</div><!-- end panel-arch -->
 
 <style>
 #panel-kb select { width: 100%; max-width: 340px; font-family: inherit; font-size: 14px; color: #1d1d1f; background: #f5f5f7; border: 0.5px solid rgba(0,0,0,.1); border-radius: 12px; padding: 10px 14px; -webkit-appearance: none; appearance: none; margin-bottom: 4px; }
@@ -1312,6 +1249,7 @@ textarea.lab-main-input {
 
   <div class="lab-subtabs" role="tablist" aria-label="Lab mode">
     <button type="button" class="lab-subtab active" id="lab-subtab-content" data-lab-sub="content" role="tab" aria-selected="true">Content</button>
+    <button type="button" class="lab-subtab" id="lab-subtab-scraper" data-lab-sub="scraper" role="tab" aria-selected="false">Scraper</button>
   </div>
 
   <div id="lab-sub-content" class="lab-subpanel visible" role="tabpanel">
@@ -1423,7 +1361,7 @@ textarea.lab-main-input {
               <span id="image-instructions-status" style="font-size:12px;opacity:.7"></span>
             </div>
             <textarea id="image-out-text" class="lab-input" rows="12" readonly placeholder="Pick an option above, then Generate instructions."></textarea>
-            <div style="margin-top:8px"><button type="button" class="lab-btn secondary" id="btn-copy-image">Copy instructions</button></div>
+            <div style="margin-top:8px;display:flex;gap:8px"><button type="button" class="lab-btn secondary" id="btn-copy-image">Copy instructions</button><button type="button" class="lab-btn secondary" id="btn-download-image">Download for Claude Design</button></div>
           </div>
         </div>
       </div>
@@ -1441,6 +1379,62 @@ textarea.lab-main-input {
     </aside>
   </div>
   </div>
+
+  <style>
+    .scraper-wrap { padding: 4px 0 40px; }
+    .scraper-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .scraper-canvas { position:relative; width:100%; height:580px; margin-top:18px; }
+    .scraper-lines { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+    .scraper-node { position:absolute; transform:translate(-50%,-50%); z-index:1; background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:14px; padding:12px 15px; box-shadow:0 2px 10px rgba(0,0,0,.06); cursor:pointer; text-align:center; transition:border-color .15s, box-shadow .15s; min-width:120px; max-width:172px; }
+    .scraper-node:hover { border-color:#0071e3; box-shadow:0 4px 16px rgba(0,113,227,.16); }
+    .scraper-node .sn-label { font-size:13px; font-weight:600; color:#1d1d1f; line-height:1.3; }
+    .scraper-node .sn-meta { font-size:11px; color:#86868b; margin-top:4px; }
+    .scraper-node.center { cursor:default; border:1.5px solid #1d1d1f; padding:20px 24px; min-width:128px; box-shadow:0 4px 18px rgba(0,0,0,.08); }
+    .scraper-node.center:hover { border-color:#1d1d1f; box-shadow:0 4px 18px rgba(0,0,0,.08); }
+    .scraper-node.center .sn-label { font-size:15px; }
+    .scraper-subtopics { display:flex; flex-direction:column; gap:14px; margin-top:6px; }
+    .scraper-card { border:1px solid rgba(0,0,0,.1); border-radius:14px; padding:16px 18px; background:#fff; }
+    .scraper-card h3 { margin:0 0 6px; font-size:15px; color:#1d1d1f; }
+    .scraper-card .sc-summary { font-size:13px; color:#3a3a3c; line-height:1.5; margin:0 0 8px; }
+    .scraper-card .sc-angle { font-size:12px; color:#0071e3; margin:0 0 10px; }
+    .scraper-sources { display:flex; flex-direction:column; gap:6px; border-top:1px solid rgba(0,0,0,.07); padding-top:10px; }
+    .scraper-source { font-size:12px; line-height:1.5; }
+    .scraper-source a { color:#1d1d1f; text-decoration:none; border-bottom:1px solid rgba(0,113,227,.4); }
+    .scraper-source a:hover { color:#0071e3; }
+    .scraper-source .ss-meta { color:#86868b; }
+    .scraper-empty { color:#86868b; font-size:13px; padding:34px 0; text-align:center; line-height:1.6; }
+  </style>
+
+  <div id="lab-sub-scraper" class="lab-subpanel" role="tabpanel" aria-label="Scraper">
+    <div class="scraper-wrap">
+      <!-- HUB VIEW -->
+      <div id="scraper-hub">
+        <div class="scraper-head">
+          <div>
+            <h2 style="margin:0">Source map</h2>
+            <p class="lab-intent-hint" style="margin:4px 0 0;max-width:620px">The realities your audience faces, derived from this brand’s knowledge base. Click a category to see what Claude found across the news — each subtopic links to its sources so you can fact-check before drafting.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;white-space:nowrap">
+            <span id="scraper-hub-status" class="lab-intent-hint"></span>
+            <button type="button" class="lab-btn secondary" id="scraper-rebuild" title="Re-derive the categories from the knowledge base + business objectives">Rebuild from KB</button>
+          </div>
+        </div>
+        <div id="scraper-canvas" class="scraper-canvas">
+          <svg id="scraper-lines" class="scraper-lines" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <!-- DETAIL (ZOOM) VIEW -->
+      <div id="scraper-detail" hidden>
+        <div class="scraper-head">
+          <button type="button" class="lab-btn secondary" id="scraper-back">&larr; Back to map</button>
+          <button type="button" class="lab-generate-btn" id="scraper-refresh" style="width:auto;padding:9px 18px">Refresh from sources</button>
+        </div>
+        <h2 id="scraper-detail-title" style="margin:16px 0 2px"></h2>
+        <p id="scraper-detail-meta" class="lab-intent-hint" style="margin:0 0 14px"></p>
+        <div id="scraper-subtopics" class="scraper-subtopics"></div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -1449,7 +1443,7 @@ textarea.lab-main-input {
 <script>
 /* ----- Tabs ----- */
 function switchTab(name) {
-  var tabs = ['arch', 'lab', 'kb'];
+  var tabs = ['lab', 'kb'];
   tabs.forEach(function (t) {
     var panel = document.getElementById('panel-' + t);
     var btn = document.getElementById('tab-' + t);
@@ -1459,212 +1453,14 @@ function switchTab(name) {
   });
   document.body.classList.toggle('lab-tab', name === 'lab' || name === 'kb');
   try { localStorage.setItem('me-dash-tab', name); } catch (e) {}
-  if (name === 'arch' && typeof drawLines === 'function') setTimeout(drawLines, 50);
   if (name === 'kb' && typeof kbRefresh === 'function') kbRefresh();
 }
-document.getElementById('tab-arch').addEventListener('click', function () { switchTab('arch'); });
 document.getElementById('tab-lab').addEventListener('click', function () { switchTab('lab'); });
 document.getElementById('tab-kb').addEventListener('click', function () { switchTab('kb'); });
+// Marketing Engine is the home tab; KB is opt-in via stored choice or #kb hash.
 try {
-  if (localStorage.getItem('me-dash-tab') === 'lab' || location.hash === '#lab' || /[?&]session=/.test(location.search)) {
-    switchTab('lab');
-  }
-} catch (e) {}
-
-/* ----- Architecture diagram (original) ----- */
-function getBox(id) {
-  var el = document.getElementById(id);
-  var cv = document.getElementById('cv');
-  var cr = cv.getBoundingClientRect();
-  var br = el.getBoundingClientRect();
-  return {
-    l: br.left - cr.left, r: br.right - cr.left,
-    t: br.top - cr.top, b: br.bottom - cr.top,
-    cx: br.left - cr.left + br.width / 2, cy: br.top - cr.top + br.height / 2
-  };
-}
-
-function drawLines() {
-  var NS = 'http://www.w3.org/2000/svg';
-  var svg = document.getElementById('svg');
-  if (!svg) return;
-  while (svg.children.length > 1) svg.removeChild(svg.lastChild);
-  var BLUE = '#5b9bd5', AMBER = '#f59e0b';
-  function path(d, color, noarrow) {
-    var p = document.createElementNS(NS, 'path');
-    p.setAttribute('d', d); p.setAttribute('stroke', color || '#666');
-    p.setAttribute('stroke-width', '1.3'); p.setAttribute('fill', 'none');
-    if (!noarrow) p.setAttribute('marker-end', 'url(#ah)');
-    svg.appendChild(p);
-  }
-  function dot(cx, cy, r, color) {
-    var c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
-    c.setAttribute('fill', 'none'); c.setAttribute('stroke', color); c.setAttribute('stroke-width', '1');
-    svg.appendChild(c);
-  }
-  function hz(a, b, color) {
-    var sx = a.r, sy = a.cy, ex = b.l, ey = b.cy, m = (sx + ex) / 2;
-    path('M' + sx + ' ' + sy + ' C' + m + ' ' + sy + ', ' + m + ' ' + ey + ', ' + ex + ' ' + ey, color);
-  }
-  function vt(a, b, color) {
-    var sx = a.cx, sy = a.b, ex = b.cx, ey = b.t, m = (sy + ey) / 2;
-    path('M' + sx + ' ' + sy + ' C' + sx + ' ' + m + ', ' + ex + ' ' + m + ', ' + ex + ' ' + ey, color);
-  }
-  var harness = getBox('harness');
-  ['u0', 'u1', 'u2', 'u3', 'u4'].forEach(function (id) { hz(getBox(id), harness, BLUE); });
-  vt(getBox('kb'), harness, AMBER);
-  vt(getBox('rules'), harness, AMBER);
-  hz(harness, getBox('llm'), AMBER);
-  hz(getBox('llm'), getBox('input'), BLUE);
-  vt(getBox('input'), getBox('ideas'), BLUE);
-  vt(getBox('input'), getBox('braindump'), BLUE);
-  vt(getBox('ideas'), getBox('edits'), BLUE);
-  vt(getBox('braindump'), getBox('edits'), BLUE);
-  vt(getBox('edits'), getBox('textout'), BLUE);
-  vt(harness, getBox('design'), AMBER);
-  vt(harness, getBox('memory'), AMBER);
-  hz(getBox('design'), getBox('imageout'), AMBER);
-  var e = getBox('edits');
-  path('M' + e.l + ' ' + (e.t + 8) + ' C' + (harness.r + 130) + ' ' + (e.t - 34) + ', ' + (harness.r + 40) + ' ' + (harness.cy - 14) + ', ' + harness.r + ' ' + (harness.cy - 14), BLUE);
-  var ac = getBox('account');
-  path('M' + ac.cx + ' ' + ac.t + ' C' + ac.cx + ' ' + (ac.t - 60) + ', ' + harness.cx + ' ' + (harness.b + 60) + ', ' + harness.cx + ' ' + harness.b, AMBER);
-  var cx = ac.cx, cy = ac.cy, R = ac.w / 2;
-  for (var i = 0; i < 11; i++) {
-    var ang = (i / 11) * Math.PI * 2;
-    var ox = cx + Math.cos(ang) * R, oy = cy + Math.sin(ang) * R;
-    var ex2 = cx + Math.cos(ang) * 52, ey2 = cy + Math.sin(ang) * 52;
-    path('M' + ox + ' ' + oy + ' L' + ex2 + ' ' + ey2, BLUE, true);
-    dot(ex2, ey2, 4, BLUE);
-  }
-}
-
-window.addEventListener('load', function () { drawLines(); renderProgress(); });
-window.addEventListener('resize', drawLines);
-
-var PIPELINE_ORDER = ['rules', 'kb', 'archive', 'memory', 'design', 'triggers', 'ideas', 'gate', 'edits'];
-var DISTRIBUTION_KEYS = ['x', 'linkedin', 'blog', 'discord'];
-var NO_BAR_KEYS = ['output'].concat(DISTRIBUTION_KEYS);
-var DIST_NS = { x: 'Short posts', linkedin: 'Long-form', blog: 'Articles', discord: 'Recaps', output: 'Draft + learning' };
-var NODE_MAP = [
-  { el: 'b0', key: 'rules' }, { el: 'b1', key: 'kb' }, { el: 'b2', key: 'archive' }, { el: 'b3', key: 'design' }, { el: 'b4', key: 'memory' },
-  { el: 'llm', key: 'llm' }, { el: 'trg', key: 'triggers' },
-  { el: 'f0', key: 'input' }, { el: 'f1', key: 'routing' }, { el: 'f2', key: 'ideas' }, { el: 'f3', key: 'braindump' }, { el: 'f4', key: 'structure' },
-  { el: 'r0', key: 'gate' }, { el: 'r1', key: 'edits' }, { el: 'r2', key: 'output' },
-  { el: 'c0', key: 'x' }, { el: 'c1', key: 'linkedin' }, { el: 'c2', key: 'blog' }, { el: 'c3', key: 'discord' }
-];
-
-var D = {
-  rules: { s: 'g', t: 'Rules', d: 'Per-brand constitution plus shared writing rules. The constitution is inlined into the system prompt; the agent reads the rest on demand.', f: [{ n: 'brands/<b>/_rules/_core.md', s: 'g', l: 'brand constitution' }, { n: '_shared/rules/WRITING_RULES.md', s: 'g', l: 'master writing rules' }, { n: '_shared/rules/BANNED_PATTERNS.md', s: 'g', l: 'anti-AI audit list' }, { n: '_shared/rules/CONTENT_STRUCTURES.md', s: 'g', l: 'post + article patterns' }], c: 'Client-agnostic rules shared across all brands.' },
-  kb: { s: 'g', t: 'Knowledge base', d: 'Per-brand source material the agent reads to ground copy in real facts.', f: [{ n: 'brands/<b>/_kb/', s: 'g', l: 'white papers, articles, research' }, { n: 'Read / Grep / Glob', s: 'g', l: 'agent reads on demand' }], c: 'Filesystem-direct Obsidian vault.' },
-  archive: { s: 'g', t: 'Content archive', d: 'Generated drafts saved per brand, dated with frontmatter.', f: [{ n: 'brands/<b>/_outputs/', s: 'g', l: 'dated draft notes' }], c: 'Written by Save edits.' },
-  design: { s: 'a', t: 'Design system', d: 'Per-brand design tokens and platform format guidance. Image rendering is a later milestone.', f: [{ n: 'brands/<b>/_design/tokens.yaml', s: 'g', l: 'brand tokens' }, { n: '_shared/platforms/', s: 'g', l: 'Short posts and Articles' }], c: 'Feeds image output (later).' },
-  memory: { s: 'g', t: 'Obsidian memory', d: 'Append-only edit-learnings per brand, fed back into the next generation.', f: [{ n: 'brands/<b>/_memory/LAB_LEARNINGS.md', s: 'g', l: 'edit patterns' }], c: 'Grows on each Save edits.' },
-  llm: { s: 'g', t: 'Agent harness', d: 'Claude Agent SDK over your Claude Code login. Brand-isolated; reads KB and rules, then drafts copy.', f: [{ n: 'engine.generate()', s: 'g', l: '/api/lab/generate' }, { n: 'PreToolUse hook', s: 'g', l: 'brand isolation' }, { n: 'claude-opus-4-8', s: 'g', l: 'default model' }, { n: 'commit-edits', s: 'g', l: 'save draft + learning' }], c: 'No API key needed; uses Claude Code auth.' },
-  triggers: { s: 'g', t: 'Reactive triggers', d: 'External events that warrant content.', f: [{ n: 'Provider change', s: 'g', l: 'infrastructure angle' }, { n: 'New model release', s: 'g', l: 'timely analysis' }, { n: 'Competitor ships', s: 'g', l: 'honest take' }, { n: 'Regulation', s: 'g', l: 'compliance angle' }], c: 'Feeds ideas generation.' },
-  input: { s: 'g', t: 'Input', d: 'Braindump what you want written.', f: [{ n: 'Braindump', s: 'g', l: 'free text' }, { n: 'File drop', s: 'g', l: '.md .txt' }], c: 'Dashboard Content tab.' },
-  routing: { s: 'g', t: 'Routing', d: 'Pick Client / Brand and Platform.', f: [{ n: 'Client / Brand', s: 'g', l: '/api/brands' }, { n: 'Short posts', s: 'g', l: 'social' }, { n: 'Articles', s: 'g', l: 'long-form' }], c: 'Dashboard routing panel.' },
-  ideas: { s: 'g', t: 'Ideas generation', d: 'Generate a draft from the braindump plus brand context.', f: [{ n: 'bundle-pack', s: 'g', l: 'context shown' }, { n: 'generate', s: 'g', l: 'brand voice + rules' }, { n: 'platform guidance', s: 'g', l: 'format' }], c: 'Runs the agent harness.' },
-  braindump: { s: 'g', t: 'Brain dump', d: 'Raw unstructured thoughts.', f: [{ n: 'Lab textarea', s: 'g', l: 'persisted locally' }, { n: 'Drag-drop files', s: 'g', l: 'multi-file' }], c: 'Dashboard Content tab.' },
-  structure: { s: 'g', t: 'Structure + match', d: 'Brand voice, platform format, and rules applied during generation.', f: [{ n: 'Platform guidance', s: 'g', l: 'Short posts / Articles' }, { n: 'Bundle context', s: 'g', l: 'full brand context' }], c: 'Applied automatically on Generate.' },
-  gate: { s: 'g', t: 'Quality gate', d: 'Style and isolation checks.', f: [{ n: 'Voice check', s: 'g', l: 'system prompt' }, { n: 'Specificity', s: 'g', l: 'name, number, date' }, { n: 'Banned patterns', s: 'g', l: '_shared/rules' }, { n: 'Brand mention', s: 'g', l: 'earned only' }, { n: 'Isolation', s: 'g', l: 'PreToolUse hook' }], c: 'Reads _rules/ and _shared/rules/.' },
-  edits: { s: 'g', t: 'Manual edits', d: 'Human catches mismatches and verifies facts.', f: [{ n: 'Human review', s: 'g', l: 'required step' }], c: 'Receives from gate.' },
-  output: { s: 'g', channel: true, t: 'Output', d: 'Save edits writes a dated draft plus a learning, both brand-scoped.', f: [{ n: 'brands/<b>/_outputs/', s: 'g', l: 'dated draft' }, { n: '_memory/LAB_LEARNINGS.md', s: 'g', l: 'edit learning' }], c: 'commit-edits endpoint.' },
-  x: { s: 'g', channel: true, t: 'X (Twitter)', d: 'Distribution channel for short posts and threads.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Short-form social.' },
-  linkedin: { s: 'g', channel: true, t: 'LinkedIn', d: 'Distribution channel for long-form posts.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Professional network.' },
-  blog: { s: 'g', channel: true, t: 'Blog', d: 'Distribution channel for long-form articles.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Long-form.' },
-  discord: { s: 'g', channel: true, t: 'Discord', d: 'Distribution channel for community recaps and announcements.', f: [{ n: 'Channel', s: 'g', l: 'active' }], c: 'Casual tone, links welcome.' }
-};
-
-Object.assign(D, {
-  notion: { s: 'a', t: 'Work Organiser (Notion)', d: 'MCP server that pulls tasks, notes and docs from Notion into the engine.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
-  transcripts: { s: 'a', t: 'Call Transcripts', d: 'MCP server that ingests meeting and call transcripts as source material.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
-  messaging: { s: 'a', t: 'Company Messaging', d: 'MCP server for Slack / Telegram messages as context.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
-  li_mcp: { s: 'a', t: 'LinkedIn', d: 'MCP server that pulls LinkedIn activity and context.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
-  email: { s: 'a', t: 'Email', d: 'MCP server that brings email threads in as source material.', f: [{ n: 'MCP server', s: 'a', l: 'connector (M5)' }], c: 'User integration.' },
-  harness: { s: 'g', t: 'Agent Harness', d: 'The orchestrator. Reads the Repo (Knowledge Base + Rules), drafts via the LLM, writes Obsidian Memory and the Design System. Brand-isolated.', f: [{ n: 'engine.generate()', s: 'g', l: '/api/lab/generate' }, { n: 'PreToolUse hook', s: 'g', l: 'brand isolation' }, { n: 'commit-edits', s: 'g', l: 'save draft + learning' }], c: 'Claude Agent SDK over Claude Code auth.' },
-  llmnode: { s: 'g', t: 'LLM', d: 'Claude (default claude-opus-4-8) via the Agent SDK over your Claude Code login. No API key.', f: [{ n: 'claude-opus-4-8', s: 'g', l: 'default model' }, { n: 'Claude Code auth', s: 'g', l: 'no API key' }], c: 'Model behind the harness.' },
-  textout: { s: 'g', t: 'Text Output', d: 'The finished copy, saved to the brand vault on Save edits.', f: [{ n: 'brands/<b>/_outputs/', s: 'g', l: 'dated draft' }], c: 'From Manual Edits + Feedback.' },
-  imageout: { s: 'a', t: 'Image Output', d: 'Rendered from the Design System using brand tokens. Image rendering is a later milestone.', f: [{ n: '_design/tokens.yaml', s: 'g', l: 'brand tokens' }, { n: 'renderer', s: 'a', l: 'M4' }], c: 'Fed by the Design System.' },
-  scraper: { s: 'a', t: 'Scraper', d: 'Ingests a user account social graph into the engine as source signal.', f: [{ n: 'User account', s: 'a', l: 'graph crawl' }, { n: 'feeds Agent Harness', s: 'a', l: 'source signal' }], c: 'Planned (later milestone).' }
-});
-
-function fileScore(s) { return s === 'g' ? 100 : s === 'a' ? 50 : 0; }
-function nodePct(d) {
-  if (d.f && d.f.length) {
-    var sum = 0;
-    d.f.forEach(function (x) { sum += fileScore(x.s); });
-    return Math.round(sum / d.f.length);
-  }
-  return fileScore(d.s);
-}
-function statusFromPct(p) { return p >= 100 ? 'g' : p > 0 ? 'a' : 'r'; }
-
-function ensureNodeChrome(el) {
-  if (!el.querySelector('.nd-bar-wrap')) {
-    var pri = document.createElement('span');
-    pri.className = 'nd-pri r';
-    pri.style.display = 'none';
-    el.insertBefore(pri, el.firstChild);
-    var wrap = document.createElement('div');
-    wrap.className = 'nd-bar-wrap';
-    var fill = document.createElement('div');
-    fill.className = 'nd-bar-fill r';
-    wrap.appendChild(fill);
-    el.appendChild(wrap);
-  }
-}
-
-function renderProgress() {
-  var cv = document.getElementById('cv');
-  if (cv) Array.prototype.forEach.call(cv.querySelectorAll('.nd'), function (el) { el.classList.add('dist'); });
-  var label = document.getElementById('engine-pct-label');
-  var bar = document.getElementById('engine-pct-bar');
-  var sub = document.getElementById('engine-pct-sub');
-  if (label) label.textContent = 'V2';
-  if (bar) bar.style.width = '100%';
-  if (sub) sub.textContent = 'Systems diagram — User to Backend to Frontend';
-}
-
-function od(id) {
-  var d = D[id]; if (!d) return;
-  var isNoBar = NO_BAR_KEYS.indexOf(id) >= 0;
-  var h;
-  if (isNoBar && id !== 'output') {
-    h = '<span class="dss g">Active channel</span>';
-    h += '<div class="dtt">' + d.t + '</div><div class="ddd">' + d.d + '</div>';
-  } else if (id === 'output') {
-    h = '<span class="dss g">Pipeline ready</span>';
-    h += '<div class="dtt">' + d.t + '</div><div class="ddd">' + d.d + '</div>';
-  } else {
-    var pct = nodePct(d);
-    var st = statusFromPct(pct);
-    var sl = { g: 'Complete', a: 'Partial', r: 'Not started' };
-    h = '<span class="dss ' + st + '">' + sl[st] + ' · ' + pct + '%</span>';
-    h += '<div class="dppct">' + pct + '% complete</div>';
-    h += '<div class="dppct-bar"><div class="dppct-fill nd-bar-fill ' + st + '" style="width:' + pct + '%"></div></div>';
-    h += '<div class="dtt">' + d.t + '</div><div class="ddd">' + d.d + '</div>';
-  }
-  if (d.f && d.f.length) {
-    h += '<div class="dsl">Files</div>';
-    d.f.forEach(function (f) {
-      h += '<div class="df"><span class="fd ' + f.s + '"></span>' + f.n + '<span class="fl">' + f.l + '</span></div>';
-    });
-  }
-  if (d.c) h += '<div class="dsl">Connections</div><div class="dc">' + d.c + '</div>';
-  document.getElementById('dcc').innerHTML = h;
-  document.getElementById('dp').classList.add('open');
-  document.getElementById('ov').classList.add('open');
-  document.querySelectorAll('.nd').forEach(function (n) { n.classList.remove('active'); });
-  var ev = typeof window.event !== 'undefined' ? window.event : null;
-  if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
-}
-
-function cd() {
-  document.getElementById('dp').classList.remove('open');
-  document.getElementById('ov').classList.remove('open');
-  document.querySelectorAll('.nd').forEach(function (n) { n.classList.remove('active'); });
-}
+  switchTab(localStorage.getItem('me-dash-tab') === 'kb' || location.hash === '#kb' ? 'kb' : 'lab');
+} catch (e) { switchTab('lab'); }
 
 /* ----- Marketing Engine state ----- */
 var droppedFiles = [];
@@ -1987,11 +1783,17 @@ function copyDesignBrief() {
 }
 
 function switchLabSub(name) {
-  var content = document.getElementById('lab-sub-content');
-  var tContent = document.getElementById('lab-subtab-content');
-  if (content) content.classList.add('visible');
-  if (tContent) { tContent.classList.add('active'); tContent.setAttribute('aria-selected', 'true'); }
-  try { localStorage.setItem('me-lab-subtab', 'content'); } catch (e) {}
+  var subs = ['content', 'scraper'];
+  if (subs.indexOf(name) < 0) name = 'content';
+  subs.forEach(function (s) {
+    var panel = document.getElementById('lab-sub-' + s);
+    var tab = document.getElementById('lab-subtab-' + s);
+    var on = (s === name);
+    if (panel) panel.classList.toggle('visible', on);
+    if (tab) { tab.classList.toggle('active', on); tab.setAttribute('aria-selected', on ? 'true' : 'false'); }
+  });
+  try { localStorage.setItem('me-lab-subtab', name); } catch (e) {}
+  if (name === 'scraper' && typeof loadScraperMap === 'function') loadScraperMap();
 }
 
 document.querySelectorAll('.lab-subtab').forEach(function (btn) {
@@ -2039,16 +1841,28 @@ function pushSessionToServer() {
   }).catch(function () {});
 }
 
+// Coerce stray persisted junk (the literal strings "undefined"/"null", left by an
+// older build) into empty text, so a poisoned field can actually be cleared.
+function sanitizeStored(v) {
+  if (v == null) return '';
+  var s = String(v);
+  return (s === 'undefined' || s === 'null') ? '' : s;
+}
+
 function pullSessionFromServer() {
   var sid = ensureSessionId();
   return fetch('/api/lab/session?id=' + encodeURIComponent(sid))
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!data) return;
-      if (data.braindump != null) document.getElementById('braindump').value = data.braindump;
+      // Never overwrite a field the user is actively editing — that's what made the
+      // box impossible to clear (the 3s sync kept restoring the old server copy).
+      var bdEl = document.getElementById('braindump');
+      if (data.braindump != null && document.activeElement !== bdEl) bdEl.value = sanitizeStored(data.braindump);
       if (data.platform) applyPlatformSelect(data.platform);
       // V2: platform is not derived from voice (voice now carries the brand ref).
-      if (data.narrative != null) document.getElementById('narrative').value = data.narrative;
+      var narEl = document.getElementById('narrative');
+      if (data.narrative != null && document.activeElement !== narEl) narEl.value = sanitizeStored(data.narrative);
       if (data.chatMessages) chatMessages = data.chatMessages;
       if (data.learnings) labLearnings = data.learnings;
       if (data.lastBundle) window._lastLabBundle = data.lastBundle;
@@ -2077,15 +1891,18 @@ function startLabSync() {
 function loadLabFromStorage() {
   try {
     ensureSessionId();
-    var bd = localStorage.getItem(LS.BD);
-    if (bd) document.getElementById('braindump').value = bd;
+    var bd = sanitizeStored(localStorage.getItem(LS.BD));
+    document.getElementById('braindump').value = bd;
+    if (!bd) { try { localStorage.removeItem(LS.BD); } catch (e) {} }
     var p = localStorage.getItem(LS.PL);
     if (p) applyPlatformSelect(p);
     else {
       var v = localStorage.getItem(LS.VO);
       // V2: platform is not derived from voice (voice now carries the brand ref).
     }
-    var n = localStorage.getItem(LS.NA); if (n) document.getElementById('narrative').value = n;
+    var n = sanitizeStored(localStorage.getItem(LS.NA));
+    document.getElementById('narrative').value = n;
+    if (!n) { try { localStorage.removeItem(LS.NA); } catch (e) {} }
     var c = localStorage.getItem(LS.CHAT);
     if (c) chatMessages = JSON.parse(c);
     var lr = localStorage.getItem(LS.LEARN);
@@ -2162,8 +1979,13 @@ function applyPlatformSelect(value) {
   updateArticleUI();
 }
 
+var bdPushTimer = null;
 function persistBraindump() {
   try { localStorage.setItem(LS.BD, document.getElementById('braindump').value); } catch (e) {}
+  // Push edits (including clearing the field) to the server so the 3s sync can't
+  // resurrect a stale copy. Debounced so we don't POST on every keystroke.
+  if (bdPushTimer) clearTimeout(bdPushTimer);
+  bdPushTimer = setTimeout(function () { bdPushTimer = null; pushSessionToServer(); }, 600);
 }
 
 document.getElementById('braindump').addEventListener('input', persistBraindump);
@@ -3132,6 +2954,51 @@ document.getElementById('btn-copy-output').addEventListener('click', copyOutput)
 document.getElementById('btn-draft-topic').addEventListener('click', generatePostFromSelectedIdea);
 (function () { var ib = document.getElementById('btn-image-brief'); if (ib) ib.addEventListener('click', generateImageBriefFromResponse); })();
 (function () { var cb = document.getElementById('btn-copy-image'); if (cb) cb.addEventListener('click', function () { var t = document.getElementById('image-out-text'); if (t && t.value) { t.removeAttribute('readonly'); t.select(); try { document.execCommand('copy'); } catch (e) {} t.setAttribute('readonly', ''); if (typeof toast === 'function') toast('Copied'); } }); })();
+// Download a self-contained image brief (post + chosen template + instructions) to
+// drop straight into Claude Design.
+function buildImageBriefFile() {
+  var brief = (document.getElementById('image-out-text') || {}).value || '';
+  if (!brief.trim()) return null;
+  var post = (typeof getResponseText === 'function') ? getResponseText() : '';
+  var opt = (selectedImageIdx >= 0 && imageOptions[selectedImageIdx]) ? imageOptions[selectedImageIdx] : null;
+  var kindLabel = opt ? (IMAGE_KIND_LABELS[opt.kind] || opt.kind || '') : '';
+  var lines = ['# Image brief — Claude Design', ''];
+  if (opt) {
+    lines.push('## Source: ' + kindLabel);
+    if (opt.kind === 'library') lines.push('Use the library template named at the start of the direction below.');
+    lines.push('');
+    lines.push('## Direction');
+    lines.push(opt.direction || '');
+    lines.push('');
+  }
+  lines.push('## Instructions');
+  lines.push(brief.trim());
+  if (post && post.trim()) {
+    lines.push('', '## The post this image illustrates', post.trim());
+  }
+  return lines.join('\n') + '\n';
+}
+function slugifyForFile(s) {
+  return (s || 'image-brief').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'image-brief';
+}
+(function () {
+  var db = document.getElementById('btn-download-image');
+  if (!db) return;
+  db.addEventListener('click', function () {
+    var content = buildImageBriefFile();
+    if (!content) { if (typeof toast === 'function') toast('Generate instructions first'); return; }
+    var post = (typeof getResponseText === 'function') ? getResponseText() : '';
+    var firstLine = (post || '').split('\n').filter(Boolean)[0] || 'image-brief';
+    var name = 'denario-image-brief-' + slugifyForFile(firstLine) + '.md';
+    var blob = new Blob([content], { type: 'text/markdown' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    if (typeof toast === 'function') toast('Downloaded ' + name);
+  });
+})();
 
 function generatePostFromSelectedIdea() {
   var idea = selectedTopicTitle;
@@ -3474,6 +3341,17 @@ refreshTranscriptPendingStatus();
         if (d.skipped && d.skipped.length) msg += ' Skipped ' + d.skipped.length + ' (unsupported type).';
         if (d.notes && d.notes.length) msg += ' Note: ' + d.notes.join('; ') + '.';
         st.textContent = msg; kbList();
+        // Self-updating Scraper map: new KB docs change what's worth monitoring, so
+        // re-derive the categories for this brand (only if it's the one in focus).
+        if (d.ingested && d.ingested.length && typeof window.scraperRebuildMap === 'function') {
+          try {
+            var cur = (typeof resolveVoice === 'function') ? resolveVoice() : '';
+            if (cur && cur === s.value) {
+              st.textContent = msg + ' Updating the source map from the new docs…';
+              window.scraperRebuildMap();
+            }
+          } catch (e) {}
+        }
       }).catch(function () { st.textContent = 'Upload failed — is the server running?'; });
   }
 
@@ -3512,6 +3390,208 @@ refreshTranscriptPendingStatus();
     ['dragleave', 'drop'].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.remove('drag'); }); });
     drop.addEventListener('drop', function (ev) { handle(ev.dataTransfer.files); });
   });
+})();
+</script>
+
+<script>
+/* ===== Scraper tab — source map (hub) + per-category subtopics (zoom) ===== */
+(function () {
+  var SCRAPER = { center: 'Users', categories: [], loaded: false, current: null };
+
+  function scVoice() { return (typeof resolveVoice === 'function') ? resolveVoice() : ''; }
+  function byId(id) { return document.getElementById(id); }
+
+  function loadScraperMap(force) {
+    var ref = scVoice();
+    var status = byId('scraper-hub-status');
+    if (!ref) { if (status) status.textContent = 'Pick a brand first.'; return; }
+    if (SCRAPER.loaded && !force) { renderScraperHub(); return; }
+    if (status) status.textContent = 'Loading…';
+    fetch('/api/lab/topics?voice=' + encodeURIComponent(ref))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { if (status) status.textContent = (d && d.error) || 'Could not load map'; return; }
+        SCRAPER.center = d.center || 'Users';
+        SCRAPER.categories = d.categories || [];
+        SCRAPER.loaded = true;
+        renderScraperHub();
+        // Agnostic: with no map yet, derive one from the brand's knowledge base.
+        if (!SCRAPER.categories.length) { rebuildMap(true); }
+        else if (status) status.textContent = '';
+      })
+      .catch(function () { if (status) status.textContent = 'Request failed'; });
+  }
+
+  // Re-derive the categories from the brand's KB + objectives (self-updating map).
+  function rebuildMap(auto) {
+    var ref = scVoice();
+    if (!ref) { if (typeof toast === 'function') toast('Pick a brand first.'); return; }
+    var status = byId('scraper-hub-status');
+    var btn = byId('scraper-rebuild');
+    if (btn) { btn.disabled = true; btn.textContent = 'Reading KB…'; }
+    if (status) status.textContent = auto ? 'No map yet — reading the knowledge base…' : 'Re-deriving from the knowledge base…';
+    return fetch('/api/lab/topics/rebuild', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voice: ref })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Rebuild from KB'; }
+      if (!d || !d.ok) { if (status) status.textContent = (d && d.error) || 'Rebuild failed'; return; }
+      SCRAPER.center = d.center || SCRAPER.center;
+      SCRAPER.categories = d.categories || [];
+      SCRAPER.loaded = true;
+      if (status) status.textContent = '';
+      renderScraperHub();
+      if (typeof toast === 'function') toast('Source map updated · ' + SCRAPER.categories.length + ' categories');
+    }).catch(function () {
+      if (btn) { btn.disabled = false; btn.textContent = 'Rebuild from KB'; }
+      if (status) status.textContent = 'Request failed';
+    });
+  }
+
+  function renderScraperHub() {
+    var canvas = byId('scraper-canvas');
+    var svg = byId('scraper-lines');
+    if (!canvas || !svg) return;
+    Array.prototype.slice.call(canvas.querySelectorAll('.scraper-node')).forEach(function (n) { n.remove(); });
+    var W = canvas.clientWidth || 900, H = canvas.clientHeight || 580;
+    var cx = W / 2, cy = H / 2;
+    var R = Math.max(140, Math.min(W, H) / 2 - 95);
+    var cats = SCRAPER.categories, n = cats.length || 1;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = '';
+    cats.forEach(function (c, i) {
+      var a = (-90 + i * (360 / n)) * Math.PI / 180;
+      var x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+      line.setAttribute('x2', x); line.setAttribute('y2', y);
+      line.setAttribute('stroke', c.count ? 'rgba(0,113,227,.35)' : 'rgba(0,0,0,.12)');
+      line.setAttribute('stroke-width', '1.3');
+      svg.appendChild(line);
+    });
+    var center = document.createElement('div');
+    center.className = 'scraper-node center';
+    center.style.left = cx + 'px'; center.style.top = cy + 'px';
+    center.innerHTML = '<div class="sn-label">' + escapeHtml(SCRAPER.center) + '</div>';
+    canvas.appendChild(center);
+    cats.forEach(function (c, i) {
+      var a = (-90 + i * (360 / n)) * Math.PI / 180;
+      var x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+      var node = document.createElement('div');
+      node.className = 'scraper-node';
+      node.style.left = x + 'px'; node.style.top = y + 'px';
+      var meta = c.count ? (c.count + ' subtopic' + (c.count === 1 ? '' : 's')) : 'Not scanned';
+      node.innerHTML = '<div class="sn-label">' + escapeHtml(c.label) + '</div><div class="sn-meta">' + escapeHtml(meta) + '</div>';
+      node.addEventListener('click', function () { openCategory(c.id); });
+      canvas.appendChild(node);
+    });
+  }
+
+  function findCat(id) {
+    for (var i = 0; i < SCRAPER.categories.length; i++) {
+      if (SCRAPER.categories[i].id === id) return SCRAPER.categories[i];
+    }
+    return null;
+  }
+
+  function openCategory(id) {
+    var c = findCat(id);
+    if (!c) return;
+    SCRAPER.current = id;
+    byId('scraper-hub').hidden = true;
+    byId('scraper-detail').hidden = false;
+    byId('scraper-detail-title').textContent = c.label;
+    renderSubtopics(c);
+  }
+
+  function fmtWhen(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleString(); } catch (e) { return iso; }
+  }
+
+  function renderSubtopics(c) {
+    var meta = byId('scraper-detail-meta');
+    var wrap = byId('scraper-subtopics');
+    if (meta) meta.textContent = c.scanned
+      ? ('Last scanned ' + fmtWhen(c.scanned) + ' · always click sources to verify before drafting')
+      : 'Not scanned yet — click “Refresh from sources”.';
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    var subs = c.subtopics || [];
+    if (!subs.length) {
+      wrap.innerHTML = '<div class="scraper-empty">Nothing here yet.<br>Click “Refresh from sources” and Claude will scan Swiss news for what’s happening in <b>' + escapeHtml(c.label) + '</b> — listing each development with links to fact-check.</div>';
+      return;
+    }
+    subs.forEach(function (s) {
+      var card = document.createElement('div');
+      card.className = 'scraper-card';
+      var html = '<h3>' + escapeHtml(s.title || '') + '</h3>';
+      if (s.summary) html += '<p class="sc-summary">' + escapeHtml(s.summary) + '</p>';
+      if (s.angle) html += '<p class="sc-angle">Angle · ' + escapeHtml(s.angle) + '</p>';
+      var srcs = s.sources || [];
+      if (srcs.length) {
+        html += '<div class="scraper-sources">';
+        srcs.forEach(function (src) {
+          var label = src.title || src.url || 'source';
+          var m = [src.source, src.date].filter(Boolean).join(' · ');
+          var inner = src.url
+            ? ('<a href="' + escapeHtml(src.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label) + '</a>')
+            : escapeHtml(label);
+          html += '<div class="scraper-source">' + inner + (m ? ' <span class="ss-meta">— ' + escapeHtml(m) + '</span>' : '') + '</div>';
+        });
+        html += '</div>';
+      }
+      card.innerHTML = html;
+      wrap.appendChild(card);
+    });
+  }
+
+  function refreshCurrent() {
+    var id = SCRAPER.current, c = findCat(id);
+    if (!c) return;
+    var ref = scVoice();
+    if (!ref) { if (typeof toast === 'function') toast('Pick a brand first.'); return; }
+    var btn = byId('scraper-refresh'), meta = byId('scraper-detail-meta');
+    if (btn) { btn.disabled = true; btn.textContent = 'Scanning sources…'; }
+    if (meta) meta.textContent = 'Claude is scanning Swiss news for ' + c.label + '… this takes a minute.';
+    fetch('/api/lab/topics/scan', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voice: ref, categoryId: id, category: c.label })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Refresh from sources'; }
+      if (!d || !d.ok) {
+        if (meta) meta.textContent = (d && d.error) || 'Scan failed';
+        if (typeof toast === 'function') toast((d && d.error) || 'Scan failed');
+        return;
+      }
+      c.subtopics = d.subtopics || [];
+      c.scanned = d.scanned || '';
+      c.count = c.subtopics.length;
+      renderSubtopics(c);
+      if (typeof toast === 'function') toast(c.count + ' subtopic' + (c.count === 1 ? '' : 's') + ' found');
+    }).catch(function () {
+      if (btn) { btn.disabled = false; btn.textContent = 'Refresh from sources'; }
+      if (meta) meta.textContent = 'Request failed';
+    });
+  }
+
+  function backToHub() {
+    byId('scraper-detail').hidden = true;
+    byId('scraper-hub').hidden = false;
+    renderScraperHub();
+  }
+
+  var rb = byId('scraper-refresh'); if (rb) rb.addEventListener('click', refreshCurrent);
+  var bk = byId('scraper-back'); if (bk) bk.addEventListener('click', backToHub);
+  var rbm = byId('scraper-rebuild'); if (rbm) rbm.addEventListener('click', function () { rebuildMap(false); });
+  window.addEventListener('resize', function () {
+    if (byId('lab-sub-scraper') && byId('lab-sub-scraper').classList.contains('visible')
+        && byId('scraper-hub') && !byId('scraper-hub').hidden) renderScraperHub();
+  });
+
+  window.loadScraperMap = loadScraperMap;  // called by switchLabSub('scraper')
+  // Exposed so the KB-upload flow can self-update the map when docs change.
+  window.scraperRebuildMap = function () { SCRAPER.loaded = false; return rebuildMap(false); };
 })();
 </script>
 </body>

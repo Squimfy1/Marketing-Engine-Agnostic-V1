@@ -87,6 +87,7 @@ def make_handler(api: Api, web_dir: Path):
                 "/api/lab/bundle-pack": lambda: api.bundle_pack(params),
                 "/api/kb/list": lambda: api.kb_list(params),
                 "/api/lab/session": lambda: api.session_get(params),
+                "/api/lab/topics": lambda: api.topics_get(params),
                 "/api/lab/anthropic/status": api.anthropic_status,
                 "/api/lab/bridge/status": api.bridge_status,
                 "/api/engine/status": api.engine_status,
@@ -120,6 +121,8 @@ def make_handler(api: Api, web_dir: Path):
                 "/api/lab/commit-edits": lambda: api.commit_edits(body),
                 "/api/lab/save-draft": lambda: api.commit_edits(body),
                 "/api/kb/upload": lambda: api.kb_upload(body),
+                "/api/lab/topics/scan": lambda: api.topic_scan(body),
+                "/api/lab/topics/rebuild": lambda: api.topic_map_rebuild(body),
                 "/api/lab/session": lambda: api.session_post(body),
             }
             if path in routes:

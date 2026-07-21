@@ -32,6 +32,25 @@ def test_en_dash_range_becomes_hyphen():
     assert "–" not in clean_copy("3–5%")
 
 
+def test_semicolon_becomes_comma():
+    assert clean_copy("You own it; someone vouches for it.") == "You own it, someone vouches for it."
+    assert ";" not in clean_copy("a; b; c")
+
+
+def test_spaced_hyphen_clause_break_becomes_comma():
+    assert clean_copy("done for you - not by you") == "done for you, not by you"
+    assert clean_copy("fakes pass -- a bar hides it") == "fakes pass, a bar hides it"
+
+
+def test_compound_hyphens_preserved():
+    # Hyphens inside compounds have no surrounding spaces and must survive.
+    assert clean_copy("well-made 999.9-purity gold-plated bars") == "well-made 999.9-purity gold-plated bars"
+
+
+def test_markdown_bullets_preserved():
+    assert clean_copy("intro\n- one\n- two") == "intro\n- one\n- two"
+
+
 def test_tidies_spacing_and_punctuation():
     assert clean_copy("word  ,  next") == "word, next"
     assert "  " not in clean_copy("a   b    c")

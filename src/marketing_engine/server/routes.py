@@ -320,6 +320,138 @@ class Api:
                 skipped.append(name)
         return 200, {"ok": True, "ingested": ingested, "skipped": skipped, "notes": notes}
 
+    # -- topic map (Scraper tab) -----------------------------------------
+    def _topics_dir(self, tenant: str, brand: str) -> Path:
+        d = self.engine.layout.brand_dir(tenant, brand) / "_kb" / "topics"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _read_topic_map(self, tdir: Path) -> dict:
+        f = tdir / "_map.json"
+        if f.is_file():
+            try:
+                return json.loads(f.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        return {"center": "", "categories": []}
+
+    def topics_get(self, params: dict) -> tuple[int, dict]:
+        """The category map + any cached subtopics, for the Scraper hub view."""
+        try:
+            tenant, brand = split_ref(_ref_of(params))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        try:
+            cfg = self.engine.registry.get_brand(tenant, brand)
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        tdir = self._topics_dir(tenant, brand)
+        tmap = self._read_topic_map(tdir)
+        center = tmap.get("center") or f"{cfg.name} Users"
+        cats = []
+        for c in tmap.get("categories", []):
+            cid = (c.get("id") or "").strip()
+            if not cid:
+                continue
+            cached = {}
+            cf = tdir / f"{cid}.json"
+            if cf.is_file():
+                try:
+                    cached = json.loads(cf.read_text(encoding="utf-8"))
+                except Exception:
+                    cached = {}
+            subs = cached.get("subtopics", []) or []
+            cats.append(
+                {
+                    "id": cid,
+                    "label": c.get("label") or cid,
+                    "scanned": cached.get("scanned", ""),
+                    "subtopics": subs,
+                    "count": len(subs),
+                }
+            )
+        return 200, {"ok": True, "center": center, "categories": cats}
+
+    def topic_map_rebuild(self, body: dict) -> tuple[int, dict]:
+        """Agnostic: (re)derive the category map from the brand's KB + objectives, write
+        ``_map.json``, and return the refreshed hub payload. Cached per-category scans
+        are preserved where the category id survives."""
+        try:
+            tenant, brand = split_ref(_ref_of(body))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        try:
+            self.engine.registry.get_brand(tenant, brand)
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        try:
+            result = asyncio.run(self.engine.derive_topic_map(tenant, brand))
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        except EngineError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            return 500, {"ok": False, "error": f"map rebuild failed: {exc}"}
+        cats = result.get("categories") or []
+        if not cats:
+            return 200, {"ok": False, "error": "no categories derived — try again"}
+        tdir = self._topics_dir(tenant, brand)
+        (tdir / "_map.json").write_text(
+            json.dumps(
+                {"center": result.get("center"), "categories": cats, "derived": result.get("derived")},
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        # Return the same enriched shape the hub loads with (re-reads cached scans).
+        return self.topics_get(body)
+
+    def topic_scan(self, body: dict) -> tuple[int, dict]:
+        """Rescan ONE category (Claude web research), persist, and return it."""
+        import re
+
+        try:
+            tenant, brand = split_ref(_ref_of(body))
+        except ValueError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        try:
+            self.engine.registry.get_brand(tenant, brand)
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        cid = (body.get("categoryId") or body.get("id") or "").strip()
+        label = (body.get("category") or body.get("label") or "").strip()
+        tdir = self._topics_dir(tenant, brand)
+        if cid and not label:  # resolve the human label from the map
+            for c in self._read_topic_map(tdir).get("categories", []):
+                if c.get("id") == cid:
+                    label = c.get("label") or cid
+                    break
+        if not label:
+            return 400, {"ok": False, "error": "category required"}
+        if not cid:
+            cid = re.sub(r"[^a-z0-9-]", "", label.lower().replace("&", "and").replace(" ", "-"))
+        try:
+            result = asyncio.run(self.engine.scan_topics(tenant, brand, category=label))
+        except RegistryError as exc:
+            return 404, {"ok": False, "error": str(exc)}
+        except EngineError as exc:
+            return 400, {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            return 500, {"ok": False, "error": f"topic scan failed: {exc}"}
+        record = {
+            "id": cid,
+            "category": label,
+            "scanned": result.get("scanned"),
+            "subtopics": result.get("subtopics", []),
+        }
+        (tdir / f"{cid}.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
+        return 200, {
+            "ok": not result.get("is_error", False),
+            **record,
+            "model": result.get("model"),
+            "usage": result.get("usage", {}),
+        }
+
     # -- sessions (server-managed UI state) ------------------------------
     def _sessions_dir(self) -> Path:
         d = self.engine.layout.root / SESSIONS_DIRNAME

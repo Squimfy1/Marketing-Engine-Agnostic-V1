@@ -94,9 +94,13 @@ async def recommend_images(
         allowed_tools=[],
         model=model,
     )
-    tokens_path = engine.layout.design_dir(tenant_id, brand_id) / "tokens.yaml"
+    design_dir = engine.layout.design_dir(tenant_id, brand_id)
+    tokens_path = design_dir / "tokens.yaml"
     tokens = tokens_path.read_text(encoding="utf-8") if tokens_path.is_file() else ""
-    prompt = build_image_recommend_prompt(post_text, design_tokens=tokens)
+    # The brand's reusable image templates (the "library" kind picks from these).
+    lib_path = design_dir / "library.md"
+    library = lib_path.read_text(encoding="utf-8") if lib_path.is_file() else ""
+    prompt = build_image_recommend_prompt(post_text, design_tokens=tokens, library=library)
     try:
         result = await engine.llm.run(prompt, options)
     except Exception:

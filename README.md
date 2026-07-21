@@ -67,6 +67,7 @@ Claude Code login.
  Planned: MCP connectors (Notion/Slack/LinkedIn/Email) · the multi-step scraper
  chain · Articles · topic-coverage tracking · Image-search MCP.
  The 🔒 _sources transcripts are read only by `distill`, never by generation.
+
 ```
 
 ## How it works
