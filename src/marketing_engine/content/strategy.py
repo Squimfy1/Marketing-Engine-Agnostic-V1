@@ -3,7 +3,7 @@
 Every brand, whoever they are, is described by the SAME set of strategy sections.
 ``distill`` fills them from that brand's own uploaded calls; ``filter`` scores
 ideas against them. The engine never hard-codes a brand — it only knows these
-section *names*. Denario is simply today's fill of this template; upload another
+section *names*. Any client is simply one fill of this template; upload another
 company's material and the same code fills the same sections with their answers.
 
 One source of truth (``STRATEGY_SECTIONS``) is imported by both the distiller

@@ -11,11 +11,11 @@ def test_text_passthrough():
 
 
 def test_pdf_extracted_to_markdown(pdf_factory):
-    data = pdf_factory("Denario builds AI research tools")
-    assert "Denario builds AI research tools" in pdf_to_text(data)
+    data = pdf_factory("Acme builds AI research tools")
+    assert "Acme builds AI research tools" in pdf_to_text(data)
     c = convert("paper.pdf", data=data)
     assert c.name == "paper.md"
-    assert "Denario builds AI research tools" in c.content
+    assert "Acme builds AI research tools" in c.content
     assert c.note == ""
 
 

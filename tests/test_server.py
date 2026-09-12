@@ -215,7 +215,7 @@ def test_kb_upload_unknown_brand(api: Api):
 
 def test_kb_upload_pdf_converted(api: Api, pdf_factory):
     import base64
-    b64 = base64.b64encode(pdf_factory("Denario whitepaper body")).decode()
+    b64 = base64.b64encode(pdf_factory("Acme whitepaper body")).decode()
     status, payload = api.kb_upload({
         "brand": "acme-co/acme",
         "files": [{"name": "whitepaper.pdf", "content_b64": b64}],
@@ -224,7 +224,7 @@ def test_kb_upload_pdf_converted(api: Api, pdf_factory):
     assert "whitepaper.md" in payload["ingested"]  # pdf -> md
     from marketing_engine.vault.fs_adapter import FilesystemVaultAdapter
     vault = FilesystemVaultAdapter(api.engine.layout, "acme-co", "acme")
-    assert "Denario whitepaper body" in vault.read("_kb/whitepaper.md")
+    assert "Acme whitepaper body" in vault.read("_kb/whitepaper.md")
 
 
 # -- status --------------------------------------------------------------

@@ -89,7 +89,7 @@ braindump ─▶ ideas ─▶ [strategy filter] ─▶ pick one ─▶ full post
 `content/strategy.py` defines **one** universal schema — `business_principles`,
 `customer_personas`, `customer_narratives` — for **every** brand. `distill` fills
 it from that brand's uploaded call transcripts; the filter reads it back by key.
-The engine never names a brand. Today's client (Denario) is just one fill of the
+The engine never names a brand. Any given client is just one fill of the
 template; upload another company's data and the same code fills the same sections
 with their answers, no engine change.
 

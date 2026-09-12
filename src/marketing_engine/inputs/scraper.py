@@ -7,7 +7,7 @@ customer-narrative lens the content filter uses), and writes a relevance-filtere
 public-safe digest into ``_kb/news/<date>.md`` — which generation may then read.
 
 Agnostic: the agent derives its own searches from the brand's identity + strategy
-(seed queries in ``brand.yaml: news.queries`` are optional). Denario works because
+(seed queries in ``brand.yaml: news.queries`` are optional). A brand works because
 its strategy is filled in; any other brand works the same way.
 
 The model RETURNS structured JSON; the engine writes the file deterministically —

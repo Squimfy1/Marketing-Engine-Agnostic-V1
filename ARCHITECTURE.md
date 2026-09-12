@@ -91,7 +91,7 @@ distillation. Prompt caching keeps the stable system prompt cheap.
 `content/strategy.py` defines `STRATEGY_SECTIONS` — the same three dimensions
 (business principles, customer personas, customer narratives) for *every* brand.
 `distill` fills them from that brand's uploaded calls; `filter` reads them back by
-key. Neither the filter nor the engine ever names a brand — Denario works because
+key. Neither the filter nor the engine ever names a brand — a client works because
 its `strategy.md` is filled in, and any other company works the same way once
 theirs is. The schema is the contract; the LLM is the parser; the vault holds the
 fill.

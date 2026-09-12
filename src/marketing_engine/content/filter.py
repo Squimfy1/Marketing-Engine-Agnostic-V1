@@ -8,7 +8,7 @@ their principle/narrative tags so the dashboard can show *why* each made it.
 
 Agnostic by construction: this module references only the section *names* from
 ``content.strategy`` (business_principles, customer_personas, customer_narratives)
-— never any brand. Denario works because Denario's strategy.md is filled in; any
+— never any brand. A client works because its strategy.md is filled in; any
 other company works the same way once theirs is.
 
 Fails OPEN: if there is no distilled strategy yet, or the verdict can't be parsed,
